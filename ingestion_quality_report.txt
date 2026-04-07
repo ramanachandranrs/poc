@@ -1,0 +1,7 @@
+INGESTION QUALITY REPORT
+
+[duplicate_pk] count=0
+
+[orphan_fk] count=0
+
+[invalid_type] count=0

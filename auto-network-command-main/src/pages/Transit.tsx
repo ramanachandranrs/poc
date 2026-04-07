@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Train, MapPin, AlertTriangle, CheckCircle2, Clock, Loader2, PackageOpen } from "lucide-react";
+import { Train, MapPin, AlertTriangle, CheckCircle2, Clock, PackageOpen } from "lucide-react";
 import { useTransit } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
@@ -49,7 +49,9 @@ const Transit = () => {
                         {shipment.status}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{shipment.carrier} · {shipment.items} units</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {shipment.carrier} · {shipment.items} units · Delay {shipment.delay_days} d
+                    </p>
                   </div>
                 </div>
 

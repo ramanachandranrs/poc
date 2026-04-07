@@ -45,12 +45,16 @@ const Inventory = () => {
 
               <div className="mt-4 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">VIN</span>
+                    <span className="text-muted-foreground">Vehicle ID</span>
                   <span className="text-foreground font-mono text-[11px]">{vehicle.vin}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Color</span>
-                  <span className="text-foreground">{vehicle.color}</span>
+                    <span className="text-muted-foreground">Dealer</span>
+                    <span className="text-foreground">{vehicle.dealer_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fuel</span>
+                    <span className="text-foreground">{vehicle.fuel_type || "N/A"}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Days in Inventory</span>

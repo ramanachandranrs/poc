@@ -1,26 +1,17 @@
 import { motion } from "framer-motion";
-import { Car, Package, Train, AlertTriangle, TrendingUp, Activity, ShieldAlert } from "lucide-react";
+import { Car, Package, Train, AlertTriangle, Activity, ShieldAlert } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import StatCard from "@/components/StatCard";
-import { useInventory, usePartsList, useTransit } from "@/hooks/useApiData";
+import { useInventory, usePartsList, useTransit, useTrends } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
-
-const chartData = [
-  { month: "Jan", inventory: 320, demand: 280 },
-  { month: "Feb", inventory: 290, demand: 310 },
-  { month: "Mar", inventory: 340, demand: 295 },
-  { month: "Apr", inventory: 280, demand: 330 },
-  { month: "May", inventory: 310, demand: 340 },
-  { month: "Jun", inventory: 350, demand: 320 },
-  { month: "Jul", inventory: 330, demand: 360 },
-];
 
 const Overview = () => {
   const { data: inventory, loading: invLoading } = useInventory();
   const { data: parts, loading: partsLoading } = usePartsList();
   const { data: transit, loading: transitLoading } = useTransit();
+  const { data: trends, loading: trendsLoading } = useTrends();
 
-  const loading = invLoading || partsLoading || transitLoading;
+  const loading = invLoading || partsLoading || transitLoading || trendsLoading;
 
   const agingCount = inventory.filter((v) => v.days_in_inventory > 60).length;
   const stockouts = parts.filter((p) => p.quantity_on_hand === 0 || p.quantity_on_hand < p.reorder_point).length;
@@ -89,7 +80,7 @@ const Overview = () => {
           </div>
         </div>
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={chartData}>
+          <AreaChart data={trends}>
             <defs>
               <linearGradient id="inventoryGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(205, 100%, 55%)" stopOpacity={0.3} />

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Package, AlertOctagon, CheckCircle2 } from "lucide-react";
+import { AlertOctagon, CheckCircle2 } from "lucide-react";
 import { usePartsList } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
