@@ -15,8 +15,7 @@ __pycache__/
 dealer_network.db
 
 # Generated output data
-*.xlsx
-*.csv
+
 Mock_Dealer_Data.xlsx
 
 # OS generated files

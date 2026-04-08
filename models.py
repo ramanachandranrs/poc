@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 from sqlalchemy import Date, Float, ForeignKey, Integer, String, create_engine
@@ -295,6 +295,82 @@ class JobCardInsight(BaseModel):
     service_type: Optional[str]
     date_in: date
     total_amount: float
+
+
+# ── Aging Stock Models ────────────────────────────────────────────────────────
+
+class AgingVehicle(BaseModel):
+    vin: str
+    model: str
+    variant: str
+    fuel_type: Optional[str]
+    source_dealer_id: str
+    source_dealer_name: str
+    source_city: str
+    days_in_inventory: int
+    age_bucket: str          # Fresh / Watch / Aging / Critical
+    invoice_value: float
+    daily_floorplan_cost: float
+    total_floorplan_cost: float
+
+
+class TransferRecommendation(BaseModel):
+    vin: str
+    model: str
+    variant: str
+    fuel_type: Optional[str]
+    source_dealer_id: str
+    source_dealer_name: str
+    source_city: str
+    target_dealer_id: str
+    target_dealer_name: str
+    target_city: str
+    days_in_inventory: int
+    age_bucket: str
+    invoice_value: float
+    total_floorplan_cost: float
+    transport_cost: float
+    demand_score: float
+    net_utility_score: float
+    recommendation: str      # Transfer / Discount / Hold
+    ai_prompt: str
+
+
+class AgingSummary(BaseModel):
+    total_aging: int
+    critical_count: int
+    aging_count: int
+    watch_count: int
+    total_floorplan_burn: float
+    top_aging_model: str
+    avg_days_aging: float
+
+
+# ── Demand Forecast Models ────────────────────────────────────────────────────
+
+class DailyForecastPoint(BaseModel):
+    date: str
+    forecast: float
+
+
+class DealerVariantForecast(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    dealer_id: str
+    dealer_name: str
+    variant_id: str
+    total_30d: float
+    model_mape: float
+    daily: List[DailyForecastPoint]
+
+
+class ForecastSummary(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    generated_at: str
+    forecast_horizon: int
+    total_dealer_variant_combos: int
+    top_pairs: List[dict]          # top 10 by total_30d
+    variant_totals: List[dict]     # network-wide per variant
+    model_metrics: dict
 
 
 if __name__ == "__main__":

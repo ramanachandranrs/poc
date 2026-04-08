@@ -1,0 +1,13 @@
+Warehouse_ID,Warehouse_Type,Parent_Warehouse_ID,Zone,City
+WH001,Mother,,South,Chennai
+WH002,Mother,,West,Pune
+WH003,Mother,,North,Delhi
+WH004,Mother,,East,Kolkata
+WH005,Mother,,Central,Indore
+CH101,Child,WH001,South,Coimbatore
+CH102,Child,WH001,South,Hyderabad
+CH201,Child,WH002,West,Ahmedabad
+CH202,Child,WH002,West,Nagpur
+CH301,Child,WH003,North,Jaipur
+CH401,Child,WH004,East,Bhubaneswar
+CH501,Child,WH005,Central,Bhopal

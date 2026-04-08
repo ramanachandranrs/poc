@@ -1,10 +1,23 @@
 from fastapi import Depends, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
+import json
+from pathlib import Path
 
 import models
+
+FORECAST_PATH = Path("data/forecast_output.json")
+_forecast_cache: Dict[str, Any] = {}
+
+def _load_forecast() -> Dict[str, Any]:
+    global _forecast_cache
+    if not _forecast_cache and FORECAST_PATH.exists():
+        with open(FORECAST_PATH) as f:
+            _forecast_cache = json.load(f)
+    return _forecast_cache
 
 app = FastAPI(
     title="Automotive Dealer Network AI Copilot API",
@@ -43,7 +56,7 @@ def get_inventory(
             models.Vehicle.fuel_type,
             models.JobCard.dealer_id,
             models.Dealer.dealer_name,
-            func.max(func.julianday("now") - func.julianday(models.JobCard.date_in)).label(
+            func.min(func.julianday("2025-12-31") - func.julianday(models.JobCard.date_in)).label(
                 "days_in_inventory"
             ),
         )
@@ -65,7 +78,7 @@ def get_inventory(
         query = query.filter(models.Dealer.zone == zone.strip())
     if days_in_inventory_gt is not None:
         query = query.having(
-            func.max(func.julianday("now") - func.julianday(models.JobCard.date_in))
+            func.min(func.julianday("2025-12-31") - func.julianday(models.JobCard.date_in))
             > days_in_inventory_gt
         )
 
@@ -225,6 +238,326 @@ def get_customers(
         )
         for r in rows
     ]
+
+
+# ── Demand Forecast Endpoints ─────────────────────────────────────────────────
+
+@app.get("/api/v1/forecast/variants", response_model=List[models.DealerVariantForecast])
+def get_forecast_variants(
+    dealer_id: Optional[str] = None,
+    variant_id: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=500),
+):
+    data = _load_forecast()
+    records = data.get("forecasts", [])
+    if dealer_id:
+        records = [r for r in records if r["dealer_id"] == dealer_id.upper().strip()]
+    if variant_id:
+        records = [r for r in records if r["variant_id"] == variant_id.strip()]
+    records = sorted(records, key=lambda x: x["total_30d"], reverse=True)[:limit]
+    return [
+        models.DealerVariantForecast(
+            dealer_id=r["dealer_id"],
+            dealer_name=r["dealer_name"],
+            variant_id=r["variant_id"],
+            total_30d=r["total_30d"],
+            model_mape=r["model_mape"],
+            daily=[models.DailyForecastPoint(**d) for d in r["daily"]],
+        )
+        for r in records
+    ]
+
+
+@app.get("/api/v1/forecast/summary", response_model=models.ForecastSummary)
+def get_forecast_summary():
+    data = _load_forecast()
+    records = data.get("forecasts", [])
+
+    # Top 10 dealer-variant pairs by 30d demand
+    top_pairs = sorted(records, key=lambda x: x["total_30d"], reverse=True)[:10]
+
+    # Network-wide totals per variant
+    variant_map: dict = {}
+    for r in records:
+        v = r["variant_id"]
+        variant_map[v] = variant_map.get(v, 0) + r["total_30d"]
+    variant_totals = [
+        {"variant_id": k, "total_30d": round(v, 1)}
+        for k, v in sorted(variant_map.items(), key=lambda x: -x[1])
+    ]
+
+    return models.ForecastSummary(
+        generated_at=data.get("generated_at", ""),
+        forecast_horizon=data.get("forecast_horizon", 30),
+        total_dealer_variant_combos=len(records),
+        top_pairs=[
+            {
+                "dealer_id": r["dealer_id"],
+                "dealer_name": r["dealer_name"],
+                "variant_id": r["variant_id"],
+                "total_30d": r["total_30d"],
+                "model_mape": r["model_mape"],
+            }
+            for r in top_pairs
+        ],
+        variant_totals=variant_totals,
+        model_metrics=data.get("model_metrics", {}),
+    )
+
+
+# ── Aging Stock Helpers ───────────────────────────────────────────────────────
+
+FLOORPLAN_RATE_MONTHLY = 0.01   # 1% per month on invoice value
+AVG_INVOICE_VALUE = 800_000     # ₹8L default if not in DB
+TRANSPORT_COST_PER_KM = 12      # ₹12/km estimate
+
+
+def _age_bucket(days: int) -> str:
+    if days < 30:   return "Fresh"
+    if days < 60:   return "Watch"
+    if days < 90:   return "Aging"
+    return "Critical"
+
+
+def _floorplan_cost(days: int, invoice: float) -> float:
+    return round((days / 30) * FLOORPLAN_RATE_MONTHLY * invoice, 2)
+
+
+def _transport_cost(distance_km: float) -> float:
+    return round(max(distance_km, 50) * TRANSPORT_COST_PER_KM, 2)
+
+
+def _demand_score_for_variant(variant: str, dealer_id: str, db: Session) -> float:
+    """30-day demand from ML forecast output if available, else DB proxy."""
+    fc = _load_forecast()
+    for rec in fc.get("forecasts", []):
+        if rec["dealer_id"] == dealer_id and rec["variant_id"] == variant:
+            return float(rec["total_30d"])
+    # fallback to DB average
+    row = db.execute(
+        text("""
+            SELECT AVG(demand_qty) as avg_demand
+            FROM demand_records
+            WHERE variant_id = :variant AND dealer_id = :dealer
+        """),
+        {"variant": variant, "dealer": dealer_id},
+    ).fetchone()
+    val = float(row.avg_demand or 0) if row else 0.0
+    return round(val * 30, 2)
+
+
+def _build_ai_prompt(v: dict, target: dict, net_utility: float) -> str:
+    action = "transfer" if net_utility > 0 else "discount"
+    return (
+        f"You are a B2B automotive inventory negotiation assistant.\n\n"
+        f"Vehicle: {v['model']} {v['variant']} ({v['fuel_type'] or 'N/A'})\n"
+        f"VIN: {v['vin']}\n"
+        f"Days in stock at {v['source_dealer_name']} ({v['source_city']}): {v['days_in_inventory']}\n"
+        f"Floorplan cost to date: ₹{v['total_floorplan_cost']:,.0f}\n"
+        f"Proposed {action} to: {target['dealer_name']} ({target['city']})\n"
+        f"Estimated transport cost: ₹{v['transport_cost']:,.0f}\n"
+        f"Net utility score: {net_utility:+.0f}\n\n"
+        f"Draft a concise, professional {'transfer proposal' if action == 'transfer' else 'discount offer'} "
+        f"highlighting the mutual financial benefit. Keep it under 120 words."
+    )
+
+
+# ── Aging Stock Endpoints ─────────────────────────────────────────────────────
+
+@app.get("/api/v1/aging/summary", response_model=models.AgingSummary)
+def get_aging_summary(db: Session = Depends(get_db)):
+    rows = db.execute(
+        text("""
+            SELECT
+                v.chassis_number,
+                v.model_code,
+                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            GROUP BY v.chassis_number, v.model_code
+            HAVING days > 30
+        """)
+    ).fetchall()
+
+    if not rows:
+        return models.AgingSummary(
+            total_aging=0, critical_count=0, aging_count=0, watch_count=0,
+            total_floorplan_burn=0, top_aging_model="N/A", avg_days_aging=0
+        )
+
+    critical = [r for r in rows if r.days >= 90]
+    aging    = [r for r in rows if 60 <= r.days < 90]
+    watch    = [r for r in rows if 30 <= r.days < 60]
+    total_burn = sum(_floorplan_cost(r.days, AVG_INVOICE_VALUE) for r in rows if r.days > 60)
+
+    from collections import Counter
+    model_counts = Counter(r.model_code for r in rows if r.days > 60)
+    top_model = model_counts.most_common(1)[0][0] if model_counts else "N/A"
+    avg_days = round(sum(r.days for r in rows if r.days > 60) / max(len([r for r in rows if r.days > 60]), 1), 1)
+
+    return models.AgingSummary(
+        total_aging=len([r for r in rows if r.days > 60]),
+        critical_count=len(critical),
+        aging_count=len(aging),
+        watch_count=len(watch),
+        total_floorplan_burn=round(total_burn, 2),
+        top_aging_model=top_model,
+        avg_days_aging=avg_days,
+    )
+
+
+@app.get("/api/v1/aging/vehicles", response_model=List[models.AgingVehicle])
+def get_aging_vehicles(
+    min_days: int = Query(60, ge=0),
+    limit: int = Query(200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        text("""
+            SELECT
+                v.chassis_number,
+                v.model_code,
+                v.variant_id,
+                v.fuel_type,
+                j.dealer_id,
+                d.dealer_name,
+                d.city,
+                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN dealers d ON d.dealer_id = j.dealer_id
+            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                     j.dealer_id, d.dealer_name, d.city
+            HAVING days >= :min_days
+            ORDER BY days DESC
+            LIMIT :lim
+        """),
+        {"min_days": min_days, "lim": limit},
+    ).fetchall()
+
+    result = []
+    for r in rows:
+        daily = round(FLOORPLAN_RATE_MONTHLY * AVG_INVOICE_VALUE / 30, 2)
+        total = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
+        result.append(models.AgingVehicle(
+            vin=r.chassis_number,
+            model=r.model_code or "Unknown",
+            variant=r.variant_id or "Unknown",
+            fuel_type=r.fuel_type,
+            source_dealer_id=r.dealer_id,
+            source_dealer_name=r.dealer_name,
+            source_city=r.city,
+            days_in_inventory=r.days,
+            age_bucket=_age_bucket(r.days),
+            invoice_value=AVG_INVOICE_VALUE,
+            daily_floorplan_cost=daily,
+            total_floorplan_cost=total,
+        ))
+    return result
+
+
+@app.get("/api/v1/aging/transfers", response_model=List[models.TransferRecommendation])
+def get_transfer_recommendations(
+    min_days: int = Query(60, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    # Get aging vehicles
+    aging_rows = db.execute(
+        text("""
+            SELECT
+                v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                j.dealer_id, d.dealer_name, d.city,
+                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN dealers d ON d.dealer_id = j.dealer_id
+            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                     j.dealer_id, d.dealer_name, d.city
+            HAVING days >= :min_days
+            ORDER BY days DESC
+            LIMIT :lim
+        """),
+        {"min_days": min_days, "lim": limit},
+    ).fetchall()
+
+    # Get all dealers for target matching
+    all_dealers = db.query(models.Dealer).all()
+    dealer_map = {d.dealer_id: d for d in all_dealers}
+
+    # Get routes for transport cost
+    routes = db.query(models.Route).all()
+    route_map = {}
+    for r in routes:
+        key = (r.origin_city or "", r.destination_city or "")
+        route_map[key] = r.distance_km or 500
+
+    recommendations = []
+    for r in aging_rows:
+        total_fp = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
+
+        # Find best target dealer (different from source, highest demand for variant)
+        best_target = None
+        best_utility = -999_999
+        best_transport = 0
+        best_demand = 0
+
+        for d in all_dealers:
+            if d.dealer_id == r.dealer_id:
+                continue
+            dist = route_map.get((r.city, d.city), 500)
+            transport = _transport_cost(dist)
+            demand = _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
+            # Net utility = floorplan saved + demand value - transport
+            utility = total_fp + (demand * 500) - transport
+            if utility > best_utility:
+                best_utility = utility
+                best_target = d
+                best_transport = transport
+                best_demand = demand
+
+        if best_target is None:
+            continue
+
+        if best_utility > 0:
+            rec = "Transfer"
+        elif r.days > 90:
+            rec = "Discount"
+        else:
+            rec = "Hold"
+
+        v_dict = {
+            "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
+            "fuel_type": r.fuel_type, "source_dealer_name": r.dealer_name,
+            "source_city": r.city, "days_in_inventory": r.days,
+            "total_floorplan_cost": total_fp, "transport_cost": best_transport,
+        }
+        t_dict = {"dealer_name": best_target.dealer_name, "city": best_target.city}
+
+        recommendations.append(models.TransferRecommendation(
+            vin=r.chassis_number,
+            model=r.model_code or "Unknown",
+            variant=r.variant_id or "Unknown",
+            fuel_type=r.fuel_type,
+            source_dealer_id=r.dealer_id,
+            source_dealer_name=r.dealer_name,
+            source_city=r.city,
+            target_dealer_id=best_target.dealer_id,
+            target_dealer_name=best_target.dealer_name,
+            target_city=best_target.city,
+            days_in_inventory=r.days,
+            age_bucket=_age_bucket(r.days),
+            invoice_value=AVG_INVOICE_VALUE,
+            total_floorplan_cost=total_fp,
+            transport_cost=best_transport,
+            demand_score=best_demand,
+            net_utility_score=round(best_utility, 2),
+            recommendation=rec,
+            ai_prompt=_build_ai_prompt(v_dict, t_dict, best_utility),
+        ))
+
+    recommendations.sort(key=lambda x: x.net_utility_score, reverse=True)
+    return recommendations
 
 
 @app.get("/api/v1/wipro/services", response_model=List[models.JobCardInsight])

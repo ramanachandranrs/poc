@@ -1,4 +1,4 @@
-import { LayoutDashboard, Car, Package, Train, Users } from "lucide-react";
+import { LayoutDashboard, Car, Package, Train, Users, Flame, TrendingUp } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "AI Command Center", url: "/", icon: LayoutDashboard },
-  { title: "Vehicle Inventory", url: "/inventory", icon: Car },
-  { title: "Spare Parts & ROP", url: "/parts", icon: Package },
-  { title: "Transit Logistics", url: "/transit", icon: Train },
-  { title: "Customer Registry", url: "/customers", icon: Users },
+  { title: "AI Command Center",  url: "/",         icon: LayoutDashboard },
+  { title: "Vehicle Inventory",  url: "/inventory",icon: Car },
+  { title: "Aging Stock",        url: "/aging",    icon: Flame },
+  { title: "Demand Forecast",    url: "/forecast", icon: TrendingUp },
+  { title: "Spare Parts & ROP",  url: "/parts",    icon: Package },
+  { title: "Transit Logistics",  url: "/transit",  icon: Train },
+  { title: "Customer Registry",  url: "/customers",icon: Users },
 ];
 
 export function AppSidebar() {

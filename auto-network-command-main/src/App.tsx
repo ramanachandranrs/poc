@@ -9,6 +9,8 @@ import Inventory from "@/pages/Inventory";
 import Parts from "@/pages/Parts";
 import Transit from "@/pages/Transit";
 import Customers from "@/pages/Customers";
+import AgingStock from "@/pages/AgingStock";
+import DemandForecast from "@/pages/DemandForecast";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/parts" element={<Parts />} />
             <Route path="/transit" element={<Transit />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/aging" element={<AgingStock />} />
+            <Route path="/forecast" element={<DemandForecast />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </DashboardLayout>

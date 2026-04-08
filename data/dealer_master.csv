@@ -1,0 +1,31 @@
+Dealer_ID,Dealer_Name,City,State,Dealer_Type,Zone
+DLR001,Maruti Dealer 01,Chennai,Tamil Nadu,A,South
+DLR002,Maruti Dealer 02,Coimbatore,Tamil Nadu,B,South
+DLR003,Maruti Dealer 03,Madurai,Tamil Nadu,B,South
+DLR004,Maruti Dealer 04,Bengaluru,Karnataka,A,South
+DLR005,Maruti Dealer 05,Mysuru,Karnataka,C,South
+DLR006,Maruti Dealer 06,Hyderabad,Telangana,A,South
+DLR007,Maruti Dealer 07,Vijayawada,Andhra Pradesh,B,South
+DLR008,Maruti Dealer 08,Visakhapatnam,Andhra Pradesh,B,South
+DLR009,Maruti Dealer 09,Mumbai,Maharashtra,A,West
+DLR010,Maruti Dealer 10,Pune,Maharashtra,A,West
+DLR011,Maruti Dealer 11,Nagpur,Maharashtra,B,West
+DLR012,Maruti Dealer 12,Ahmedabad,Gujarat,A,West
+DLR013,Maruti Dealer 13,Surat,Gujarat,B,West
+DLR014,Maruti Dealer 14,Jaipur,Rajasthan,A,North
+DLR015,Maruti Dealer 15,Jodhpur,Rajasthan,C,North
+DLR016,Maruti Dealer 16,Delhi,Delhi,A,North
+DLR017,Maruti Dealer 17,Gurugram,Haryana,A,North
+DLR018,Maruti Dealer 18,Ludhiana,Punjab,B,North
+DLR019,Maruti Dealer 19,Lucknow,Uttar Pradesh,B,North
+DLR020,Maruti Dealer 20,Varanasi,Uttar Pradesh,C,North
+DLR021,Maruti Dealer 21,Kolkata,West Bengal,A,East
+DLR022,Maruti Dealer 22,Siliguri,West Bengal,C,East
+DLR023,Maruti Dealer 23,Bhubaneswar,Odisha,B,East
+DLR024,Maruti Dealer 24,Guwahati,Assam,B,East
+DLR025,Maruti Dealer 25,Patna,Bihar,B,East
+DLR026,Maruti Dealer 26,Ranchi,Jharkhand,C,East
+DLR027,Maruti Dealer 27,Indore,Madhya Pradesh,B,Central
+DLR028,Maruti Dealer 28,Bhopal,Madhya Pradesh,B,Central
+DLR029,Maruti Dealer 29,Raipur,Chhattisgarh,C,Central
+DLR030,Maruti Dealer 30,Kochi,Kerala,B,South
