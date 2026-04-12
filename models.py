@@ -348,6 +348,33 @@ class AgingSummary(BaseModel):
     avg_days_aging: float
 
 
+# ── GenAI Prompt Models ───────────────────────────────────────────────────────
+
+class B2CPrompt(BaseModel):
+    vin: str
+    model: str
+    variant: str
+    fuel_type: Optional[str]
+    dealer_name: str
+    days_in_inventory: int
+    age_bucket: str
+    discount_estimate: float
+    prompt: str
+
+
+class OperationalAlert(BaseModel):
+    alert_type: str          # "stockout" | "transit_delay"
+    severity: str            # "Critical" | "High" | "Medium"
+    subject: str
+    dealer_id: Optional[str]
+    part_sku: Optional[str]
+    part_name: Optional[str]
+    shipment_id: Optional[str]
+    delay_days: Optional[float]
+    quantity_gap: Optional[int]
+    prompt: str
+
+
 # ── Demand Forecast Models ────────────────────────────────────────────────────
 
 class DailyForecastPoint(BaseModel):

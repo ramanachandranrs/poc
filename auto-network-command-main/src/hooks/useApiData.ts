@@ -369,6 +369,43 @@ export const useTransferRecommendations = (minDays = 60) =>
     (data) => data.map((r: any) => ({ ...r }))
   );
 
+// ── GenAI Prompts ─────────────────────────────────────────────────────────────
+
+export interface B2CPrompt {
+  vin: string;
+  model: string;
+  variant: string;
+  fuel_type: string | null;
+  dealer_name: string;
+  days_in_inventory: number;
+  age_bucket: string;
+  discount_estimate: number;
+  prompt: string;
+}
+
+export interface OperationalAlert {
+  alert_type: "stockout" | "transit_delay";
+  severity: "Critical" | "High" | "Medium";
+  subject: string;
+  dealer_id: string | null;
+  part_sku: string | null;
+  part_name: string | null;
+  shipment_id: string | null;
+  delay_days: number | null;
+  quantity_gap: number | null;
+  prompt: string;
+}
+
+export const useB2CPrompts = (minDays = 60) =>
+  useApiData<any, B2CPrompt>(`/genai/b2c-prompts?min_days=${minDays}`,
+    (data) => data.map((r: any) => ({ ...r }))
+  );
+
+export const useOperationalAlerts = () =>
+  useApiData<any, OperationalAlert>("/genai/operational-alerts",
+    (data) => data.map((r: any) => ({ ...r }))
+  );
+
 // ── Demand Forecast ───────────────────────────────────────────────────────────
 
 export interface DailyForecastPoint {

@@ -672,6 +672,199 @@ def get_transfer_recommendations(
     return recommendations
 
 
+# ── GenAI Prompt Endpoints ────────────────────────────────────────────────────
+
+def _b2c_prompt(vin: str, model: str, variant: str, fuel: str,
+                dealer: str, days: int, discount: float) -> str:
+    urgency = "urgent" if days >= 90 else "priority"
+    return (
+        f"You are a B2C automotive sales assistant for {dealer}.\n\n"
+        f"Vehicle Details:\n"
+        f"  Model    : {model} {variant} ({fuel or 'N/A'})\n"
+        f"  VIN      : {vin}\n"
+        f"  Days in showroom: {days} days\n"
+        f"  Special offer   : ₹{discount:,.0f} discount available\n\n"
+        f"Task: Write a warm, persuasive WhatsApp/SMS message to a customer "
+        f"who previously enquired about this variant. Highlight the {urgency} "
+        f"limited-time discount, the vehicle availability, and create a gentle "
+        f"sense of urgency. Keep it under 100 words. Use a friendly, "
+        f"conversational tone. Do not use generic phrases like 'Dear Customer'."
+    )
+
+
+def _stockout_prompt(sku: str, part_name: str, dealer_id: str,
+                     qty_on_hand: int, rop: int, gap: int) -> str:
+    return (
+        f"You are an operational alert assistant for an automotive dealer network.\n\n"
+        f"Stockout Alert:\n"
+        f"  Part     : {part_name} (SKU: {sku})\n"
+        f"  Dealer   : {dealer_id}\n"
+        f"  On Hand  : {qty_on_hand} units\n"
+        f"  Reorder Point: {rop} units\n"
+        f"  Shortfall: {gap} units below ROP\n\n"
+        f"Task: Write a concise operational alert message to the parts manager. "
+        f"Include the urgency level, recommended order quantity (EOQ = {max(rop * 2, 10)} units), "
+        f"and the business impact of not reordering immediately. "
+        f"Keep it under 80 words. Professional tone."
+    )
+
+
+def _transit_delay_prompt(shipment_id: str, part_name: str,
+                           origin: str, destination: str,
+                           delay_days: float, carrier: str) -> str:
+    severity = "CRITICAL" if delay_days >= 5 else "HIGH"
+    return (
+        f"You are an operational alert assistant for an automotive dealer network.\n\n"
+        f"Transit Delay Alert [{severity}]:\n"
+        f"  Shipment : {shipment_id}\n"
+        f"  Part     : {part_name}\n"
+        f"  Route    : {origin} → {destination}\n"
+        f"  Carrier  : {carrier}\n"
+        f"  Delay    : {delay_days:.0f} days past expected arrival\n\n"
+        f"Task: Write a concise escalation message to the logistics coordinator. "
+        f"Include the delay severity, recommended action (expedite / alternative carrier / "
+        f"emergency stock transfer), and customer impact. Keep it under 80 words."
+    )
+
+
+@app.get("/api/v1/genai/b2c-prompts", response_model=List[models.B2CPrompt])
+def get_b2c_prompts(
+    min_days: int = Query(60, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        text("""
+            SELECT
+                v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                j.dealer_id, d.dealer_name,
+                CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN dealers d ON d.dealer_id = j.dealer_id
+            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                     j.dealer_id, d.dealer_name
+            HAVING days >= :min_days
+            ORDER BY days DESC
+            LIMIT :lim
+        """),
+        {"min_days": min_days, "lim": limit},
+    ).fetchall()
+
+    result = []
+    for r in rows:
+        days = r.days
+        # Discount scales with age: 60d=₹15k, 90d=₹25k, 120d+=₹40k
+        discount = 15000 if days < 90 else (25000 if days < 120 else 40000)
+        bucket = _age_bucket(days)
+        result.append(models.B2CPrompt(
+            vin=r.chassis_number,
+            model=r.model_code or "Unknown",
+            variant=r.variant_id or "Unknown",
+            fuel_type=r.fuel_type,
+            dealer_name=r.dealer_name,
+            days_in_inventory=days,
+            age_bucket=bucket,
+            discount_estimate=discount,
+            prompt=_b2c_prompt(
+                r.chassis_number, r.model_code or "Unknown",
+                r.variant_id or "Unknown", r.fuel_type or "N/A",
+                r.dealer_name, days, discount
+            ),
+        ))
+    return result
+
+
+@app.get("/api/v1/genai/operational-alerts", response_model=List[models.OperationalAlert])
+def get_operational_alerts(
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    alerts = []
+
+    # ── Stockout alerts ───────────────────────────────────────────────────────
+    stockout_rows = db.execute(
+        text("""
+            SELECT
+                dr.part_number, p.description,
+                dr.dealer_id,
+                SUM(dr.on_hand_qty) as on_hand,
+                AVG(dr.reorder_point) as rop
+            FROM demand_records dr
+            JOIN parts p ON p.part_number = dr.part_number
+            GROUP BY dr.part_number, p.description, dr.dealer_id
+            HAVING on_hand < rop
+            ORDER BY (rop - on_hand) DESC
+            LIMIT :lim
+        """),
+        {"lim": limit // 2},
+    ).fetchall()
+
+    for r in stockout_rows:
+        on_hand = int(r.on_hand or 0)
+        rop     = int(r.rop or 0)
+        gap     = rop - on_hand
+        severity = "Critical" if on_hand == 0 else ("High" if gap > rop * 0.5 else "Medium")
+        alerts.append(models.OperationalAlert(
+            alert_type="stockout",
+            severity=severity,
+            subject=f"Stockout Alert — {r.description} at {r.dealer_id}",
+            dealer_id=r.dealer_id,
+            part_sku=str(r.part_number),
+            part_name=r.description,
+            shipment_id=None,
+            delay_days=None,
+            quantity_gap=gap,
+            prompt=_stockout_prompt(
+                str(r.part_number), r.description,
+                r.dealer_id, on_hand, rop, gap
+            ),
+        ))
+
+    # ── Transit delay alerts ──────────────────────────────────────────────────
+    delay_rows = db.execute(
+        text("""
+            SELECT
+                s.shipment_id, s.description,
+                s.origin_city, s.destination_city,
+                s.delay_days, s.carrier_name, s.dealer_id
+            FROM shipments s
+            WHERE s.delay_days > 0
+            ORDER BY s.delay_days DESC
+            LIMIT :lim
+        """),
+        {"lim": limit // 2},
+    ).fetchall()
+
+    for r in delay_rows:
+        delay = float(r.delay_days or 0)
+        severity = "Critical" if delay >= 5 else ("High" if delay >= 3 else "Medium")
+        alerts.append(models.OperationalAlert(
+            alert_type="transit_delay",
+            severity=severity,
+            subject=f"Transit Delay — {r.description or 'Shipment'} ({r.delay_days:.0f}d late)",
+            dealer_id=r.dealer_id,
+            part_sku=None,
+            part_name=r.description,
+            shipment_id=r.shipment_id,
+            delay_days=delay,
+            quantity_gap=None,
+            prompt=_transit_delay_prompt(
+                r.shipment_id,
+                r.description or "Unknown Part",
+                r.origin_city or "Origin",
+                r.destination_city or "Destination",
+                delay,
+                r.carrier_name or "Unknown Carrier",
+            ),
+        ))
+
+    # Sort by severity
+    order = {"Critical": 0, "High": 1, "Medium": 2}
+    alerts.sort(key=lambda x: order.get(x.severity, 3))
+    return alerts[:limit]
+
+
 @app.get("/api/v1/wipro/services", response_model=List[models.JobCardInsight])
 def get_service_insights(
     dealer_id: Optional[str] = None,

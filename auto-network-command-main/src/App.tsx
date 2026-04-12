@@ -11,6 +11,7 @@ import Transit from "@/pages/Transit";
 import Customers from "@/pages/Customers";
 import AgingStock from "@/pages/AgingStock";
 import DemandForecast from "@/pages/DemandForecast";
+import GenAIPrompts from "@/pages/GenAIPrompts";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/customers" element={<Customers />} />
             <Route path="/aging" element={<AgingStock />} />
             <Route path="/forecast" element={<DemandForecast />} />
+            <Route path="/genai" element={<GenAIPrompts />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </DashboardLayout>
