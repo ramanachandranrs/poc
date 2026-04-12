@@ -40,131 +40,229 @@ def get_db():
         db.close()
 
 
+@app.get("/api/v1/wipro/inventory/summary")
+def get_inventory_summary(db: Session = Depends(get_db)):
+    row = db.execute(text("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) <= 60 THEN 1 ELSE 0 END) as available,
+            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 60 THEN 1 ELSE 0 END) as aging,
+            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 90 THEN 1 ELSE 0 END) as critical
+        FROM vehicles
+        WHERE stock_arrival_date IS NOT NULL AND dealer_id IS NOT NULL
+    """)).fetchone()
+    return {"total": row.total, "available": row.available, "aging": row.aging, "critical": row.critical}
+
+
 @app.get("/api/v1/wipro/inventory", response_model=List[models.InventoryResponse])
 def get_inventory(
     dealer_id: Optional[str] = None,
     zone: Optional[str] = None,
-    days_in_inventory_gt: Optional[int] = Query(None, alias="days_in_inventory_gt"),
-    limit: int = Query(250, ge=1, le=2000),
+    status: Optional[str] = None,
+    model: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    query = (
-        db.query(
-            models.Vehicle.chassis_number,
-            models.Vehicle.model_code,
-            models.Vehicle.variant_id,
-            models.Vehicle.fuel_type,
-            models.JobCard.dealer_id,
-            models.Dealer.dealer_name,
-            func.min(func.julianday("2025-12-31") - func.julianday(models.JobCard.date_in)).label(
-                "days_in_inventory"
-            ),
-        )
-        .join(models.JobCard, models.JobCard.chassis_number == models.Vehicle.chassis_number)
-        .join(models.Dealer, models.Dealer.dealer_id == models.JobCard.dealer_id)
-        .group_by(
-            models.Vehicle.chassis_number,
-            models.Vehicle.model_code,
-            models.Vehicle.variant_id,
-            models.Vehicle.fuel_type,
-            models.JobCard.dealer_id,
-            models.Dealer.dealer_name,
-        )
-    )
+    conditions = ["v.stock_arrival_date IS NOT NULL", "v.dealer_id IS NOT NULL"]
+    params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
-    if dealer_id is not None:
-        query = query.filter(models.JobCard.dealer_id == dealer_id.upper().strip())
-    if zone is not None:
-        query = query.filter(models.Dealer.zone == zone.strip())
-    if days_in_inventory_gt is not None:
-        query = query.having(
-            func.min(func.julianday("2025-12-31") - func.julianday(models.JobCard.date_in))
-            > days_in_inventory_gt
-        )
+    if dealer_id:
+        conditions.append("UPPER(v.dealer_id) = UPPER(:dealer_id)")
+        params["dealer_id"] = dealer_id.strip()
+    if zone:
+        conditions.append("d.zone = :zone")
+        params["zone"] = zone.strip()
+    if model:
+        conditions.append("v.model_code = :model")
+        params["model"] = model.strip()
+    if fuel_type:
+        conditions.append("v.fuel_type = :fuel_type")
+        params["fuel_type"] = fuel_type.strip()
+    if status == "Available":
+        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) <= 60")
+    elif status == "Aging":
+        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 60")
+    if search:
+        conditions.append("(v.chassis_number LIKE :search OR v.model_code LIKE :search OR d.dealer_name LIKE :search OR v.variant_id LIKE :search)")
+        params["search"] = f"%{search.strip()}%"
 
-    rows = query.order_by(func.max(models.JobCard.date_in).asc()).limit(limit).all()
-    response = []
-    for row in rows:
-        days = int(row.days_in_inventory or 0)
-        response.append(
-            models.InventoryResponse(
-                vin=row.chassis_number,
-                dealer_id=row.dealer_id,
-                dealer_name=row.dealer_name,
-                model=row.model_code or "Unknown",
-                variant=row.variant_id or "Unknown",
-                fuel_type=row.fuel_type,
-                days_in_inventory=days,
-                status="Aging" if days > 60 else "Available",
-            )
+    where = " AND ".join(conditions)
+    rows = db.execute(text(f"""
+        SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+            d.dealer_id, d.dealer_name, d.zone,
+            CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
+        FROM vehicles v
+        JOIN dealers d ON d.dealer_id = v.dealer_id
+        WHERE {where}
+        ORDER BY days DESC
+        LIMIT :limit OFFSET :offset
+    """), params).fetchall()
+
+    return [
+        models.InventoryResponse(
+            vin=row.chassis_number,
+            dealer_id=row.dealer_id,
+            dealer_name=row.dealer_name,
+            model=row.model_code or "Unknown",
+            variant=row.variant_id or "Unknown",
+            fuel_type=row.fuel_type,
+            days_in_inventory=int(row.days or 0),
+            status="Aging" if int(row.days or 0) > 60 else "Available",
         )
-    return response
+        for row in rows
+    ]
+
+
+@app.get("/api/v1/sap/parts/summary")
+def get_parts_summary(db: Session = Depends(get_db)):
+    rows = db.execute(text("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN on_hand < rop THEN 1 ELSE 0 END) as stockout,
+            SUM(CASE WHEN on_hand >= rop THEN 1 ELSE 0 END) as adequate
+        FROM (
+            SELECT dealer_id, part_number,
+                SUM(on_hand_qty) as on_hand,
+                AVG(reorder_point) as rop
+            FROM demand_records
+            GROUP BY dealer_id, part_number
+        )
+    """)).fetchone()
+    sku_count = db.execute(text("SELECT COUNT(*) FROM parts")).fetchone()[0]
+    return {
+        "total_dealer_part_combos": rows.total,
+        "stockout": rows.stockout,
+        "adequate": rows.adequate,
+        "unique_skus": sku_count,
+    }
 
 
 @app.get("/api/v1/sap/parts", response_model=List[models.PartsResponse])
 def get_sap_parts(
     dealer_id: Optional[str] = None,
-    part: Optional[str] = None,
-    limit: int = Query(500, ge=1, le=5000),
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    demand = db.query(
-        models.DemandRecord.part_number,
-        func.sum(models.DemandRecord.on_hand_qty).label("on_hand_qty"),
-        func.avg(models.DemandRecord.reorder_point).label("reorder_point"),
-        func.avg(models.DemandRecord.unit_price).label("unit_cost"),
-        func.avg(models.DemandRecord.stockout_flag).label("stockout_rate"),
-    )
+    conditions = ["1=1"]
+    params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
     if dealer_id:
-        demand = demand.filter(models.DemandRecord.dealer_id == dealer_id.upper().strip())
-    if part:
-        demand = demand.filter(models.DemandRecord.part_number == part.upper().strip())
+        conditions.append("UPPER(dr.dealer_id) = UPPER(:dealer_id)")
+        params["dealer_id"] = dealer_id.strip()
+    if category:
+        conditions.append("p.category_group = :category")
+        params["category"] = category.strip()
+    if search:
+        conditions.append("(p.description LIKE :search OR p.part_number LIKE :search)")
+        params["search"] = f"%{search.strip()}%"
+    if status == "Stockout Alert":
+        conditions.append("on_hand < rop")
+    elif status == "Adequate":
+        conditions.append("on_hand >= rop")
 
-    demand = demand.group_by(models.DemandRecord.part_number).subquery()
+    where = " AND ".join(conditions)
+    rows = db.execute(text(f"""
+        SELECT p.part_number, p.description, p.category_group,
+            on_hand, rop, unit_cost, stockout_rate,
+            dr.dealer_id, d.dealer_name
+        FROM (
+            SELECT part_number, dealer_id,
+                SUM(on_hand_qty) as on_hand,
+                AVG(reorder_point) as rop,
+                AVG(unit_price) as unit_cost,
+                AVG(stockout_flag) as stockout_rate
+            FROM demand_records
+            GROUP BY part_number, dealer_id
+        ) dr
+        JOIN parts p ON p.part_number = dr.part_number
+        JOIN dealers d ON d.dealer_id = dr.dealer_id
+        WHERE {where}
+        ORDER BY on_hand ASC, p.part_number ASC
+        LIMIT :limit OFFSET :offset
+    """), params).fetchall()
 
-    rows = (
-        db.query(
-            models.Part.part_number,
-            models.Part.description,
-            models.Part.category_group,
-            func.coalesce(demand.c.on_hand_qty, 0),
-            func.coalesce(demand.c.reorder_point, models.Part.reorder_point),
-            func.coalesce(demand.c.unit_cost, models.Part.mrp_base),
-            func.coalesce(demand.c.stockout_rate, 0),
-        )
-        .outerjoin(demand, demand.c.part_number == models.Part.part_number)
-        .order_by(models.Part.critical_flag.desc(), models.Part.part_number.asc())
-        .limit(limit)
-        .all()
-    )
     return [
         models.PartsResponse(
-            sku=row[0],
-            part_name=row[1],
-            category=row[2],
-            quantity_on_hand=int(row[3] or 0),
-            reorder_point=int(round(row[4] or 0)),
-            unit_cost=round(float(row[5] or 0), 2),
-            stockout_rate=round(float(row[6] or 0), 3),
+            sku=row.part_number,
+            part_name=row.description,
+            category=row.category_group,
+            quantity_on_hand=int(row.on_hand or 0),
+            reorder_point=int(round(row.rop or 0)),
+            unit_cost=round(float(row.unit_cost or 0), 2),
+            stockout_rate=round(float(row.stockout_rate or 0), 3),
         )
         for row in rows
     ]
+
+
+@app.get("/api/v1/rail/transit/summary")
+def get_transit_summary(db: Session = Depends(get_db)):
+    row = db.execute(text("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'In Transit' THEN 1 ELSE 0 END) as in_transit,
+            SUM(CASE WHEN status = 'Delivered'  THEN 1 ELSE 0 END) as delivered,
+            SUM(CASE WHEN status IN ('Delayed', 'Past Due') THEN 1 ELSE 0 END) as delayed
+        FROM shipments
+    """)).fetchone()
+    return {
+        "total": row.total,
+        "in_transit": row.in_transit,
+        "delivered": row.delivered,
+        "delayed": row.delayed,
+    }
 
 
 @app.get("/api/v1/rail/transit", response_model=List[models.TransitResponse])
 def get_transit(
     zone: Optional[str] = None,
     mode: Optional[str] = None,
-    limit: int = Query(400, ge=1, le=5000),
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    dealer_id: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    query = db.query(models.Shipment)
+    conditions = ["1=1"]
+    params: dict = {"limit": limit, "offset": (page - 1) * limit}
+
     if zone:
-        query = query.filter(models.Shipment.zone == zone.strip())
+        conditions.append("zone = :zone")
+        params["zone"] = zone.strip()
     if mode:
-        query = query.filter(models.Shipment.transport_mode == mode.strip())
-    shipments = query.order_by(models.Shipment.dispatch_date.desc()).limit(limit).all()
+        conditions.append("transport_mode = :mode")
+        params["mode"] = mode.strip()
+    if dealer_id:
+        conditions.append("UPPER(dealer_id) = UPPER(:dealer_id)")
+        params["dealer_id"] = dealer_id.strip()
+    if status and status != "All":
+        if status == "Delayed":
+            conditions.append("status IN ('Delayed', 'Past Due')")
+        else:
+            conditions.append("status = :status")
+            params["status"] = status.strip()
+    if search:
+        conditions.append("(shipment_id LIKE :search OR carrier_name LIKE :search OR origin_city LIKE :search OR destination_city LIKE :search)")
+        params["search"] = f"%{search.strip()}%"
+
+    where = " AND ".join(conditions)
+    shipments = db.execute(text(f"""
+        SELECT shipment_id, origin_city, origin_name, destination_city, destination_name,
+               status, expected_arrival, carrier_name, qty_shipped, delay_days
+        FROM shipments
+        WHERE {where}
+        ORDER BY dispatch_date DESC
+        LIMIT :limit OFFSET :offset
+    """), params).fetchall()
+
     return [
         models.TransitResponse(
             shipment_id=s.shipment_id,
@@ -371,11 +469,10 @@ def get_aging_summary(db: Session = Depends(get_db)):
             SELECT
                 v.chassis_number,
                 v.model_code,
-                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN job_cards j ON j.chassis_number = v.chassis_number
-            GROUP BY v.chassis_number, v.model_code
-            HAVING days > 30
+            WHERE v.stock_arrival_date IS NOT NULL
+            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
         """)
     ).fetchall()
 
@@ -422,13 +519,20 @@ def get_aging_vehicles(
                 j.dealer_id,
                 d.dealer_name,
                 d.city,
-                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN (
+                SELECT chassis_number, dealer_id
+                FROM job_cards
+                WHERE (chassis_number, date_in) IN (
+                    SELECT chassis_number, MAX(date_in)
+                    FROM job_cards
+                    GROUP BY chassis_number
+                )
+            ) j ON j.chassis_number = v.chassis_number
             JOIN dealers d ON d.dealer_id = j.dealer_id
-            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-                     j.dealer_id, d.dealer_name, d.city
-            HAVING days >= :min_days
+            WHERE v.stock_arrival_date IS NOT NULL
+            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -468,13 +572,20 @@ def get_transfer_recommendations(
             SELECT
                 v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
                 j.dealer_id, d.dealer_name, d.city,
-                CAST(MAX(julianday('2025-12-31') - julianday(j.date_in)) AS INTEGER) AS days
+                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN (
+                SELECT chassis_number, dealer_id
+                FROM job_cards
+                WHERE (chassis_number, date_in) IN (
+                    SELECT chassis_number, MAX(date_in)
+                    FROM job_cards
+                    GROUP BY chassis_number
+                )
+            ) j ON j.chassis_number = v.chassis_number
             JOIN dealers d ON d.dealer_id = j.dealer_id
-            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-                     j.dealer_id, d.dealer_name, d.city
-            HAVING days >= :min_days
+            WHERE v.stock_arrival_date IS NOT NULL
+            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
             ORDER BY days DESC
             LIMIT :lim
         """),

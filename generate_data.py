@@ -171,6 +171,24 @@ def load_data():
 
         vehicles_df = read_csv("vehicle_master.csv")
         vehicle_ids = set()
+
+        import random
+        from datetime import timedelta
+        _ref_date = pd.Timestamp("2025-12-31").date()
+
+        def _random_arrival_date():
+            """Realistic distribution: ~40% fresh, 25% watch, 20% aging, 15% critical"""
+            r = random.random()
+            if r < 0.40:
+                days = random.randint(1, 29)       # Fresh  <30d
+            elif r < 0.65:
+                days = random.randint(30, 59)      # Watch  30-59d
+            elif r < 0.85:
+                days = random.randint(60, 89)      # Aging  60-89d
+            else:
+                days = random.randint(90, 365)     # Critical 90d+
+            return _ref_date - timedelta(days=days)
+
         for row in vehicles_df.to_dict(orient="records"):
             chassis = clean_id(row.get("Chassis_Number"))
             customer_id = clean_id(row.get("Customer_ID"))
@@ -184,6 +202,10 @@ def load_data():
                 quality["orphan_fk"].append(f"vehicles.customer_id:{customer_id}")
                 customer_id = None
             vehicle_ids.add(chassis)
+            # Assign dealer deterministically from chassis number
+            dealer_list = sorted(dealer_ids)
+            chassis_num = int(chassis.replace("VIN", "")) if chassis.replace("VIN", "").isdigit() else 0
+            assigned_dealer = dealer_list[chassis_num % len(dealer_list)]
             session.add(
                 Vehicle(
                     chassis_number=chassis,
@@ -194,6 +216,8 @@ def load_data():
                     fuel_type=clean_str(row.get("Fuel_Type")),
                     transmission_type=clean_str(row.get("Transmission_Type")),
                     model_year=to_int(row.get("Model_Year"), default=0) or None,
+                    stock_arrival_date=_random_arrival_date(),
+                    dealer_id=assigned_dealer,
                 )
             )
         session.flush()

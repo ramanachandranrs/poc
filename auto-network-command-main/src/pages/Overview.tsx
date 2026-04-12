@@ -2,20 +2,22 @@ import { motion } from "framer-motion";
 import { Car, Package, Train, AlertTriangle, Activity, ShieldAlert } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import StatCard from "@/components/StatCard";
-import { useInventory, usePartsList, useTransit, useTrends } from "@/hooks/useApiData";
+import { useInventorySummary, usePartsSummary, useTransitSummary, useTrends } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 const Overview = () => {
-  const { data: inventory, loading: invLoading } = useInventory();
-  const { data: parts, loading: partsLoading } = usePartsList();
-  const { data: transit, loading: transitLoading } = useTransit();
-  const { data: trends, loading: trendsLoading } = useTrends();
+  const { data: invSummary,     loading: invLoading }     = useInventorySummary();
+  const { data: partsSummary,   loading: partsLoading }   = usePartsSummary();
+  const { data: transitSummary, loading: transitLoading } = useTransitSummary();
+  const { data: trends,         loading: trendsLoading }  = useTrends();
 
   const loading = invLoading || partsLoading || transitLoading || trendsLoading;
 
-  const agingCount = inventory.filter((v) => v.days_in_inventory > 60).length;
-  const stockouts = parts.filter((p) => p.quantity_on_hand === 0 || p.quantity_on_hand < p.reorder_point).length;
-  const delayed = transit.filter((t) => t.status === "Delayed" || t.status === "Past Due").length;
+  const agingCount  = invSummary?.aging     ?? 0;
+  const stockouts   = partsSummary?.stockout ?? 0;
+  const delayed     = transitSummary?.delayed ?? 0;
+  const inTransit   = transitSummary?.in_transit ?? 0;
+  const totalVehicles = invSummary?.total ?? 0;
 
   if (loading) return <LoadingSkeleton rows={6} />;
 
@@ -56,10 +58,10 @@ const Overview = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Vehicles" value={inventory.length} icon={Car} trend="+12% vs last month" trendUp accentColor="blue" delay={0} />
+        <StatCard title="Total Vehicles" value={totalVehicles} icon={Car} trend="+12% vs last month" trendUp accentColor="blue" delay={0} />
         <StatCard title="Aging Stock" value={agingCount} suffix="units" icon={AlertTriangle} trend="Needs attention" accentColor="amber" delay={0.1} />
         <StatCard title="Parts Alerts" value={stockouts} suffix="items" icon={Package} trend="Below ROP" accentColor="red" delay={0.2} />
-        <StatCard title="Active Shipments" value={transit.filter((t) => t.status === "In Transit").length} icon={Train} trend="On schedule" trendUp accentColor="green" delay={0.3} />
+        <StatCard title="Active Shipments" value={inTransit} icon={Train} trend="On schedule" trendUp accentColor="green" delay={0.3} />
       </div>
 
       {/* Chart */}

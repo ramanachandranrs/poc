@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle, ArrowRightLeft, TrendingDown, IndianRupee,
   Clock, Car, ChevronDown, ChevronUp, Copy, Check, Flame,
+  Search, X, Filter,
 } from "lucide-react";
 import {
   useAgingSummary, useAgingVehicles, useTransferRecommendations,
@@ -211,17 +212,55 @@ function TransferCard({ rec, index }: { rec: TransferRecommendation; index: numb
 const AgingStock = () => {
   const [tab, setTab] = useState<"transfers" | "vehicles">("transfers");
   const [minDays, setMinDays] = useState(60);
+  const [dealerFilter, setDealerFilter] = useState("All");
+
+  const DEALERS = Array.from({length: 30}, (_, i) => ({
+    id: `DLR${String(i+1).padStart(3,"0")}`,
+    name: `Maruti Dealer ${String(i+1).padStart(2,"0")}`,
+  }));
+
+  // filters for vehicles tab
+  const [vehicleSearch, setVehicleSearch] = useState("");
+  const [modelFilter,   setModelFilter]   = useState("All");
+  const [bucketFilter,  setBucketFilter]  = useState("All");
+
+  // filters for transfers tab
+  const [transferSearch, setTransferSearch] = useState("");
+  const [recFilter,      setRecFilter]      = useState("All");
 
   const { data: summary, loading: sumLoading } = useAgingSummary();
-  const { data: vehicles, loading: vLoading } = useAgingVehicles(minDays);
+  const { data: vehicles, loading: vLoading }  = useAgingVehicles(minDays);
   const { data: transfers, loading: tLoading } = useTransferRecommendations(minDays);
 
   const loading = sumLoading || vLoading || tLoading;
 
+  const vehicleModels = useMemo(() => ["All", ...Array.from(new Set(vehicles.map(v => v.model))).sort()], [vehicles]);
+
+  const filteredVehicles = useMemo(() => {
+    const q = vehicleSearch.toLowerCase();
+    return vehicles.filter(v => {
+      const matchSearch = !q || v.model.toLowerCase().includes(q) || v.vin.toLowerCase().includes(q) || v.source_dealer_name.toLowerCase().includes(q);
+      const matchModel  = modelFilter  === "All" || v.model === modelFilter;
+      const matchBucket = bucketFilter === "All" || v.age_bucket === bucketFilter;
+      const matchDealer = dealerFilter === "All" || v.source_dealer_id === dealerFilter;
+      return matchSearch && matchModel && matchBucket && matchDealer;
+    });
+  }, [vehicles, vehicleSearch, modelFilter, bucketFilter, dealerFilter]);
+
+  const filteredTransfers = useMemo(() => {
+    const q = transferSearch.toLowerCase();
+    return transfers.filter(r => {
+      const matchSearch = !q || r.model.toLowerCase().includes(q) || r.vin.toLowerCase().includes(q) || r.source_dealer_name.toLowerCase().includes(q) || r.target_dealer_name.toLowerCase().includes(q);
+      const matchRec    = recFilter === "All" || r.recommendation === recFilter;
+      const matchDealer = dealerFilter === "All" || r.source_dealer_id === dealerFilter || r.target_dealer_id === dealerFilter;
+      return matchSearch && matchRec && matchDealer;
+    });
+  }, [transfers, transferSearch, recFilter, dealerFilter]);
+
   if (loading) return <LoadingSkeleton rows={8} />;
 
-  const transferCount  = transfers.filter((r) => r.recommendation === "Transfer").length;
-  const discountCount  = transfers.filter((r) => r.recommendation === "Discount").length;
+  const transferCount = transfers.filter(r => r.recommendation === "Transfer").length;
+  const discountCount = transfers.filter(r => r.recommendation === "Discount").length;
 
   return (
     <div className="space-y-6">
@@ -282,103 +321,163 @@ const AgingStock = () => {
         ))}
       </div>
 
-      {/* Filter + Tabs */}
+      {/* Tabs + Min Days + Dealer */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex rounded-lg bg-muted/30 p-1 gap-1">
           {(["transfers", "vehicles"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
+            <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${
-                tab === t
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                tab === t ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t === "transfers" ? "Transfer Recommendations" : "All Aging Vehicles"}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Min days:</span>
-          {[30, 60, 90].map((d) => (
-            <button
-              key={d}
-              onClick={() => setMinDays(d)}
-              className={`px-3 py-1 rounded-lg transition-colors ${
-                minDays === d
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "bg-muted/30 hover:bg-muted/50"
-              }`}
-            >
-              {d}+
-            </button>
-          ))}
+        <div className="flex items-center gap-3 flex-wrap">
+          <select
+            value={dealerFilter}
+            onChange={e => setDealerFilter(e.target.value)}
+            className="bg-muted/40 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[160px]"
+          >
+            <option value="All">All Dealers</option>
+            {DEALERS.map(d => <option key={d.id} value={d.id} className="bg-background">{d.name}</option>)}
+          </select>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Min days:</span>
+            {[30, 60, 90].map((d) => (
+              <button key={d} onClick={() => setMinDays(d)}
+                className={`px-3 py-1 rounded-lg transition-colors ${
+                  minDays === d ? "bg-primary/10 text-primary font-medium" : "bg-muted/30 hover:bg-muted/50"
+                }`}
+              >{d}+</button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Transfer Recommendations */}
       {tab === "transfers" && (
-        <div className="space-y-3">
-          {transfers.length === 0 ? (
-            <div className="glass rounded-xl p-8 text-center text-muted-foreground text-sm">
-              No transfer recommendations for the selected threshold.
+        <>
+          {/* Transfer filter bar */}
+          <div className="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input value={transferSearch} onChange={e => setTransferSearch(e.target.value)}
+                placeholder="Search VIN, model, dealer…"
+                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+              {transferSearch && <button onClick={() => setTransferSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>}
             </div>
-          ) : (
-            transfers.map((rec, i) => (
-              <TransferCard key={rec.vin} rec={rec} index={i} />
-            ))
-          )}
-        </div>
+            <div className="flex items-center gap-1.5">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              {["All", "Transfer", "Discount", "Hold"].map(r => (
+                <button key={r} onClick={() => setRecFilter(r)}
+                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                    recFilter === r ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  }`}
+                >{r}</button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground self-center whitespace-nowrap">
+              {filteredTransfers.length} of {transfers.length}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {filteredTransfers.length === 0 ? (
+              <div className="glass rounded-xl p-8 text-center text-muted-foreground text-sm">No transfer recommendations match your filters.</div>
+            ) : (
+              filteredTransfers.map((rec, i) => <TransferCard key={rec.vin} rec={rec} index={i} />)
+            )}
+          </div>
+        </>
       )}
 
       {/* All Aging Vehicles */}
       {tab === "vehicles" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {vehicles.map((v, i) => (
-            <motion.div
-              key={v.vin}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="glass rounded-xl p-4 space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">{v.model}</p>
-                  <p className="text-xs text-muted-foreground">{v.variant}</p>
-                </div>
-                <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${BUCKET_STYLE[v.age_bucket]}`}>
-                  {v.age_bucket}
-                </span>
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">VIN</span>
-                  <span className="font-mono text-[11px] text-foreground">{v.vin}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Dealer</span>
-                  <span className="text-foreground">{v.source_dealer_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Days in Stock</span>
-                  <span className={`font-semibold flex items-center gap-1 ${v.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
-                    <Clock className="h-3 w-3" />{v.days_in_inventory}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Floorplan Cost</span>
-                  <span className="font-semibold text-neon-red">₹{fmt(v.total_floorplan_cost)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Daily Burn</span>
-                  <span className="text-foreground">₹{fmt(v.daily_floorplan_cost)}/day</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <>
+          {/* Vehicle filter bar */}
+          <div className="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)}
+                placeholder="Search VIN, model, dealer…"
+                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+              {vehicleSearch && <button onClick={() => setVehicleSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              {["All", "Critical", "Aging", "Watch"].map(b => (
+                <button key={b} onClick={() => setBucketFilter(b)}
+                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                    bucketFilter === b ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  }`}
+                >{b}</button>
+              ))}
+            </div>
+            <select value={modelFilter} onChange={e => setModelFilter(e.target.value)}
+              className="bg-muted/40 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[130px]">
+              {vehicleModels.map(m => <option key={m} value={m} className="bg-background">{m === "All" ? "All Models" : m}</option>)}
+            </select>
+            <p className="text-xs text-muted-foreground self-center whitespace-nowrap">
+              {filteredVehicles.length} of {vehicles.length}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredVehicles.length === 0 ? (
+                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="col-span-full glass rounded-xl p-8 text-center text-muted-foreground text-sm">
+                  No vehicles match your filters.
+                </motion.div>
+              ) : (
+                filteredVehicles.map((v, i) => (
+                  <motion.div key={v.vin} layout initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}
+                    className="glass rounded-xl p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">{v.model}</p>
+                        <p className="text-xs text-muted-foreground">{v.variant}</p>
+                      </div>
+                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${BUCKET_STYLE[v.age_bucket]}`}>
+                        {v.age_bucket}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">VIN</span>
+                        <span className="font-mono text-[11px] text-foreground">{v.vin}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dealer</span>
+                        <span className="text-foreground">{v.source_dealer_name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Days in Stock</span>
+                        <span className={`font-semibold flex items-center gap-1 ${v.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
+                          <Clock className="h-3 w-3" />{v.days_in_inventory}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Floorplan Cost</span>
+                        <span className="font-semibold text-neon-red">₹{fmt(v.total_floorplan_cost)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Daily Burn</span>
+                        <span className="text-foreground">₹{fmt(v.daily_floorplan_cost)}/day</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
+          </div>
+        </>
       )}
     </div>
   );

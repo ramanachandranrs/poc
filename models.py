@@ -69,6 +69,8 @@ class Vehicle(Base):
     fuel_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     transmission_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     model_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    stock_arrival_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True, index=True)
+    dealer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("dealers.dealer_id"), nullable=True, index=True)
 
 
 class JobCard(Base):

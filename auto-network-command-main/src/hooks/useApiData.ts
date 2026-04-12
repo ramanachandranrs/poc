@@ -84,43 +84,195 @@ export const useAgingSummary = () => {
   return { data, loading, error };
 };
 
-export const useInventory = () => useApiData<any, InventoryItem>("/wipro/inventory", 
-  (data) => data.map((v: any) => ({
-    vin: v.vin,
-    dealer_id: v.dealer_id,
-    dealer_name: v.dealer_name,
-    model: v.model,
-    variant: v.variant,
-    fuel_type: v.fuel_type,
-    days_in_inventory: v.days_in_inventory,
-    status: v.status
-  }))
-);
+export interface InventorySummary {
+  total: number;
+  available: number;
+  aging: number;
+  critical: number;
+}
 
-export const usePartsList = () => useApiData<any, PartItem>("/sap/parts",
-  (data) => data.map((p: any) => ({
-    sku: p.sku,
-    name: p.part_name,
-    category: p.category,
-    quantity_on_hand: p.quantity_on_hand,
-    reorder_point: p.reorder_point,
-    unit_price: p.unit_cost,
-    stockout_rate: p.stockout_rate
-  }))
-);
+export const useInventorySummary = () => {
+  const [data, setData] = useState<InventorySummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/wipro/inventory/summary`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, []);
+  return { data, loading };
+};
 
-export const useTransit = () => useApiData<any, TransitItem>("/rail/transit",
-  (data) => data.map((t: any) => ({
-    shipment_id: t.shipment_id,
-    origin: t.origin,
-    destination: t.destination,
-    status: t.status,
-    expected_delivery: String(t.expected_delivery ?? ""),
-    carrier: t.carrier,
-    items: t.items,
-    delay_days: t.delay_days
-  }))
-);
+export interface InventoryFilters {
+  status?: string;
+  model?: string;
+  fuel_type?: string;
+  dealer_id?: string;
+  search?: string;
+  page?: number;
+}
+
+export const useInventory = (filters: InventoryFilters = {}) => {
+  const [data, setData] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.status)    params.set("status",    filters.status);
+    if (filters.model)     params.set("model",     filters.model);
+    if (filters.fuel_type) params.set("fuel_type", filters.fuel_type);
+    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+    if (filters.search)    params.set("search",    filters.search);
+    params.set("page",  String(filters.page  ?? 1));
+    params.set("limit", "50");
+
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`${API_BASE}/wipro/inventory?${params.toString()}`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((json: any[]) => {
+        setData(json.map(v => ({
+          vin: v.vin, dealer_id: v.dealer_id, dealer_name: v.dealer_name,
+          model: v.model, variant: v.variant, fuel_type: v.fuel_type,
+          days_in_inventory: v.days_in_inventory, status: v.status,
+        })));
+        setLoading(false);
+      })
+      .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
+    return () => controller.abort();
+  }, [filters.status, filters.model, filters.fuel_type, filters.dealer_id, filters.search, filters.page]);
+
+  return { data, loading, error };
+};
+
+export interface PartsSummary {
+  total_dealer_part_combos: number;
+  stockout: number;
+  adequate: number;
+  unique_skus: number;
+}
+
+export const usePartsSummary = () => {
+  const [data, setData] = useState<PartsSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/sap/parts/summary`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, []);
+  return { data, loading };
+};
+
+export interface PartsFilters {
+  status?: string;
+  category?: string;
+  search?: string;
+  dealer_id?: string;
+  page?: number;
+}
+
+export const usePartsList = (filters: PartsFilters = {}) => {
+  const [data, setData] = useState<PartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.status)    params.set("status",    filters.status);
+    if (filters.category)  params.set("category",  filters.category);
+    if (filters.search)    params.set("search",    filters.search);
+    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+    params.set("page",  String(filters.page ?? 1));
+    params.set("limit", "50");
+
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`${API_BASE}/sap/parts?${params.toString()}`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((json: any[]) => {
+        setData(json.map(p => ({
+          sku: p.sku, name: p.part_name, category: p.category,
+          quantity_on_hand: p.quantity_on_hand, reorder_point: p.reorder_point,
+          unit_price: p.unit_cost, stockout_rate: p.stockout_rate,
+        })));
+        setLoading(false);
+      })
+      .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
+    return () => controller.abort();
+  }, [filters.status, filters.category, filters.search, filters.dealer_id, filters.page]);
+
+  return { data, loading, error };
+};
+
+export interface TransitSummary {
+  total: number;
+  in_transit: number;
+  delivered: number;
+  delayed: number;
+}
+
+export const useTransitSummary = () => {
+  const [data, setData] = useState<TransitSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/rail/transit/summary`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, []);
+  return { data, loading };
+};
+
+export interface TransitFilters {
+  status?: string;
+  search?: string;
+  zone?: string;
+  mode?: string;
+  dealer_id?: string;
+  page?: number;
+}
+
+export const useTransit = (filters: TransitFilters = {}) => {
+  const [data, setData] = useState<TransitItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.status)    params.set("status",    filters.status);
+    if (filters.search)    params.set("search",    filters.search);
+    if (filters.zone)      params.set("zone",      filters.zone);
+    if (filters.mode)      params.set("mode",      filters.mode);
+    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+    params.set("page",  String(filters.page ?? 1));
+    params.set("limit", "50");
+
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`${API_BASE}/rail/transit?${params.toString()}`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((json: any[]) => {
+        setData(json.map(t => ({
+          shipment_id: t.shipment_id, origin: t.origin, destination: t.destination,
+          status: t.status, expected_delivery: String(t.expected_delivery ?? ""),
+          carrier: t.carrier, items: t.items, delay_days: t.delay_days,
+        })));
+        setLoading(false);
+      })
+      .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
+    return () => controller.abort();
+  }, [filters.status, filters.search, filters.zone, filters.mode, filters.dealer_id, filters.page]);
+
+  return { data, loading, error };
+};
 
 export interface CustomerItem {
   customer_id: string;
