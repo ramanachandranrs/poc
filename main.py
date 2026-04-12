@@ -388,13 +388,14 @@ def get_forecast_summary():
         generated_at=data.get("generated_at", ""),
         forecast_horizon=data.get("forecast_horizon", 30),
         total_dealer_variant_combos=len(records),
+        data_source=data.get("data_source", "vehicle_sales_transactions.csv"),
         top_pairs=[
             {
-                "dealer_id": r["dealer_id"],
+                "dealer_id":   r["dealer_id"],
                 "dealer_name": r["dealer_name"],
-                "variant_id": r["variant_id"],
-                "total_30d": r["total_30d"],
-                "model_mape": r["model_mape"],
+                "variant_id":  r["variant_id"],
+                "total_30d":   r["total_30d"],
+                "model_mape":  r["model_mape"],
             }
             for r in top_pairs
         ],

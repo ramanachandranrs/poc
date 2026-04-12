@@ -27,7 +27,7 @@ const fmt = (n: number) =>
 function MapeChip({ mape }: { mape: number }) {
   const color =
     mape < 30  ? "text-emerald-400 bg-emerald-500/10" :
-    mape < 100 ? "text-yellow-400 bg-yellow-500/10"   :
+    mape < 60  ? "text-yellow-400 bg-yellow-500/10"   :
                  "text-neon-amber bg-neon-amber/10";
   return (
     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${color}`}>
@@ -144,16 +144,52 @@ const DemandForecast = () => {
         transition={{ delay: 0.2 }}
         className="glass rounded-xl p-4"
       >
-        <p className="text-xs text-muted-foreground mb-3">Model Accuracy per Variant</p>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(summary.model_metrics).map(([v, m]) => (
-            <div key={v} className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full" style={{ background: getColor(v) }} />
-              <span className="text-xs text-foreground font-medium">{v}</span>
-              <MapeChip mape={m.mape} />
-              <span className="text-[10px] text-muted-foreground">MAE {m.mae}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-muted-foreground">Two-Stage Model Accuracy (Classifier + Regressor) per Variant</p>
+          <span className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
+            Source: {summary.data_source ?? "vehicle_sales_transactions.csv"}
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border/30">
+                {["Variant", "MAE", "RMSE", "R²", "MAPE (non-zero)", "SMAPE", "F1 (sale detect)"].map((h) => (
+                  <th key={h} className="text-left px-3 py-2 text-muted-foreground font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(summary.model_metrics).sort().map(([v, m]) => (
+                <tr key={v} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ background: getColor(v) }} />
+                      <span className="font-semibold text-foreground">{v}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-foreground">{m.mae}</td>
+                  <td className="px-3 py-2 text-foreground">{m.rmse}</td>
+                  <td className="px-3 py-2">
+                    <span className={m.r2 > 0.3 ? "text-emerald-400" : "text-yellow-400"}>
+                      {m.r2.toFixed(3)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2"><MapeChip mape={m.mape} /></td>
+                  <td className="px-3 py-2">
+                    <span className={m.smape < 70 ? "text-emerald-400" : "text-yellow-400"}>
+                      {m.smape.toFixed(1)}%
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`font-semibold ${m.f1_sale > 0.85 ? "text-emerald-400" : m.f1_sale > 0.75 ? "text-yellow-400" : "text-neon-amber"}`}>
+                      {m.f1_sale.toFixed(3)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </motion.div>
 

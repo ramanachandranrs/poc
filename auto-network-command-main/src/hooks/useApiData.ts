@@ -389,9 +389,10 @@ export interface ForecastSummary {
   generated_at: string;
   forecast_horizon: number;
   total_dealer_variant_combos: number;
+  data_source: string;
   top_pairs: { dealer_id: string; dealer_name: string; variant_id: string; total_30d: number; model_mape: number }[];
   variant_totals: { variant_id: string; total_30d: number }[];
-  model_metrics: Record<string, { mae: number; mape: number }>;
+  model_metrics: Record<string, { mae: number; rmse: number; r2: number; mape: number; smape: number; f1_sale: number }>;
 }
 
 export const useForecastSummary = () => {

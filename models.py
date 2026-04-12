@@ -370,8 +370,9 @@ class ForecastSummary(BaseModel):
     generated_at: str
     forecast_horizon: int
     total_dealer_variant_combos: int
-    top_pairs: List[dict]          # top 10 by total_30d
-    variant_totals: List[dict]     # network-wide per variant
+    data_source: Optional[str]
+    top_pairs: List[dict]
+    variant_totals: List[dict]
     model_metrics: dict
 
 

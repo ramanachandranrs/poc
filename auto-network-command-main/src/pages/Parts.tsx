@@ -156,6 +156,7 @@ const Parts = () => {
                   <th className="text-right p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Qty on Hand</th>
                   <th className="text-right p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">ROP</th>
                   <th className="text-center p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Status</th>
+                  <th className="text-center p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">AI Recommendation</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,6 +190,29 @@ const Parts = () => {
                               <CheckCircle2 className="h-3 w-3" /> Adequate
                             </span>
                           )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {(() => {
+                            const gap = part.reorder_point - part.quantity_on_hand;
+                            const eoq = Math.max(Math.ceil(part.reorder_point * 1.5), 10);
+                            if (part.quantity_on_hand === 0) return (
+                              <span className="inline-flex flex-col items-center gap-0.5">
+                                <span className="text-[10px] font-bold text-neon-red">🚨 Order {eoq} units NOW</span>
+                                <span className="text-[9px] text-muted-foreground">Zero stock — critical</span>
+                              </span>
+                            );
+                            if (gap > 0) return (
+                              <span className="inline-flex flex-col items-center gap-0.5">
+                                <span className="text-[10px] font-semibold text-neon-amber">⚠ Order {eoq} units</span>
+                                <span className="text-[9px] text-muted-foreground">{gap} below ROP</span>
+                              </span>
+                            );
+                            const buffer = part.quantity_on_hand - part.reorder_point;
+                            if (buffer < part.reorder_point * 0.3) return (
+                              <span className="text-[10px] text-yellow-400">Monitor — low buffer</span>
+                            );
+                            return <span className="text-[10px] text-muted-foreground">No action needed</span>;
+                          })()}
                         </td>
                       </motion.tr>
                     );

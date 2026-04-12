@@ -177,23 +177,54 @@ function TransferCard({ rec, index }: { rec: TransferRecommendation; index: numb
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="border-t border-border/50 px-4 py-3 grid grid-cols-2 gap-2 text-xs"
+              className="border-t border-border/50 px-4 py-3 space-y-3 text-xs"
             >
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Invoice Value</span>
-                <span className="text-foreground">₹{fmt(rec.invoice_value)}</span>
+              {/* Formula breakdown */}
+              <div className="bg-muted/20 rounded-lg p-3 space-y-1.5">
+                <p className="text-muted-foreground font-medium mb-2">Net Utility Formula</p>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Floorplan saved</span>
+                  <span className="text-emerald-400 font-mono">+₹{fmt(rec.total_floorplan_cost)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Demand value at target (30d × ₹500)</span>
+                  <span className="text-emerald-400 font-mono">+₹{fmt(rec.demand_score * 500)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Transport cost</span>
+                  <span className="text-neon-red font-mono">−₹{fmt(rec.transport_cost)}</span>
+                </div>
+                <div className="flex justify-between border-t border-border/40 pt-1.5 mt-1">
+                  <span className="font-semibold text-foreground">Net Utility Score</span>
+                  <span className={`font-bold font-mono ${rec.net_utility_score > 0 ? "text-emerald-400" : "text-neon-red"}`}>
+                    {rec.net_utility_score > 0 ? "+" : ""}₹{fmt(rec.net_utility_score)}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Demand Score (30d)</span>
-                <span className="text-foreground">{rec.demand_score.toFixed(1)} units</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Invoice Value</span>
+                  <span className="text-foreground">₹{fmt(rec.invoice_value)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ML Demand (30d)</span>
+                  <span className="text-foreground">{rec.demand_score.toFixed(1)} units</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Source Dealer</span>
+                  <span className="font-mono text-foreground">{rec.source_dealer_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Target Dealer</span>
+                  <span className="font-mono text-foreground">{rec.target_dealer_id}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Source Dealer ID</span>
-                <span className="font-mono text-foreground">{rec.source_dealer_id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Target Dealer ID</span>
-                <span className="font-mono text-foreground">{rec.target_dealer_id}</span>
+              {/* Decision logic */}
+              <div className="bg-muted/20 rounded-lg p-3 text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-foreground">Why {rec.recommendation}? </span>
+                {rec.recommendation === "Transfer" && `Net utility is positive (₹${fmt(rec.net_utility_score)}). Moving this vehicle to ${rec.target_dealer_name} saves more in floorplan interest than it costs to transport.`}
+                {rec.recommendation === "Discount" && `Net utility is negative but vehicle has been aging ${rec.days_in_inventory} days (>90). A local price discount is more cost-effective than paying ₹${fmt(rec.transport_cost)} transport.`}
+                {rec.recommendation === "Hold" && `Net utility is negative and vehicle is under 90 days. Monitor for now — no action needed yet.`}
               </div>
             </motion.div>
           )}
