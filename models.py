@@ -375,6 +375,48 @@ class OperationalAlert(BaseModel):
     prompt: str
 
 
+# ── Week 3 Models ─────────────────────────────────────────────────────────────
+
+class GeminiRequest(BaseModel):
+    context: dict
+
+
+class GeminiResponse(BaseModel):
+    generated_text: str
+    model: str
+    use_case: str
+
+
+class GuidedRecommendation(BaseModel):
+    id: str
+    rec_type: str            # "transfer" | "reorder" | "stockout" | "transit_delay"
+    priority: str            # "Critical" | "High" | "Medium"
+    title: str
+    summary: str
+    status: str              # "Pending" | "Approved" | "Rejected"
+    data: dict               # raw data for Gemini generation
+    generated_message: Optional[str]
+
+
+class ROIMetric(BaseModel):
+    metric: str
+    baseline_value: float
+    ai_value: float
+    improvement: float
+    improvement_pct: float
+    unit: str
+
+
+class ROIReport(BaseModel):
+    generated_at: str
+    total_floorplan_saved: float
+    vehicles_recommended_for_transfer: int
+    avg_days_reduction: float
+    stockout_alerts_raised: int
+    metrics: List[ROIMetric]
+    summary: str
+
+
 # ── Demand Forecast Models ────────────────────────────────────────────────────
 
 class DailyForecastPoint(BaseModel):

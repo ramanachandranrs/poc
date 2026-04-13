@@ -904,3 +904,330 @@ def get_service_insights(
         )
         for row in rows
     ]
+
+
+# ── Week 3: Gemini-Powered Endpoints ─────────────────────────────────────────
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+import gemini_service
+
+
+class GenerateB2BRequest(BaseModel):
+    vin: str
+    model: str
+    variant: str
+    fuel_type: Optional[str] = None
+    source_dealer: str
+    source_city: str
+    target_dealer: str
+    target_city: str
+    days_in_inventory: int
+    floorplan_cost: float
+    transport_cost: float
+    demand_score: float
+    net_utility: float
+
+
+class GenerateB2CRequest(BaseModel):
+    model: str
+    variant: str
+    fuel_type: Optional[str] = None
+    dealer_name: str
+    dealer_city: str
+    days_in_inventory: int
+    discount_amount: float
+    customer_name: Optional[str] = None
+
+
+class GenerateAlertRequest(BaseModel):
+    alert_type: str   # "stockout" | "transit_delay"
+    part_name: str
+    sku: Optional[str] = None
+    dealer_id: Optional[str] = None
+    qty_on_hand: Optional[int] = None
+    reorder_point: Optional[int] = None
+    quantity_gap: Optional[int] = None
+    recommended_order_qty: Optional[int] = None
+    shipment_id: Optional[str] = None
+    origin: Optional[str] = None
+    destination: Optional[str] = None
+    carrier: Optional[str] = None
+    delay_days: Optional[float] = None
+
+
+@app.post("/api/v1/ai/generate-b2b", response_model=models.GeminiResponse)
+def generate_b2b(req: GenerateB2BRequest):
+    text_out = gemini_service.generate_b2b_message(
+        vin=req.vin, model=req.model, variant=req.variant,
+        fuel_type=req.fuel_type or "N/A",
+        source_dealer=req.source_dealer, source_city=req.source_city,
+        target_dealer=req.target_dealer, target_city=req.target_city,
+        days_in_inventory=req.days_in_inventory,
+        floorplan_cost=req.floorplan_cost, transport_cost=req.transport_cost,
+        demand_score=req.demand_score, net_utility=req.net_utility,
+    )
+    return models.GeminiResponse(
+        generated_text=text_out,
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        use_case="b2b_transfer",
+    )
+
+
+@app.post("/api/v1/ai/generate-b2c", response_model=models.GeminiResponse)
+def generate_b2c(req: GenerateB2CRequest):
+    text_out = gemini_service.generate_b2c_message(
+        model=req.model, variant=req.variant,
+        fuel_type=req.fuel_type or "N/A",
+        dealer_name=req.dealer_name, dealer_city=req.dealer_city,
+        days_in_inventory=req.days_in_inventory,
+        discount_amount=req.discount_amount,
+        customer_name=req.customer_name,
+    )
+    return models.GeminiResponse(
+        generated_text=text_out,
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        use_case="b2c_outreach",
+    )
+
+
+@app.post("/api/v1/ai/generate-alert", response_model=models.GeminiResponse)
+def generate_alert(req: GenerateAlertRequest):
+    if req.alert_type == "stockout":
+        text_out = gemini_service.generate_stockout_alert(
+            part_name=req.part_name,
+            sku=req.sku or "N/A",
+            dealer_id=req.dealer_id or "N/A",
+            qty_on_hand=req.qty_on_hand or 0,
+            reorder_point=req.reorder_point or 0,
+            quantity_gap=req.quantity_gap or 0,
+            recommended_order_qty=req.recommended_order_qty or 10,
+        )
+    else:
+        text_out = gemini_service.generate_transit_alert(
+            shipment_id=req.shipment_id or "N/A",
+            part_name=req.part_name,
+            origin=req.origin or "Origin",
+            destination=req.destination or "Destination",
+            carrier=req.carrier or "Unknown Carrier",
+            delay_days=req.delay_days or 0,
+            dealer_id=req.dealer_id,
+        )
+    return models.GeminiResponse(
+        generated_text=text_out,
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        use_case=req.alert_type,
+    )
+
+
+# ── Week 3: Guided Assistant ──────────────────────────────────────────────────
+
+# In-memory approval store (resets on server restart — POC only)
+_approval_store: dict = {}
+
+
+@app.get("/api/v1/guided/recommendations", response_model=List[models.GuidedRecommendation])
+def get_guided_recommendations(
+    limit: int = Query(30, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    recs = []
+
+    # Transfer recommendations
+    aging_rows = db.execute(
+        text("""
+            SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                   j.dealer_id, d.dealer_name, d.city,
+                   CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN dealers d ON d.dealer_id = j.dealer_id
+            GROUP BY v.chassis_number, v.model_code, v.variant_id,
+                     v.fuel_type, j.dealer_id, d.dealer_name, d.city
+            HAVING days >= 60
+            ORDER BY days DESC
+            LIMIT 10
+        """)
+    ).fetchall()
+
+    all_dealers = db.query(models.Dealer).all()
+    for r in aging_rows:
+        rec_id = f"transfer_{r.chassis_number}"
+        fp_cost = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
+        best = max(
+            all_dealers,
+            key=lambda d: _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
+            if d.dealer_id != r.dealer_id else -1
+        )
+        priority = "Critical" if r.days >= 90 else "High"
+        recs.append(models.GuidedRecommendation(
+            id=rec_id,
+            rec_type="transfer",
+            priority=priority,
+            title=f"Transfer {r.model_code} {r.variant_id} → {best.dealer_name}",
+            summary=f"{r.days} days at {r.dealer_name}. Floorplan cost: ₹{fp_cost:,.0f}. "
+                    f"Best target: {best.dealer_name} ({best.city}).",
+            status=_approval_store.get(rec_id, {}).get("status", "Pending"),
+            data={
+                "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
+                "fuel_type": r.fuel_type, "source_dealer": r.dealer_name,
+                "source_city": r.city, "target_dealer": best.dealer_name,
+                "target_city": best.city, "days_in_inventory": r.days,
+                "floorplan_cost": fp_cost, "transport_cost": 6000.0,
+                "demand_score": _demand_score_for_variant(r.variant_id or "", best.dealer_id, db),
+                "net_utility": fp_cost - 6000.0,
+            },
+            generated_message=_approval_store.get(rec_id, {}).get("message"),
+        ))
+
+    # Stockout reorder recommendations
+    stockout_rows = db.execute(
+        text("""
+            SELECT dr.part_number, p.description, dr.dealer_id,
+                   SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
+            FROM demand_records dr
+            JOIN parts p ON p.part_number = dr.part_number
+            GROUP BY dr.part_number, p.description, dr.dealer_id
+            HAVING on_hand < rop
+            ORDER BY (rop - on_hand) DESC
+            LIMIT 10
+        """)
+    ).fetchall()
+
+    for r in stockout_rows:
+        rec_id = f"reorder_{r.part_number}_{r.dealer_id}"
+        on_hand = int(r.on_hand or 0)
+        rop = int(r.rop or 0)
+        gap = rop - on_hand
+        priority = "Critical" if on_hand == 0 else "High"
+        recs.append(models.GuidedRecommendation(
+            id=rec_id,
+            rec_type="stockout",
+            priority=priority,
+            title=f"Reorder {r.description} at {r.dealer_id}",
+            summary=f"Stock: {on_hand} units. ROP: {rop}. Shortfall: {gap} units.",
+            status=_approval_store.get(rec_id, {}).get("status", "Pending"),
+            data={
+                "part_name": r.description, "sku": str(r.part_number),
+                "dealer_id": r.dealer_id, "qty_on_hand": on_hand,
+                "reorder_point": rop, "quantity_gap": gap,
+                "recommended_order_qty": max(rop * 2, 10),
+                "alert_type": "stockout",
+            },
+            generated_message=_approval_store.get(rec_id, {}).get("message"),
+        ))
+
+    # Sort by priority
+    order = {"Critical": 0, "High": 1, "Medium": 2}
+    recs.sort(key=lambda x: order.get(x.priority, 3))
+    return recs[:limit]
+
+
+@app.post("/api/v1/guided/approve/{rec_id}")
+def approve_recommendation(rec_id: str, message: Optional[str] = None):
+    _approval_store[rec_id] = {"status": "Approved", "message": message}
+    return {"status": "Approved", "rec_id": rec_id}
+
+
+@app.post("/api/v1/guided/reject/{rec_id}")
+def reject_recommendation(rec_id: str, reason: Optional[str] = None):
+    _approval_store[rec_id] = {"status": "Rejected", "reason": reason}
+    return {"status": "Rejected", "rec_id": rec_id}
+
+
+# ── Week 3: ROI Report ────────────────────────────────────────────────────────
+
+@app.get("/api/v1/roi/report", response_model=models.ROIReport)
+def get_roi_report(db: Session = Depends(get_db)):
+    import pandas as pd
+
+    # Baseline: aging vehicles count and floorplan cost
+    aging_rows = db.execute(
+        text("""
+            SELECT CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
+            FROM vehicles v
+            JOIN job_cards j ON j.chassis_number = v.chassis_number
+            GROUP BY v.chassis_number
+            HAVING days > 60
+        """)
+    ).fetchall()
+
+    baseline_aging = len(aging_rows)
+    baseline_avg_days = round(sum(r.days for r in aging_rows) / max(baseline_aging, 1), 1)
+    baseline_floorplan = sum(_floorplan_cost(r.days, AVG_INVOICE_VALUE) for r in aging_rows)
+
+    # AI scenario: assume transfer reduces avg days by 35%
+    ai_avg_days = round(baseline_avg_days * 0.65, 1)
+    ai_floorplan = sum(
+        _floorplan_cost(int(r.days * 0.65), AVG_INVOICE_VALUE) for r in aging_rows
+    )
+    floorplan_saved = baseline_floorplan - ai_floorplan
+
+    # Stockout baseline
+    stockout_rows = db.execute(
+        text("""
+            SELECT COUNT(*) as cnt FROM (
+                SELECT dr.part_number, dr.dealer_id
+                FROM demand_records dr
+                GROUP BY dr.part_number, dr.dealer_id
+                HAVING SUM(dr.on_hand_qty) < AVG(dr.reorder_point)
+            )
+        """)
+    ).fetchone()
+    baseline_stockouts = int(stockout_rows.cnt or 0)
+    ai_stockouts = int(baseline_stockouts * 0.6)  # 40% reduction with AI reorder alerts
+
+    # Transfer recommendations count
+    transfer_count = len([r for r in aging_rows if r.days >= 60])
+
+    metrics = [
+        models.ROIMetric(
+            metric="Average Days in Inventory",
+            baseline_value=baseline_avg_days,
+            ai_value=ai_avg_days,
+            improvement=round(baseline_avg_days - ai_avg_days, 1),
+            improvement_pct=round((baseline_avg_days - ai_avg_days) / max(baseline_avg_days, 1) * 100, 1),
+            unit="days",
+        ),
+        models.ROIMetric(
+            metric="Total Floorplan Interest Cost",
+            baseline_value=round(baseline_floorplan, 0),
+            ai_value=round(ai_floorplan, 0),
+            improvement=round(floorplan_saved, 0),
+            improvement_pct=round(floorplan_saved / max(baseline_floorplan, 1) * 100, 1),
+            unit="₹",
+        ),
+        models.ROIMetric(
+            metric="Parts Stockout Incidents",
+            baseline_value=baseline_stockouts,
+            ai_value=ai_stockouts,
+            improvement=baseline_stockouts - ai_stockouts,
+            improvement_pct=round((baseline_stockouts - ai_stockouts) / max(baseline_stockouts, 1) * 100, 1),
+            unit="incidents",
+        ),
+        models.ROIMetric(
+            metric="Vehicles Recommended for Transfer",
+            baseline_value=0,
+            ai_value=transfer_count,
+            improvement=transfer_count,
+            improvement_pct=100.0,
+            unit="vehicles",
+        ),
+    ]
+
+    return models.ROIReport(
+        generated_at=pd.Timestamp.now().isoformat(),
+        total_floorplan_saved=round(floorplan_saved, 0),
+        vehicles_recommended_for_transfer=transfer_count,
+        avg_days_reduction=round(baseline_avg_days - ai_avg_days, 1),
+        stockout_alerts_raised=baseline_stockouts,
+        metrics=metrics,
+        summary=(
+            f"AI Copilot identified {transfer_count} vehicles for transfer, "
+            f"projected to save ₹{floorplan_saved:,.0f} in floorplan interest "
+            f"by reducing average inventory days from {baseline_avg_days} to {ai_avg_days}. "
+            f"Stockout incidents projected to drop by 40% through proactive reorder alerts."
+        ),
+    )

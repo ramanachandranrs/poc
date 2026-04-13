@@ -12,6 +12,8 @@ import Customers from "@/pages/Customers";
 import AgingStock from "@/pages/AgingStock";
 import DemandForecast from "@/pages/DemandForecast";
 import GenAIPrompts from "@/pages/GenAIPrompts";
+import GuidedAssistant from "@/pages/GuidedAssistant";
+import ROIReport from "@/pages/ROIReport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="/aging" element={<AgingStock />} />
             <Route path="/forecast" element={<DemandForecast />} />
             <Route path="/genai" element={<GenAIPrompts />} />
+            <Route path="/guided" element={<GuidedAssistant />} />
+            <Route path="/roi" element={<ROIReport />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </DashboardLayout>

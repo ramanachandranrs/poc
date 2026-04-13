@@ -406,6 +406,82 @@ export const useOperationalAlerts = () =>
     (data) => data.map((r: any) => ({ ...r }))
   );
 
+// ── Week 3: Gemini + Guided Assistant + ROI ───────────────────────────────────
+
+export interface GeminiResponse {
+  generated_text: string;
+  model: string;
+  use_case: string;
+}
+
+export interface GuidedRecommendation {
+  id: string;
+  rec_type: "transfer" | "stockout";
+  priority: "Critical" | "High" | "Medium";
+  title: string;
+  summary: string;
+  status: "Pending" | "Approved" | "Rejected";
+  data: Record<string, any>;
+  generated_message: string | null;
+}
+
+export interface ROIMetric {
+  metric: string;
+  baseline_value: number;
+  ai_value: number;
+  improvement: number;
+  improvement_pct: number;
+  unit: string;
+}
+
+export interface ROIReport {
+  generated_at: string;
+  total_floorplan_saved: number;
+  vehicles_recommended_for_transfer: number;
+  avg_days_reduction: number;
+  stockout_alerts_raised: number;
+  metrics: ROIMetric[];
+  summary: string;
+}
+
+export const useGuidedRecommendations = () =>
+  useApiData<any, GuidedRecommendation>("/guided/recommendations",
+    (data) => data.map((r: any) => ({ ...r }))
+  );
+
+export const useROIReport = () => {
+  const [data, setData] = useState<ROIReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/roi/report`, { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((json) => { setData(json); setLoading(false); })
+      .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
+    return () => controller.abort();
+  }, []);
+  return { data, loading, error };
+};
+
+export async function callGemini(endpoint: string, payload: Record<string, any>): Promise<GeminiResponse> {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function approveRecommendation(id: string, message?: string): Promise<void> {
+  await fetch(`${API_BASE}/guided/approve/${id}?message=${encodeURIComponent(message || "")}`, { method: "POST" });
+}
+
+export async function rejectRecommendation(id: string, reason?: string): Promise<void> {
+  await fetch(`${API_BASE}/guided/reject/${id}?reason=${encodeURIComponent(reason || "")}`, { method: "POST" });
+}
+
 // ── Demand Forecast ───────────────────────────────────────────────────────────
 
 export interface DailyForecastPoint {

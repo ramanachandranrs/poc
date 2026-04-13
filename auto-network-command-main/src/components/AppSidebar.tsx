@@ -1,4 +1,4 @@
-import { LayoutDashboard, Car, Package, Train, Users, Flame, TrendingUp, Bot } from "lucide-react";
+import { LayoutDashboard, Car, Package, Train, Users, Flame, TrendingUp, Bot, ShieldCheck, BarChart3 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,8 @@ const navItems = [
   { title: "Aging Stock",        url: "/aging",    icon: Flame },
   { title: "Demand Forecast",    url: "/forecast", icon: TrendingUp },
   { title: "AI Copilot Prompts", url: "/genai",    icon: Bot },
+  { title: "Guided Assistant",   url: "/guided",   icon: ShieldCheck },
+  { title: "ROI Report",         url: "/roi",      icon: BarChart3 },
   { title: "Spare Parts & ROP",  url: "/parts",    icon: Package },
   { title: "Transit Logistics",  url: "/transit",  icon: Train },
   { title: "Customer Registry",  url: "/customers",icon: Users },
