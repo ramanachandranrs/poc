@@ -229,3 +229,156 @@ REQUIREMENTS:
 - Under 100 words
 """
     return _generate(system, user)
+
+
+# ── NLQ — Classify intent ─────────────────────────────────────────────────────
+
+def classify_nlq_intent(question: str) -> dict:
+    """Use Groq LLaMA to classify NLQ intent and extract filters."""
+    system = (
+        "You are a query router for an automotive dealer network database. "
+        "Given a user question, identify:\n"
+        "1. intent: one of [aging_stock, parts_stockout, transit_delay, sales_performance, "
+        "demand_forecast, dealer_comparison, customer_lookup, roi_summary, general]\n"
+        "2. filters: extract any dealer name, city, model name, variant, days threshold, zone mentioned\n"
+        "3. aggregation: one of [list, count, sum, average, top_n, trend]\n"
+        "4. chart_type: one of [bar, line, table, number, none]\n"
+        "Return ONLY a JSON object. No explanation. No markdown.\n"
+        'Example: {"intent":"aging_stock","filters":{"dealer":null,"min_days":90,"model":"Brezza","zone":null},"aggregation":"list","chart_type":"table"}'
+    )
+    try:
+        result = _generate_groq(system, question)
+        import json as _json
+        # Strip markdown fences if present
+        clean = result.strip().strip("```json").strip("```").strip()
+        return _json.loads(clean)
+    except Exception:
+        return {"intent": "general", "filters": {}, "aggregation": "list", "chart_type": "none"}
+
+
+def generate_nlq_answer(question: str, data: object, chart_type: str, context: list) -> dict:
+    """Generate a natural language answer for an NLQ result using Groq."""
+    import json as _json
+    system = (
+        "You are an automotive supply chain AI assistant for a Maruti Suzuki dealer network. "
+        "Answer in 2-3 sentences maximum. Be specific — use exact numbers from the data. "
+        "Always mention rupee amounts when relevant. Use Indian number format (lakhs, crores). "
+        "If recommending action, be direct: say exactly what to do. "
+        "End every answer with exactly 3 follow-up questions the user might want to ask next, "
+        'as a JSON array on the last line in this format: ["question1","question2","question3"]'
+    )
+    data_str = _json.dumps(data, default=str)[:3000]
+    ctx_str = ""
+    if context:
+        ctx_str = "\nConversation history:\n" + "\n".join(
+            f"{'User' if m['role']=='user' else 'AI'}: {m['content']}" for m in context[-6:]
+        )
+    user = f"Question: {question}{ctx_str}\n\nData: {data_str}\n\nAnswer:"
+    try:
+        raw = _generate_groq(system, user)
+        # Split answer from follow-ups
+        lines = raw.strip().split("\n")
+        follow_ups = []
+        answer_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                try:
+                    follow_ups = _json.loads(stripped)
+                except Exception:
+                    pass
+            else:
+                answer_lines.append(line)
+        answer = "\n".join(answer_lines).strip()
+        if not follow_ups:
+            follow_ups = [
+                "Which dealer has the highest floorplan burn today?",
+                "Show all parts with zero stock",
+                "What is the total revenue this month?",
+            ]
+        return {"answer": answer, "follow_ups": follow_ups, "groq_used": True}
+    except Exception as e:
+        return {
+            "answer": f"I couldn't process that query. Please try rephrasing. (Error: {str(e)[:100]})",
+            "follow_ups": [
+                "Which dealers have critical aging stock?",
+                "Show all delayed shipments",
+                "What is the ROI summary?",
+            ],
+            "groq_used": False,
+        }
+
+
+def generate_alert_message(alert_type: str, alert_data: dict) -> str:
+    """Generate a Gemini/Groq message for a specific alert."""
+    if alert_type == "aging_vehicle":
+        system = "You are a Maruti Suzuki OEM supply chain manager. Write professional B2B WhatsApp messages."
+        user = (
+            f"Write a professional B2B WhatsApp message to the dealer manager at "
+            f"{alert_data.get('dealer_name','the dealer')} in {alert_data.get('city','the city')}.\n"
+            f"Context: {alert_data.get('count',1)} vehicles have been unsold for up to "
+            f"{alert_data.get('max_days',90)} days, burning ₹{alert_data.get('daily_burn',267)}/day "
+            f"in floorplan interest.\n"
+            f"Best action: Transfer {alert_data.get('top_model','vehicle')} to best target dealer.\n"
+            f"Requirements: Max 4 sentences. Start with financial urgency. State recommended action. "
+            f"End with clear ask (confirm by EOD / reply YES). Professional but direct. No fluff.\n"
+            f"Output ONLY the message text."
+        )
+    elif alert_type == "parts_stockout":
+        system = "You are a parts operations manager. Write internal alert memos."
+        user = (
+            f"Write an internal alert memo to the parts incharge at {alert_data.get('dealer_name','the dealer')}.\n"
+            f"Context: {alert_data.get('zero_stock_count',0)} SKUs at zero stock, "
+            f"{alert_data.get('below_rop_count',0)} SKUs below ROP. "
+            f"Estimated service impact: ₹{alert_data.get('impact',5000)}/day.\n"
+            f"Top critical SKU: {alert_data.get('part_name','Unknown')} — "
+            f"{alert_data.get('qty_on_hand',0)} units on hand, ROP is {alert_data.get('rop',10)}.\n"
+            f"Requirements: Max 3 sentences. State exact SKUs at zero stock. "
+            f"Recommended EOQ order quantity for top SKU. Severity: CRITICAL/HIGH.\n"
+            f"Output ONLY the message text."
+        )
+    else:  # transit_delay
+        system = "You are a logistics coordinator. Write escalation messages to carriers."
+        user = (
+            f"Write an escalation message to carrier {alert_data.get('carrier','the carrier')} "
+            f"for shipment {alert_data.get('shipment_id','N/A')}.\n"
+            f"Context: Shipment from {alert_data.get('origin','origin')} to "
+            f"{alert_data.get('destination','destination')} is "
+            f"{alert_data.get('delay_days',0):.0f} days overdue. "
+            f"Expected {alert_data.get('expected_date','N/A')}.\n"
+            f"Requirements: Max 3 sentences. State delay in days clearly. "
+            f"Ask for immediate status update and revised ETA. "
+            f"Mention alternative action if no response in 24 hours.\n"
+            f"Output ONLY the message text."
+        )
+    try:
+        return _generate_groq(system, user)
+    except Exception as e:
+        return f"[Message generation failed: {str(e)[:100]}]"
+
+
+# ── Groq LLaMA backend ────────────────────────────────────────────────────────
+
+def _generate_groq(system_prompt: str, user_prompt: str) -> str:
+    """Call Groq LLaMA and return the text response."""
+    try:
+        from langchain_groq import ChatGroq
+        from langchain_core.messages import SystemMessage, HumanMessage
+        import os
+
+        api_key = os.getenv("GROQ_API_KEY", "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")
+        llm = ChatGroq(
+            model="llama-3.3-70b-versatile",
+            api_key=api_key,
+            temperature=0.7,
+            max_tokens=2048,
+        )
+        messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
+        response = llm.invoke(messages)
+        return response.content.strip()
+    except Exception as e:
+        # Fallback to Vertex AI Gemini if Groq fails
+        try:
+            return _generate(system_prompt, user_prompt)
+        except Exception:
+            return f"[LLM error: {str(e)[:200]}]"

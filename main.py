@@ -1436,3 +1436,456 @@ def get_sales_by_model(db: Session = Depends(get_db)):
         }
         for r in rows
     ]
+
+
+# ── UPGRADE 1: NLQ Query Engine ───────────────────────────────────────────────
+
+# In-memory session store (max 100 sessions, last 10 messages each)
+_nlq_sessions: dict = {}
+_MAX_SESSIONS = 100
+_MAX_HISTORY = 10
+
+
+class NLQRequest(BaseModel):
+    question: str
+    session_id: Optional[str] = None
+
+
+@app.post("/api/v1/nlq/query")
+def nlq_query(req: NLQRequest, db: Session = Depends(get_db)):
+    """Natural Language Query engine — routes questions to existing data functions."""
+    import uuid
+
+    session_id = req.session_id or str(uuid.uuid4())
+
+    # Manage session store size
+    if len(_nlq_sessions) >= _MAX_SESSIONS:
+        oldest = next(iter(_nlq_sessions))
+        del _nlq_sessions[oldest]
+
+    history = _nlq_sessions.get(session_id, [])
+
+    try:
+        # Step 1 — Classify intent
+        classification = gemini_service.classify_nlq_intent(req.question)
+        intent = classification.get("intent", "general")
+        filters = classification.get("filters", {})
+        aggregation = classification.get("aggregation", "list")
+        chart_type = classification.get("chart_type", "none")
+
+        # Step 2 — Route to existing data functions
+        data = None
+
+        if intent == "aging_stock":
+            min_days = filters.get("min_days", 60) or 60
+            rows = db.execute(text("""
+                SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                       d.dealer_id, d.dealer_name, d.city, d.zone,
+                       CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
+                FROM vehicles v
+                JOIN dealers d ON d.dealer_id = v.dealer_id
+                WHERE v.stock_arrival_date IS NOT NULL
+                  AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+                  AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+                ORDER BY days DESC LIMIT 50
+            """), {"min_days": min_days}).fetchall()
+            data = [
+                {"vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
+                 "dealer": r.dealer_name, "city": r.city, "zone": r.zone, "days": r.days,
+                 "daily_burn": round(FLOORPLAN_RATE_MONTHLY * AVG_INVOICE_VALUE / 30, 0)}
+                for r in rows
+            ]
+            if filters.get("model"):
+                data = [d for d in data if filters["model"].lower() in (d["model"] or "").lower()]
+            if filters.get("dealer"):
+                data = [d for d in data if filters["dealer"].lower() in (d["dealer"] or "").lower()]
+            if filters.get("zone"):
+                data = [d for d in data if filters["zone"].lower() in (d["zone"] or "").lower()]
+
+        elif intent == "parts_stockout":
+            rows = db.execute(text("""
+                SELECT dr.part_number, p.description, dr.dealer_id, d.dealer_name,
+                       SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
+                FROM demand_records dr
+                JOIN parts p ON p.part_number = dr.part_number
+                JOIN dealers d ON d.dealer_id = dr.dealer_id
+                GROUP BY dr.part_number, p.description, dr.dealer_id, d.dealer_name
+                HAVING on_hand < rop
+                ORDER BY (rop - on_hand) DESC LIMIT 50
+            """)).fetchall()
+            data = [
+                {"sku": r.part_number, "part": r.description, "dealer_id": r.dealer_id,
+                 "dealer": r.dealer_name, "on_hand": int(r.on_hand or 0),
+                 "rop": int(r.rop or 0), "gap": int(r.rop or 0) - int(r.on_hand or 0)}
+                for r in rows
+            ]
+
+        elif intent == "transit_delay":
+            rows = db.execute(text("""
+                SELECT shipment_id, origin_city, destination_city, carrier_name,
+                       status, expected_arrival, delay_days, dealer_id
+                FROM shipments
+                WHERE status IN ('Delayed','Past Due') OR delay_days > 0
+                ORDER BY delay_days DESC LIMIT 50
+            """)).fetchall()
+            data = [
+                {"shipment_id": r.shipment_id, "origin": r.origin_city,
+                 "destination": r.destination_city, "carrier": r.carrier_name,
+                 "status": r.status, "expected": r.expected_arrival,
+                 "delay_days": float(r.delay_days or 0)}
+                for r in rows
+            ]
+
+        elif intent == "sales_performance":
+            if aggregation in ["trend", "list"]:
+                rows = db.execute(text("""
+                    SELECT month, COUNT(*) AS units_sold,
+                           ROUND(SUM(final_sale_price_inr)) AS revenue,
+                           ROUND(AVG(days_to_sell),1) AS avg_days
+                    FROM vehicle_sales GROUP BY month ORDER BY month
+                """)).fetchall()
+                data = [{"month": r.month, "units_sold": r.units_sold,
+                         "revenue": r.revenue, "avg_days": r.avg_days} for r in rows]
+                chart_type = "line"
+            else:
+                rows = db.execute(text("""
+                    SELECT model_code, COUNT(*) AS units_sold,
+                           ROUND(SUM(final_sale_price_inr)) AS revenue
+                    FROM vehicle_sales GROUP BY model_code ORDER BY units_sold DESC LIMIT 10
+                """)).fetchall()
+                data = [{"model": r.model_code, "units_sold": r.units_sold,
+                         "revenue": r.revenue} for r in rows]
+                chart_type = "bar"
+
+        elif intent == "demand_forecast":
+            fc = _load_forecast()
+            records = fc.get("forecasts", [])
+            if filters.get("dealer"):
+                records = [r for r in records if filters["dealer"].lower() in r.get("dealer_name","").lower()]
+            data = [
+                {"dealer": r["dealer_name"], "variant": r["variant_id"],
+                 "total_30d": r["total_30d"]}
+                for r in sorted(records, key=lambda x: x["total_30d"], reverse=True)[:20]
+            ]
+            chart_type = "bar"
+
+        elif intent == "dealer_comparison":
+            rows = db.execute(text("""
+                SELECT d.dealer_name, d.city, d.zone,
+                       COUNT(v.chassis_number) AS aging_count,
+                       SUM(CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER)) AS total_days
+                FROM dealers d
+                LEFT JOIN vehicles v ON v.dealer_id = d.dealer_id
+                    AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+                    AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 60
+                GROUP BY d.dealer_id, d.dealer_name, d.city, d.zone
+                ORDER BY aging_count DESC LIMIT 30
+            """)).fetchall()
+            data = [
+                {"dealer": r.dealer_name, "city": r.city, "zone": r.zone,
+                 "aging_count": r.aging_count or 0,
+                 "floorplan_burn": round((r.total_days or 0) * FLOORPLAN_RATE_MONTHLY * AVG_INVOICE_VALUE / 30, 0)}
+                for r in rows
+            ]
+            chart_type = "bar"
+
+        elif intent == "customer_lookup":
+            search = filters.get("dealer") or filters.get("city") or ""
+            rows = db.execute(text("""
+                SELECT customer_id, name, city, state, ownership_history
+                FROM customers WHERE name LIKE :s OR city LIKE :s LIMIT 20
+            """), {"s": f"%{search}%"}).fetchall()
+            data = [{"id": r.customer_id, "name": r.name, "city": r.city,
+                     "state": r.state, "ownership": r.ownership_history} for r in rows]
+
+        elif intent == "roi_summary":
+            aging_rows = db.execute(text("""
+                SELECT CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
+                FROM vehicles v JOIN job_cards j ON j.chassis_number = v.chassis_number
+                GROUP BY v.chassis_number HAVING days > 60
+            """)).fetchall()
+            baseline_fp = sum(_floorplan_cost(r.days, AVG_INVOICE_VALUE) for r in aging_rows)
+            ai_fp = sum(_floorplan_cost(int(r.days * 0.65), AVG_INVOICE_VALUE) for r in aging_rows)
+            data = {
+                "vehicles_at_risk": len(aging_rows),
+                "baseline_floorplan_inr": round(baseline_fp, 0),
+                "ai_projected_inr": round(ai_fp, 0),
+                "savings_inr": round(baseline_fp - ai_fp, 0),
+            }
+            chart_type = "number"
+
+        else:  # general
+            data = {"context": "Maruti Suzuki 30-dealer network, India. 81MB SQLite DB."}
+
+        # Step 3 — Generate natural language answer
+        result = gemini_service.generate_nlq_answer(req.question, data, chart_type, history)
+
+        # Step 4 — Update session history
+        history.append({"role": "user", "content": req.question})
+        history.append({"role": "assistant", "content": result["answer"]})
+        _nlq_sessions[session_id] = history[-_MAX_HISTORY:]
+
+        return {
+            "session_id": session_id,
+            "answer": result["answer"],
+            "data": data,
+            "chart_type": chart_type,
+            "sql_hint": intent,
+            "follow_ups": result["follow_ups"],
+            "groq_used": result.get("groq_used", False),
+        }
+
+    except Exception as e:
+        return {
+            "session_id": session_id,
+            "answer": f"Sorry, I encountered an error processing your query: {str(e)[:200]}",
+            "data": None,
+            "chart_type": "none",
+            "sql_hint": None,
+            "follow_ups": [
+                "Which dealers have critical aging stock?",
+                "Show all parts with zero stock",
+                "What is the total floorplan burn?",
+            ],
+            "groq_used": False,
+        }
+
+
+# ── UPGRADE 3: Daily Alert Feed ───────────────────────────────────────────────
+
+@app.get("/api/v1/alerts/daily-feed")
+def get_daily_alert_feed(
+    role: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    """Generate ranked daily alert feed from aging vehicles, parts stockouts, and transit delays."""
+    from datetime import datetime
+    alerts = []
+
+    # ── Aging vehicle alerts (grouped by dealer) ──────────────────────────────
+    aging_rows = db.execute(text("""
+        SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+               d.dealer_id, d.dealer_name, d.city,
+               CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
+        FROM vehicles v
+        JOIN dealers d ON d.dealer_id = v.dealer_id
+        WHERE v.stock_arrival_date IS NOT NULL
+          AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+          AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= 60
+        ORDER BY days DESC
+    """)).fetchall()
+
+    # Group by dealer
+    from collections import defaultdict
+    dealer_aging: dict = defaultdict(list)
+    for r in aging_rows:
+        dealer_aging[r.dealer_id].append(r)
+
+    for dealer_id, vehicles in dealer_aging.items():
+        critical = [v for v in vehicles if v.days >= 90]
+        aging_only = [v for v in vehicles if 60 <= v.days < 90]
+        daily_burn = round(FLOORPLAN_RATE_MONTHLY * AVG_INVOICE_VALUE / 30, 0)
+
+        if critical:
+            total_burn = len(critical) * daily_burn
+            top_v = critical[0]
+            severity = "critical"
+            action_type = "transfer"
+            action_label = f"Transfer {top_v.model_code} {top_v.variant_id}"
+            title = f"{len(critical)} critical vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day burning"
+            summary = f"Vehicles unsold 90+ days. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)"
+            financial_impact = int(total_burn)
+        else:
+            total_burn = len(aging_only) * daily_burn
+            top_v = aging_only[0]
+            severity = "high"
+            action_type = "discount"
+            action_label = f"Apply discount on {top_v.model_code}"
+            title = f"{len(aging_only)} aging vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day"
+            summary = f"Vehicles 60-89 days unsold. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)"
+            financial_impact = int(total_burn)
+
+        alerts.append({
+            "alert_id": f"aging_{dealer_id}_20251231",
+            "type": "aging_vehicle",
+            "severity": severity,
+            "title": title,
+            "summary": summary,
+            "financial_impact_inr": financial_impact,
+            "dealer_name": top_v.dealer_name,
+            "dealer_id": dealer_id,
+            "action_type": action_type,
+            "action_label": action_label,
+            "entity_id": top_v.chassis_number,
+            "entity_detail": {
+                "count": len(critical) if critical else len(aging_only),
+                "max_days": max(v.days for v in vehicles),
+                "daily_burn": daily_burn,
+                "top_model": top_v.model_code,
+                "variant": top_v.variant_id,
+                "city": top_v.city,
+            },
+            "gemini_message": None,
+            "status": "pending",
+            "created_at": "2025-12-31T00:00:00",
+        })
+
+    # ── Parts stockout alerts (grouped by dealer) ─────────────────────────────
+    stockout_rows = db.execute(text("""
+        SELECT dr.part_number, p.description, dr.dealer_id, d.dealer_name,
+               SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
+        FROM demand_records dr
+        JOIN parts p ON p.part_number = dr.part_number
+        JOIN dealers d ON d.dealer_id = dr.dealer_id
+        GROUP BY dr.part_number, p.description, dr.dealer_id, d.dealer_name
+        HAVING on_hand < rop
+        ORDER BY on_hand ASC
+    """)).fetchall()
+
+    dealer_stockout: dict = defaultdict(list)
+    for r in stockout_rows:
+        dealer_stockout[r.dealer_id].append(r)
+
+    for dealer_id, parts in dealer_stockout.items():
+        zero_stock = [p for p in parts if int(p.on_hand or 0) == 0]
+        below_rop = [p for p in parts if int(p.on_hand or 0) > 0]
+        top_part = parts[0]
+        severity = "critical" if zero_stock else "high"
+        impact = len(zero_stock) * 5000
+        title = f"{len(zero_stock)} zero-stock SKUs at {top_part.dealer_name}" if zero_stock else \
+                f"{len(below_rop)} SKUs below ROP at {top_part.dealer_name}"
+        summary = f"Top critical: {top_part.description} — {int(top_part.on_hand or 0)} units (ROP: {int(top_part.rop or 0)})"
+
+        alerts.append({
+            "alert_id": f"stockout_{dealer_id}_20251231",
+            "type": "parts_stockout",
+            "severity": severity,
+            "title": title,
+            "summary": summary,
+            "financial_impact_inr": max(impact, 1000),
+            "dealer_name": top_part.dealer_name,
+            "dealer_id": dealer_id,
+            "action_type": "reorder",
+            "action_label": f"Order {max(int(top_part.rop or 10) * 2, 10)} units of {top_part.description}",
+            "entity_id": str(top_part.part_number),
+            "entity_detail": {
+                "zero_stock_count": len(zero_stock),
+                "below_rop_count": len(below_rop),
+                "part_name": top_part.description,
+                "qty_on_hand": int(top_part.on_hand or 0),
+                "rop": int(top_part.rop or 0),
+                "impact": impact,
+            },
+            "gemini_message": None,
+            "status": "pending",
+            "created_at": "2025-12-31T00:00:00",
+        })
+
+    # ── Transit delay alerts (one per shipment) ───────────────────────────────
+    delay_rows = db.execute(text("""
+        SELECT s.shipment_id, s.description, s.origin_city, s.destination_city,
+               s.carrier_name, s.dealer_id, d.dealer_name,
+               s.expected_arrival,
+               CASE
+                   WHEN s.actual_arrival IS NOT NULL AND s.expected_arrival IS NOT NULL
+                        AND s.actual_arrival > s.expected_arrival
+                   THEN CAST(julianday(s.actual_arrival) - julianday(s.expected_arrival) AS INTEGER)
+                   WHEN s.delay_days > 0 THEN s.delay_days
+                   ELSE CAST(julianday('2025-12-31') - julianday(s.expected_arrival) AS INTEGER)
+               END AS real_delay
+        FROM shipments s
+        LEFT JOIN dealers d ON d.dealer_id = s.dealer_id
+        WHERE s.status IN ('Delayed','Past Due') OR s.delay_days > 0
+        ORDER BY real_delay DESC LIMIT 50
+    """)).fetchall()
+
+    for r in delay_rows:
+        delay = float(r.real_delay or 0)
+        if delay <= 0:
+            continue
+        severity = "critical" if delay >= 5 else ("high" if delay >= 3 else "medium")
+        impact = int(delay * 2000)
+        alerts.append({
+            "alert_id": f"transit_{r.shipment_id}_20251231",
+            "type": "transit_delay",
+            "severity": severity,
+            "title": f"Shipment {r.shipment_id} — {delay:.0f} days overdue",
+            "summary": f"{r.origin_city} → {r.destination_city} via {r.carrier_name}. Expected: {r.expected_arrival}",
+            "financial_impact_inr": impact,
+            "dealer_name": r.dealer_name or "Network",
+            "dealer_id": r.dealer_id or "N/A",
+            "action_type": "escalate",
+            "action_label": f"Escalate to {r.carrier_name}",
+            "entity_id": r.shipment_id,
+            "entity_detail": {
+                "origin": r.origin_city,
+                "destination": r.destination_city,
+                "carrier": r.carrier_name,
+                "delay_days": delay,
+                "expected_date": r.expected_arrival,
+                "shipment_id": r.shipment_id,
+            },
+            "gemini_message": None,
+            "status": "pending",
+            "created_at": "2025-12-31T00:00:00",
+        })
+
+    # Role filtering
+    if role == "parts_manager":
+        alerts = [a for a in alerts if a["type"] == "parts_stockout"]
+    elif role == "logistics_coordinator":
+        alerts = [a for a in alerts if a["type"] == "transit_delay"]
+    elif role == "dealer_principal":
+        alerts = [a for a in alerts if a["type"] in ("aging_vehicle", "parts_stockout")]
+
+    # Sort: severity order then financial impact
+    sev_order = {"critical": 0, "high": 1, "medium": 2}
+    alerts.sort(key=lambda x: (sev_order.get(x["severity"], 3), -x["financial_impact_inr"]))
+
+    total_impact = sum(a["financial_impact_inr"] for a in alerts)
+
+    return {
+        "generated_at": "2025-12-31T00:00:00",
+        "total_financial_impact_inr": total_impact,
+        "alerts": alerts[:limit],
+    }
+
+
+class AlertMessageRequest(BaseModel):
+    alert_id: str
+    alert_data: dict
+
+
+@app.post("/api/v1/alerts/generate-message")
+def generate_alert_message_endpoint(req: AlertMessageRequest):
+    """Generate a Groq/Gemini message for a specific alert."""
+    try:
+        alert_type = req.alert_data.get("type", "aging_vehicle")
+        entity = req.alert_data.get("entity_detail", {})
+        message = gemini_service.generate_alert_message(alert_type, {
+            **entity,
+            "dealer_name": req.alert_data.get("dealer_name", ""),
+            "dealer_id": req.alert_data.get("dealer_id", ""),
+        })
+        recipient = req.alert_data.get("dealer_name", "Dealer Manager")
+        subject_map = {
+            "aging_vehicle": f"Action Required: Aging Stock Alert — {req.alert_data.get('dealer_name','')}",
+            "parts_stockout": f"URGENT: Parts Stockout Alert — {req.alert_data.get('dealer_name','')}",
+            "transit_delay": f"Escalation: Transit Delay — {entity.get('shipment_id','N/A')}",
+        }
+        return {
+            "alert_id": req.alert_id,
+            "message": message,
+            "recipient": recipient,
+            "subject": subject_map.get(alert_type, "Alert Notification"),
+            "groq_used": True,
+        }
+    except Exception as e:
+        return {
+            "alert_id": req.alert_id,
+            "message": f"[Message generation failed: {str(e)[:200]}]",
+            "recipient": req.alert_data.get("dealer_name", ""),
+            "subject": "Alert Notification",
+            "groq_used": False,
+        }
