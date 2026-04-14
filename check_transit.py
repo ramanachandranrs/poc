@@ -2,37 +2,37 @@ import sqlite3
 conn = sqlite3.connect('dealer_network.db')
 cur = conn.cursor()
 
-cur.execute("SELECT COUNT(*) FROM shipments")
-print("Total shipments:", cur.fetchone()[0])
-
+print('=== DELAYED shipments sample ===')
 cur.execute("""
-SELECT status, COUNT(*) as cnt
-FROM shipments
-GROUP BY status
-ORDER BY cnt DESC
+    SELECT shipment_id, status, delay_days, expected_arrival, actual_arrival,
+           origin_city, destination_city
+    FROM shipments
+    WHERE status IN ('Delayed', 'Past Due')
+    ORDER BY delay_days ASC
+    LIMIT 15
 """)
-print("\nBy status:")
-for row in cur.fetchall():
-    print(f"  {row[0]}: {row[1]}")
+for r in cur.fetchall(): print(r)
 
+print()
+print('=== delay_days distribution for DELAYED ===')
 cur.execute("""
-SELECT transport_mode, COUNT(*) as cnt
-FROM shipments
-GROUP BY transport_mode
-ORDER BY cnt DESC
+    SELECT delay_days, COUNT(*) as cnt
+    FROM shipments
+    WHERE status IN ('Delayed', 'Past Due')
+    GROUP BY delay_days
+    ORDER BY delay_days ASC
+    LIMIT 20
 """)
-print("\nBy transport mode:")
-for row in cur.fetchall():
-    print(f"  {row[0]}: {row[1]}")
+for r in cur.fetchall(): print(r)
 
+print()
+print('=== Same origin+destination (Pune->Pune)? ===')
 cur.execute("""
-SELECT zone, COUNT(*) as cnt
-FROM shipments
-GROUP BY zone
-ORDER BY cnt DESC
+    SELECT shipment_id, origin_city, destination_city, origin_name, destination_name, status, delay_days
+    FROM shipments
+    WHERE origin_city = destination_city
+    LIMIT 10
 """)
-print("\nBy zone:")
-for row in cur.fetchall():
-    print(f"  {row[0]}: {row[1]}")
+for r in cur.fetchall(): print(r)
 
 conn.close()

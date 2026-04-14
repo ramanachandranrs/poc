@@ -244,6 +244,62 @@ class Shipment(Base):
     demand_date_ref: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
 
+class VehicleSale(Base):
+    __tablename__ = "vehicle_sales"
+    sale_id: Mapped[str] = mapped_column(String(20), primary_key=True, index=True)
+    chassis_number: Mapped[str] = mapped_column(ForeignKey("vehicles.chassis_number"), index=True)
+    dealer_id: Mapped[str] = mapped_column(ForeignKey("dealers.dealer_id"), index=True)
+    dealer_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    customer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("customers.customer_id"), nullable=True, index=True)
+    model_code: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    variant_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    fuel_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    transmission_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    sale_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True, index=True)
+    stock_arrival_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    days_to_sell: Mapped[int] = mapped_column(Integer, default=0)
+    invoice_value_inr: Mapped[float] = mapped_column(Float, default=0)
+    discount_given_inr: Mapped[float] = mapped_column(Float, default=0)
+    final_sale_price_inr: Mapped[float] = mapped_column(Float, default=0)
+    exchange_vehicle: Mapped[int] = mapped_column(Integer, default=0)
+    finance_taken: Mapped[int] = mapped_column(Integer, default=0)
+    insurance_bundled: Mapped[int] = mapped_column(Integer, default=0)
+    accessories_value_inr: Mapped[float] = mapped_column(Float, default=0)
+    sales_executive_id: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    payment_mode: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    sale_channel: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    zone: Mapped[Optional[str]] = mapped_column(String(30), nullable=True, index=True)
+    dealer_type: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
+    festive_sale: Mapped[int] = mapped_column(Integer, default=0)
+    promotion_active: Mapped[int] = mapped_column(Integer, default=0)
+    month: Mapped[int] = mapped_column(Integer, default=0)
+    quarter: Mapped[int] = mapped_column(Integer, default=0)
+    year: Mapped[int] = mapped_column(Integer, default=2025)
+
+
+class VehicleSaleResponse(BaseModel):
+    sale_id: str
+    chassis_number: str
+    dealer_id: str
+    dealer_name: Optional[str]
+    model_code: Optional[str]
+    variant_id: Optional[str]
+    fuel_type: Optional[str]
+    sale_date: Optional[date]
+    days_to_sell: int
+    invoice_value_inr: float
+    discount_given_inr: float
+    final_sale_price_inr: float
+    exchange_vehicle: int
+    finance_taken: int
+    payment_mode: Optional[str]
+    sale_channel: Optional[str]
+    zone: Optional[str]
+    festive_sale: int
+    month: int
+    quarter: int
+
+
 class CustomerResponse(BaseModel):
     customer_id: str
     name: str

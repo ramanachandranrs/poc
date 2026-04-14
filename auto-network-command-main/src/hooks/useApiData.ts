@@ -549,3 +549,77 @@ export const useForecastVariants = (dealerId?: string, variantId?: string) => {
 
   return { data, loading, error };
 };
+
+// ── Vehicle Sales ─────────────────────────────────────────────────────────────
+
+export interface SalesSummary {
+  total_sales: number;
+  total_unsold: number;
+  sell_through_pct: number;
+  avg_days_to_sell: number;
+  total_revenue_inr: number;
+  avg_discount_inr: number;
+  exchange_count: number;
+  finance_count: number;
+  festive_count: number;
+}
+
+export interface SalesByMonth {
+  month: number;
+  units_sold: number;
+  revenue: number;
+  avg_days_to_sell: number;
+  avg_discount: number;
+}
+
+export interface SalesByModel {
+  model: string;
+  units_sold: number;
+  avg_days_to_sell: number;
+  total_revenue: number;
+  avg_discount: number;
+}
+
+export const useSalesSummary = () => {
+  const [data, setData] = useState<SalesSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/sales/summary`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, []);
+  return { data, loading };
+};
+
+export const useSalesMonthlyTrend = (dealerId?: string) => {
+  const [data, setData] = useState<SalesByMonth[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (dealerId) params.set("dealer_id", dealerId);
+    const controller = new AbortController();
+    fetch(`${API_BASE}/sales/monthly-trend?${params.toString()}`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, [dealerId]);
+  return { data, loading };
+};
+
+export const useSalesByModel = () => {
+  const [data, setData] = useState<SalesByModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_BASE}/sales/by-model`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { setData(json); setLoading(false); })
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
+  }, []);
+  return { data, loading };
+};

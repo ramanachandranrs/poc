@@ -194,13 +194,18 @@ const Transit = () => {
 
                       <div className="flex items-center gap-3 text-xs">
                         <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <MapPin className="h-3 w-3" /><span>{shipment.origin}</span>
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="font-medium text-foreground">{shipment.origin}</span>
                         </div>
-                        <div className="w-12 h-px bg-border relative">
-                          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full ${isAlert ? "bg-neon-red animate-pulse" : "bg-primary"}`} />
+                        <div className="flex items-center gap-0.5">
+                          <div className={`h-px w-6 ${isAlert ? "bg-neon-red" : "bg-primary/60"}`} />
+                          <svg width="10" height="10" viewBox="0 0 10 10" className={isAlert ? "text-neon-red" : "text-primary"} fill="currentColor">
+                            <path d="M0 3.5h7L5 1l1.5-1L10 5 6.5 9 5 8l2-2.5H0z" />
+                          </svg>
                         </div>
                         <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <MapPin className="h-3 w-3" /><span>{shipment.destination}</span>
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="font-medium text-foreground">{shipment.destination}</span>
                         </div>
                       </div>
 

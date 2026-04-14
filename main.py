@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import models
+from distance_service import get_transport_cost, get_distance_km
 
 FORECAST_PATH = Path("data/forecast_output.json")
 _forecast_cache: Dict[str, Any] = {}
@@ -42,6 +43,7 @@ def get_db():
 
 @app.get("/api/v1/wipro/inventory/summary")
 def get_inventory_summary(db: Session = Depends(get_db)):
+    # Only count UNSOLD vehicles (not present in vehicle_sales) — true showroom stock
     row = db.execute(text("""
         SELECT
             COUNT(*) as total,
@@ -49,7 +51,9 @@ def get_inventory_summary(db: Session = Depends(get_db)):
             SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 60 THEN 1 ELSE 0 END) as aging,
             SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 90 THEN 1 ELSE 0 END) as critical
         FROM vehicles
-        WHERE stock_arrival_date IS NOT NULL AND dealer_id IS NOT NULL
+        WHERE stock_arrival_date IS NOT NULL
+          AND dealer_id IS NOT NULL
+          AND chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
     """)).fetchone()
     return {"total": row.total, "available": row.available, "aging": row.aging, "critical": row.critical}
 
@@ -66,7 +70,11 @@ def get_inventory(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    conditions = ["v.stock_arrival_date IS NOT NULL", "v.dealer_id IS NOT NULL"]
+    conditions = [
+        "v.stock_arrival_date IS NOT NULL",
+        "v.dealer_id IS NOT NULL",
+        "v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)",
+    ]
     params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
     if dealer_id:
@@ -256,7 +264,17 @@ def get_transit(
     where = " AND ".join(conditions)
     shipments = db.execute(text(f"""
         SELECT shipment_id, origin_city, origin_name, destination_city, destination_name,
-               status, expected_arrival, carrier_name, qty_shipped, delay_days
+               status, expected_arrival, carrier_name, qty_shipped,
+               CASE
+                   WHEN actual_arrival IS NOT NULL AND expected_arrival IS NOT NULL
+                        AND actual_arrival > expected_arrival
+                   THEN CAST(julianday(actual_arrival) - julianday(expected_arrival) AS INTEGER)
+                   WHEN status IN ('Delayed', 'Past Due') AND delay_days > 0
+                   THEN delay_days
+                   WHEN status IN ('Delayed', 'Past Due')
+                   THEN CAST(julianday('2025-12-31') - julianday(expected_arrival) AS INTEGER)
+                   ELSE 0
+               END AS real_delay_days
         FROM shipments
         WHERE {where}
         ORDER BY dispatch_date DESC
@@ -272,7 +290,7 @@ def get_transit(
             expected_delivery=s.expected_arrival,
             carrier=s.carrier_name or "Unknown",
             items=round(float(s.qty_shipped or 0), 2),
-            delay_days=round(float(s.delay_days or 0), 2),
+            delay_days=round(float(s.real_delay_days or 0), 2),
         )
         for s in shipments
     ]
@@ -465,6 +483,7 @@ def _build_ai_prompt(v: dict, target: dict, net_utility: float) -> str:
 
 @app.get("/api/v1/aging/summary", response_model=models.AgingSummary)
 def get_aging_summary(db: Session = Depends(get_db)):
+    # Only unsold vehicles — true aging showroom stock
     rows = db.execute(
         text("""
             SELECT
@@ -473,7 +492,8 @@ def get_aging_summary(db: Session = Depends(get_db)):
                 CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
             WHERE v.stock_arrival_date IS NOT NULL
-            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
+              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
         """)
     ).fetchall()
 
@@ -517,23 +537,15 @@ def get_aging_vehicles(
                 v.model_code,
                 v.variant_id,
                 v.fuel_type,
-                j.dealer_id,
+                v.dealer_id,
                 d.dealer_name,
                 d.city,
                 CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN (
-                SELECT chassis_number, dealer_id
-                FROM job_cards
-                WHERE (chassis_number, date_in) IN (
-                    SELECT chassis_number, MAX(date_in)
-                    FROM job_cards
-                    GROUP BY chassis_number
-                )
-            ) j ON j.chassis_number = v.chassis_number
-            JOIN dealers d ON d.dealer_id = j.dealer_id
+            JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -567,26 +579,18 @@ def get_transfer_recommendations(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    # Get aging vehicles
+    # Get aging UNSOLD vehicles only
     aging_rows = db.execute(
         text("""
             SELECT
                 v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-                j.dealer_id, d.dealer_name, d.city,
+                v.dealer_id, d.dealer_name, d.city,
                 CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN (
-                SELECT chassis_number, dealer_id
-                FROM job_cards
-                WHERE (chassis_number, date_in) IN (
-                    SELECT chassis_number, MAX(date_in)
-                    FROM job_cards
-                    GROUP BY chassis_number
-                )
-            ) j ON j.chassis_number = v.chassis_number
-            JOIN dealers d ON d.dealer_id = j.dealer_id
+            JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-            AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -595,20 +599,12 @@ def get_transfer_recommendations(
 
     # Get all dealers for target matching
     all_dealers = db.query(models.Dealer).all()
-    dealer_map = {d.dealer_id: d for d in all_dealers}
-
-    # Get routes for transport cost
-    routes = db.query(models.Route).all()
-    route_map = {}
-    for r in routes:
-        key = (r.origin_city or "", r.destination_city or "")
-        route_map[key] = r.distance_km or 500
 
     recommendations = []
     for r in aging_rows:
         total_fp = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
 
-        # Find best target dealer (different from source, highest demand for variant)
+        # Find best target dealer using real road distances from DB
         best_target = None
         best_utility = -999_999
         best_transport = 0
@@ -617,8 +613,7 @@ def get_transfer_recommendations(
         for d in all_dealers:
             if d.dealer_id == r.dealer_id:
                 continue
-            dist = route_map.get((r.city, d.city), 500)
-            transport = _transport_cost(dist)
+            transport = get_transport_cost(r.city, d.city, db)
             demand = _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
             # Net utility = floorplan saved + demand value - transport
             utility = total_fp + (demand * 500) - transport
@@ -733,18 +728,18 @@ def get_b2c_prompts(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
+    # Use unsold vehicles with stock_arrival_date — correct aging stock for B2C outreach
     rows = db.execute(
         text("""
             SELECT
                 v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-                j.dealer_id, d.dealer_name,
-                CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
+                v.dealer_id, d.dealer_name,
+                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
-            JOIN job_cards j ON j.chassis_number = v.chassis_number
-            JOIN dealers d ON d.dealer_id = j.dealer_id
-            GROUP BY v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-                     j.dealer_id, d.dealer_name
-            HAVING days >= :min_days
+            JOIN dealers d ON d.dealer_id = v.dealer_id
+            WHERE v.stock_arrival_date IS NOT NULL
+              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -1231,3 +1226,213 @@ def get_roi_report(db: Session = Depends(get_db)):
             f"Stockout incidents projected to drop by 40% through proactive reorder alerts."
         ),
     )
+
+
+# ── Distance Lookup Endpoint ─────────────────────────────────────────────────
+
+@app.get("/api/v1/distance")
+def get_distance(origin: str, destination: str, db: Session = Depends(get_db)):
+    """Return real road distance and transport cost between two cities."""
+    km = get_distance_km(origin, destination, db)
+    cost = get_transport_cost(origin, destination, db)
+    return {
+        "origin": origin,
+        "destination": destination,
+        "distance_km": km,
+        "transport_cost_inr": cost,
+        "rate_per_km": 12,
+    }
+
+
+@app.get("/api/v1/distance/all-cities")
+def get_all_cities(db: Session = Depends(get_db)):
+    """Return all cities that have distance data."""
+    rows = db.execute(text("""
+        SELECT DISTINCT origin_city FROM routes
+        WHERE route_type = 'city_pair' AND origin_city IS NOT NULL
+        ORDER BY origin_city
+    """)).fetchall()
+    return {"cities": [r.origin_city for r in rows]}
+
+
+# ── Vehicle Sales Endpoints ───────────────────────────────────────────────────
+
+@app.get("/api/v1/sales/summary")
+def get_sales_summary(db: Session = Depends(get_db)):
+    row = db.execute(text("""
+        SELECT
+            COUNT(*)                          AS total_sales,
+            ROUND(AVG(days_to_sell), 1)       AS avg_days_to_sell,
+            ROUND(SUM(final_sale_price_inr))  AS total_revenue,
+            ROUND(AVG(discount_given_inr), 0) AS avg_discount,
+            SUM(exchange_vehicle)             AS exchange_count,
+            SUM(finance_taken)                AS finance_count,
+            SUM(festive_sale)                 AS festive_count
+        FROM vehicle_sales
+    """)).fetchone()
+
+    unsold = db.execute(text("""
+        SELECT COUNT(*) FROM vehicles v
+        WHERE NOT EXISTS (
+            SELECT 1 FROM vehicle_sales s WHERE s.chassis_number = v.chassis_number
+        )
+    """)).fetchone()[0]
+
+    return {
+        "total_sales": row.total_sales,
+        "total_unsold": unsold,
+        "sell_through_pct": round(row.total_sales / (row.total_sales + unsold) * 100, 1),
+        "avg_days_to_sell": row.avg_days_to_sell,
+        "total_revenue_inr": row.total_revenue,
+        "avg_discount_inr": row.avg_discount,
+        "exchange_count": row.exchange_count,
+        "finance_count": row.finance_count,
+        "festive_count": row.festive_count,
+    }
+
+
+@app.get("/api/v1/sales", response_model=List[models.VehicleSaleResponse])
+def get_sales(
+    dealer_id: Optional[str] = None,
+    zone: Optional[str] = None,
+    model: Optional[str] = None,
+    variant_id: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    sale_channel: Optional[str] = None,
+    month: Optional[int] = None,
+    quarter: Optional[int] = None,
+    festive_only: bool = False,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    conditions = ["1=1"]
+    params: dict = {"limit": limit, "offset": (page - 1) * limit}
+
+    if dealer_id:
+        conditions.append("UPPER(dealer_id) = UPPER(:dealer_id)")
+        params["dealer_id"] = dealer_id.strip()
+    if zone:
+        conditions.append("zone = :zone")
+        params["zone"] = zone.strip()
+    if model:
+        conditions.append("model_code = :model")
+        params["model"] = model.strip()
+    if variant_id:
+        conditions.append("variant_id = :variant_id")
+        params["variant_id"] = variant_id.strip()
+    if fuel_type:
+        conditions.append("fuel_type = :fuel_type")
+        params["fuel_type"] = fuel_type.strip()
+    if sale_channel:
+        conditions.append("sale_channel = :sale_channel")
+        params["sale_channel"] = sale_channel.strip()
+    if month:
+        conditions.append("month = :month")
+        params["month"] = month
+    if quarter:
+        conditions.append("quarter = :quarter")
+        params["quarter"] = quarter
+    if festive_only:
+        conditions.append("festive_sale = 1")
+
+    where = " AND ".join(conditions)
+    rows = db.execute(text(f"""
+        SELECT sale_id, chassis_number, dealer_id, dealer_name, model_code,
+               variant_id, fuel_type, sale_date, days_to_sell,
+               invoice_value_inr, discount_given_inr, final_sale_price_inr,
+               exchange_vehicle, finance_taken, payment_mode, sale_channel,
+               zone, festive_sale, month, quarter
+        FROM vehicle_sales
+        WHERE {where}
+        ORDER BY sale_date DESC
+        LIMIT :limit OFFSET :offset
+    """), params).fetchall()
+
+    return [
+        models.VehicleSaleResponse(
+            sale_id=r.sale_id,
+            chassis_number=r.chassis_number,
+            dealer_id=r.dealer_id,
+            dealer_name=r.dealer_name,
+            model_code=r.model_code,
+            variant_id=r.variant_id,
+            fuel_type=r.fuel_type,
+            sale_date=r.sale_date,
+            days_to_sell=r.days_to_sell,
+            invoice_value_inr=r.invoice_value_inr,
+            discount_given_inr=r.discount_given_inr,
+            final_sale_price_inr=r.final_sale_price_inr,
+            exchange_vehicle=r.exchange_vehicle,
+            finance_taken=r.finance_taken,
+            payment_mode=r.payment_mode,
+            sale_channel=r.sale_channel,
+            zone=r.zone,
+            festive_sale=r.festive_sale,
+            month=r.month,
+            quarter=r.quarter,
+        )
+        for r in rows
+    ]
+
+
+@app.get("/api/v1/sales/monthly-trend")
+def get_sales_monthly_trend(
+    dealer_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    params = {}
+    dealer_filter = ""
+    if dealer_id:
+        dealer_filter = "WHERE UPPER(dealer_id) = UPPER(:dealer_id)"
+        params["dealer_id"] = dealer_id.strip()
+
+    rows = db.execute(text(f"""
+        SELECT
+            month,
+            COUNT(*)                         AS units_sold,
+            ROUND(SUM(final_sale_price_inr)) AS revenue,
+            ROUND(AVG(days_to_sell), 1)      AS avg_days_to_sell,
+            ROUND(AVG(discount_given_inr))   AS avg_discount
+        FROM vehicle_sales
+        {dealer_filter}
+        GROUP BY month
+        ORDER BY month
+    """), params).fetchall()
+
+    return [
+        {
+            "month": r.month,
+            "units_sold": r.units_sold,
+            "revenue": r.revenue,
+            "avg_days_to_sell": r.avg_days_to_sell,
+            "avg_discount": r.avg_discount,
+        }
+        for r in rows
+    ]
+
+
+@app.get("/api/v1/sales/by-model")
+def get_sales_by_model(db: Session = Depends(get_db)):
+    rows = db.execute(text("""
+        SELECT
+            model_code,
+            COUNT(*)                         AS units_sold,
+            ROUND(AVG(days_to_sell), 1)      AS avg_days_to_sell,
+            ROUND(SUM(final_sale_price_inr)) AS total_revenue,
+            ROUND(AVG(discount_given_inr))   AS avg_discount
+        FROM vehicle_sales
+        GROUP BY model_code
+        ORDER BY units_sold DESC
+    """)).fetchall()
+
+    return [
+        {
+            "model": r.model_code,
+            "units_sold": r.units_sold,
+            "avg_days_to_sell": r.avg_days_to_sell,
+            "total_revenue": r.total_revenue,
+            "avg_discount": r.avg_discount,
+        }
+        for r in rows
+    ]
