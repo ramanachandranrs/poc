@@ -12,8 +12,8 @@ const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).
 
 const SEV_STYLE = {
   critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
-  high:     "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
-  medium:   "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  medium:   "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
+  low:      "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
 };
 
 const TYPE_ICON = {
@@ -95,7 +95,7 @@ function AlertCard({ alert, onAction }) {
       exit={{ opacity: 0, x: -20 }}
       className={`glass rounded-xl overflow-hidden border-l-4 ${
         alert.severity === "critical" ? "border-neon-red" :
-        alert.severity === "high"     ? "border-neon-amber" : "border-yellow-500"
+        alert.severity === "medium"   ? "border-neon-amber" : "border-yellow-500"
       }`}
     >
       <div className="p-4">
@@ -298,8 +298,8 @@ export default function AlertFeed() {
 
   const counts = {
     critical: alerts.filter((a) => a.severity === "critical").length,
-    high:     alerts.filter((a) => a.severity === "high").length,
     medium:   alerts.filter((a) => a.severity === "medium").length,
+    low:      alerts.filter((a) => a.severity === "low").length,
   };
 
   const minutesAgo = lastUpdated
@@ -328,10 +328,10 @@ export default function AlertFeed() {
                 {counts.critical} Critical
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-neon-amber/10 text-neon-amber border border-neon-amber/20 font-semibold">
-                {counts.high} High
+                {counts.medium} Medium
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-semibold">
-                {counts.medium} Medium
+                {counts.low} Low
               </span>
               {minutesAgo !== null && (
                 <span className="text-[10px] text-muted-foreground">
@@ -370,7 +370,7 @@ export default function AlertFeed() {
         </div>
         {/* Severity pills */}
         <div className="flex gap-1 flex-wrap">
-          {["all", "critical", "high", "medium"].map((s) => (
+          {["all", "critical", "medium", "low"].map((s) => (
             <button
               key={s}
               onClick={() => setSevFilter(s)}

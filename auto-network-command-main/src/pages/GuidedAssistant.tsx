@@ -18,8 +18,8 @@ const fmt = (n: number) =>
 
 const PRIORITY_STYLE: Record<string, string> = {
   Critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
-  High:     "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
-  Medium:   "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  Medium:   "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
+  Low:      "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -77,7 +77,7 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
       animate={{ opacity: 1, y: 0 }}
       className={`glass rounded-xl overflow-hidden border-l-4 ${
         rec.priority === "Critical" ? "border-neon-red" :
-        rec.priority === "High"     ? "border-neon-amber" : "border-yellow-500"
+        rec.priority === "Medium"   ? "border-neon-amber" : "border-yellow-500"
       }`}
     >
       {/* Header */}

@@ -1056,7 +1056,7 @@ def get_guided_recommendations(
             key=lambda d: _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
             if d.dealer_id != r.dealer_id else -1
         )
-        priority = "Critical" if r.days >= 90 else "High"
+        priority = "Critical" if r.days >= 90 else "Medium"
         recs.append(models.GuidedRecommendation(
             id=rec_id,
             rec_type="transfer",
@@ -1096,7 +1096,7 @@ def get_guided_recommendations(
         on_hand = int(r.on_hand or 0)
         rop = int(r.rop or 0)
         gap = rop - on_hand
-        priority = "Critical" if on_hand == 0 else "High"
+        priority = "Critical" if on_hand == 0 else "Medium"
         recs.append(models.GuidedRecommendation(
             id=rec_id,
             rec_type="stockout",
@@ -1115,7 +1115,7 @@ def get_guided_recommendations(
         ))
 
     # Sort by priority
-    order = {"Critical": 0, "High": 1, "Medium": 2}
+    order = {"Critical": 0, "Medium": 1, "Low": 2}
     recs.sort(key=lambda x: order.get(x.priority, 3))
     return recs[:limit]
 
@@ -1699,7 +1699,7 @@ def get_daily_alert_feed(
         else:
             total_burn = len(aging_only) * daily_burn
             top_v = aging_only[0]
-            severity = "high"
+            severity = "medium"
             action_type = "discount"
             action_label = f"Apply discount on {top_v.model_code}"
             title = f"{len(aging_only)} aging vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day"
@@ -1751,7 +1751,7 @@ def get_daily_alert_feed(
         zero_stock = [p for p in parts if int(p.on_hand or 0) == 0]
         below_rop = [p for p in parts if int(p.on_hand or 0) > 0]
         top_part = parts[0]
-        severity = "critical" if zero_stock else "high"
+        severity = "critical" if zero_stock else "medium"
         impact = len(zero_stock) * 5000
         title = f"{len(zero_stock)} zero-stock SKUs at {top_part.dealer_name}" if zero_stock else \
                 f"{len(below_rop)} SKUs below ROP at {top_part.dealer_name}"
@@ -1804,7 +1804,7 @@ def get_daily_alert_feed(
         delay = float(r.real_delay or 0)
         if delay <= 0:
             continue
-        severity = "critical" if delay >= 5 else ("high" if delay >= 3 else "medium")
+        severity = "critical" if delay >= 5 else ("medium" if delay >= 3 else "low")
         impact = int(delay * 2000)
         alerts.append({
             "alert_id": f"transit_{r.shipment_id}_20251231",
@@ -1840,7 +1840,7 @@ def get_daily_alert_feed(
         alerts = [a for a in alerts if a["type"] in ("aging_vehicle", "parts_stockout")]
 
     # Sort: severity order then financial impact
-    sev_order = {"critical": 0, "high": 1, "medium": 2}
+    sev_order = {"critical": 0, "medium": 1, "low": 2}
     alerts.sort(key=lambda x: (sev_order.get(x["severity"], 3), -x["financial_impact_inr"]))
 
     total_impact = sum(a["financial_impact_inr"] for a in alerts)

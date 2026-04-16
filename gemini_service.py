@@ -284,11 +284,13 @@ def generate_nlq_answer(question: str, data: object, chart_type: str, context: l
             stripped = line.strip()
             if stripped.startswith("[") and stripped.endswith("]"):
                 try:
-                    follow_ups = _json.loads(stripped)
+                    parsed = _json.loads(stripped)
+                    if isinstance(parsed, list):
+                        follow_ups = parsed
+                        continue
                 except Exception:
                     pass
-            else:
-                answer_lines.append(line)
+            answer_lines.append(line)
         answer = "\n".join(answer_lines).strip()
         if not follow_ups:
             follow_ups = [

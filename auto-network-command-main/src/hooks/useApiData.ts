@@ -417,7 +417,7 @@ export interface GeminiResponse {
 export interface GuidedRecommendation {
   id: string;
   rec_type: "transfer" | "stockout";
-  priority: "Critical" | "High" | "Medium";
+  priority: "Critical" | "Medium" | "Low";
   title: string;
   summary: string;
   status: "Pending" | "Approved" | "Rejected";
