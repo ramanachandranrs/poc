@@ -126,7 +126,7 @@ function B2CCard({ item, index }) {
           className="flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
         >
           {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-          {generating ? "Generating..." : "Generate with Gemini"}
+          {generating ? "Drafting..." : "Generate AI Message"}
         </button>
         {generated && <CopyButton text={generated} />}
         <button

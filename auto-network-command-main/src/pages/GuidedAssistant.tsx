@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2, XCircle, Sparkles, ArrowRightLeft,
-  Package, Clock, IndianRupee, RefreshCw, ChevronDown, ChevronUp,
+  Package, Clock, IndianRupee, RefreshCw, ChevronDown, ChevronUp, Mail,
 } from "lucide-react";
 import {
   useGuidedRecommendations, callGemini,
@@ -37,6 +37,8 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
   const [expanded,  setExpanded]  = useState(false);
   const [rejectBox, setRejectBox] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [emailInfo, setEmailInfo]   = useState<string>("");
 
   const isTransfer = rec.rec_type === "transfer";
   const Icon = isTransfer ? ArrowRightLeft : Package;
@@ -58,8 +60,30 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
   };
 
   const handleApprove = async () => {
-    await approveRecommendation(rec.id, message);
-    setStatus("Approved");
+    setEmailStatus("sending");
+    try {
+      const result = await approveRecommendation(rec.id, message);
+      setStatus("Approved");
+      const email = result?.email as Record<string, unknown> | undefined;
+      if (email && !("error" in email)) {
+        if (rec.rec_type === "transfer") {
+          const sent = (email.source_email_sent || email.target_email_sent) ? "sent" : "error";
+          setEmailStatus(sent);
+          const srcTo = email.source_to ?? "dealer";
+          const tgtTo = email.target_to ?? "dealer";
+          setEmailInfo(`Emails dispatched to ${srcTo} (Source Dealer) and ${tgtTo} (Target Dealer)`);
+        } else {
+          setEmailStatus(email.email_sent ? "sent" : "error");
+          setEmailInfo(`Email dispatched to ${email.to ?? "dealer"}`);
+        }
+      } else {
+        setEmailStatus("error");
+        setEmailInfo(String((email as Record<string, unknown>)?.error ?? "Email send failed"));
+      }
+    } catch {
+      setEmailStatus("error");
+      setEmailInfo("Approval failed. Check backend.");
+    }
     onRefresh();
   };
 
@@ -146,8 +170,8 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
             className="flex items-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 text-xs font-medium transition-colors disabled:opacity-50 w-full justify-center"
           >
             {loading
-              ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Generating with Gemini 2.5 Flash…</>
-              : <><Sparkles className="h-3.5 w-3.5" /> Generate Message with Gemini</>
+              ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Drafting AI Message…</>
+              : <><Sparkles className="h-3.5 w-3.5" /> Generate AI Message</>
             }
           </button>
         </div>
@@ -165,7 +189,7 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
             <div className="bg-muted/20 rounded-xl p-4 border border-border/40">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-medium text-primary">Gemini 2.5 Flash</span>
+                <span className="text-xs font-medium text-primary">AI Generated</span>
               </div>
               <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">
                 {message}
@@ -180,10 +204,13 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
         <div className="px-4 pb-4 flex items-center gap-2">
           <button
             onClick={handleApprove}
-            disabled={!message}
+            disabled={!message || emailStatus === "sending"}
             className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-30"
           >
-            <CheckCircle2 className="h-3.5 w-3.5" /> Approve & Send
+            {emailStatus === "sending"
+              ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+              : <><CheckCircle2 className="h-3.5 w-3.5" /> Approve & Send Email</>
+            }
           </button>
           <button
             onClick={() => setRejectBox(!rejectBox)}
@@ -200,6 +227,30 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
           </button>
         </div>
       )}
+
+      {/* Email status banner */}
+      <AnimatePresence>
+        {(emailStatus === "sent" || emailStatus === "error") && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 pb-3"
+          >
+            <div className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${
+              emailStatus === "sent"
+                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                : "bg-neon-red/10 text-neon-red border border-neon-red/20"
+            }`}>
+              <Mail className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>
+                {emailStatus === "sent" ? "✓ Email sent — " : "✗ Email failed — "}
+                {emailInfo}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Reject reason box */}
       <AnimatePresence>
@@ -269,7 +320,7 @@ const GuidedAssistant = () => {
       <div>
         <h2 className="text-2xl font-bold text-foreground">Guided Assistant</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Human-in-the-loop · Gemini 2.5 Flash · Approve or Reject AI recommendations
+          Human-in-the-loop · AI Copilot · Approve or Reject AI recommendations
         </p>
       </div>
 
@@ -309,9 +360,9 @@ const GuidedAssistant = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
           {[
             { step: "1", title: "AI Surfaces Recommendation", desc: "XGBoost + Heuristic Score identifies the best action" },
-            { step: "2", title: "Generate with Gemini",       desc: "Click to generate a professional message via Gemini 2.5 Flash" },
+            { step: "2", title: "Generate AI Message",       desc: "Click to draft a professional message using the AI Copilot" },
             { step: "3", title: "Human Reviews",              desc: "Manager reads the AI-generated message and context" },
-            { step: "4", title: "Approve or Reject",          desc: "Human approves to send or rejects with a reason" },
+            { step: "4", title: "Approve or Reject",          desc: "Human approves to send email to dealers or rejects with a reason" },
           ].map((s) => (
             <div key={s.step} className="bg-muted/20 rounded-lg p-3 space-y-1">
               <div className="flex items-center gap-2">

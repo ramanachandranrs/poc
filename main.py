@@ -9,6 +9,7 @@ from pathlib import Path
 
 import models
 from distance_service import get_transport_cost, get_distance_km
+import email_service
 
 FORECAST_PATH = Path("data/forecast_output.json")
 _forecast_cache: Dict[str, Any] = {}
@@ -1023,6 +1024,75 @@ def generate_alert(req: GenerateAlertRequest):
 _approval_store: dict = {}
 
 
+def _derive_rec_data(rec_id: str, db: Session) -> dict:
+    """Re-derive rec_data from DB when the in-memory store doesn't have it.
+    This makes approve robust to server restarts."""
+    if rec_id.startswith("transfer_"):
+        vin = rec_id[len("transfer_"):]
+        row = db.execute(
+            text("""
+                SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
+                       d.dealer_name, d.city,
+                       CAST(julianday('now') - julianday(v.stock_arrival_date) AS INTEGER) AS days
+                FROM vehicles v
+                JOIN dealers d ON d.dealer_id = v.dealer_id
+                WHERE v.chassis_number = :vin
+            """),
+            {"vin": vin},
+        ).fetchone()
+        if not row:
+            return {}
+        fp_cost = _floorplan_cost(row.days or 0, AVG_INVOICE_VALUE)
+        all_dealers = db.query(models.Dealer).all()
+        best = max(
+            all_dealers,
+            key=lambda d: _demand_score_for_variant(row.variant_id or "", d.dealer_id, db)
+            if d.dealer_name != row.dealer_name else -1,
+        )
+        demand = _demand_score_for_variant(row.variant_id or "", best.dealer_id, db)
+        transport = get_transport_cost(row.city, best.city, db)
+        return {
+            "vin": row.chassis_number, "model": row.model_code, "variant": row.variant_id,
+            "fuel_type": row.fuel_type, "source_dealer": row.dealer_name,
+            "source_city": row.city, "target_dealer": best.dealer_name,
+            "target_city": best.city, "days_in_inventory": row.days or 0,
+            "floorplan_cost": fp_cost, "transport_cost": transport,
+            "demand_score": demand, "net_utility": fp_cost - transport,
+        }
+
+    if rec_id.startswith("reorder_"):
+        # rec_id format: reorder_{part_number}_{dealer_id}
+        parts = rec_id[len("reorder_"):].rsplit("_", 1)
+        if len(parts) != 2:
+            return {}
+        part_number, dealer_id = parts
+        row = db.execute(
+            text("""
+                SELECT dr.part_number, p.description, dr.dealer_id,
+                       SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
+                FROM demand_records dr
+                JOIN parts p ON p.part_number = dr.part_number
+                WHERE dr.part_number = :pn AND dr.dealer_id = :did
+                GROUP BY dr.part_number, p.description, dr.dealer_id
+            """),
+            {"pn": part_number, "did": dealer_id},
+        ).fetchone()
+        if not row:
+            return {}
+        on_hand = int(row.on_hand or 0)
+        rop = int(row.rop or 0)
+        gap = rop - on_hand
+        return {
+            "part_name": row.description, "sku": str(row.part_number),
+            "dealer_id": row.dealer_id, "qty_on_hand": on_hand,
+            "reorder_point": rop, "quantity_gap": gap,
+            "recommended_order_qty": max(rop * 2, 10),
+            "alert_type": "stockout",
+        }
+
+    return {}
+
+
 @app.get("/api/v1/guided/recommendations", response_model=List[models.GuidedRecommendation])
 def get_guided_recommendations(
     limit: int = Query(30, ge=1, le=100),
@@ -1057,6 +1127,20 @@ def get_guided_recommendations(
             if d.dealer_id != r.dealer_id else -1
         )
         priority = "Critical" if r.days >= 90 else "Medium"
+        rec_data = {
+            "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
+            "fuel_type": r.fuel_type, "source_dealer": r.dealer_name,
+            "source_city": r.city, "target_dealer": best.dealer_name,
+            "target_city": best.city, "days_in_inventory": r.days,
+            "floorplan_cost": fp_cost, "transport_cost": 6000.0,
+            "demand_score": _demand_score_for_variant(r.variant_id or "", best.dealer_id, db),
+            "net_utility": fp_cost - 6000.0,
+        }
+        # Stash rec_data so approve endpoint can send the right email
+        if rec_id not in _approval_store:
+            _approval_store[rec_id] = {"status": "Pending", "rec_data": rec_data}
+        else:
+            _approval_store[rec_id]["rec_data"] = rec_data
         recs.append(models.GuidedRecommendation(
             id=rec_id,
             rec_type="transfer",
@@ -1065,15 +1149,7 @@ def get_guided_recommendations(
             summary=f"{r.days} days at {r.dealer_name}. Floorplan cost: ₹{fp_cost:,.0f}. "
                     f"Best target: {best.dealer_name} ({best.city}).",
             status=_approval_store.get(rec_id, {}).get("status", "Pending"),
-            data={
-                "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
-                "fuel_type": r.fuel_type, "source_dealer": r.dealer_name,
-                "source_city": r.city, "target_dealer": best.dealer_name,
-                "target_city": best.city, "days_in_inventory": r.days,
-                "floorplan_cost": fp_cost, "transport_cost": 6000.0,
-                "demand_score": _demand_score_for_variant(r.variant_id or "", best.dealer_id, db),
-                "net_utility": fp_cost - 6000.0,
-            },
+            data=rec_data,
             generated_message=_approval_store.get(rec_id, {}).get("message"),
         ))
 
@@ -1097,6 +1173,17 @@ def get_guided_recommendations(
         rop = int(r.rop or 0)
         gap = rop - on_hand
         priority = "Critical" if on_hand == 0 else "Medium"
+        rec_data = {
+            "part_name": r.description, "sku": str(r.part_number),
+            "dealer_id": r.dealer_id, "qty_on_hand": on_hand,
+            "reorder_point": rop, "quantity_gap": gap,
+            "recommended_order_qty": max(rop * 2, 10),
+            "alert_type": "stockout",
+        }
+        if rec_id not in _approval_store:
+            _approval_store[rec_id] = {"status": "Pending", "rec_data": rec_data}
+        else:
+            _approval_store[rec_id]["rec_data"] = rec_data
         recs.append(models.GuidedRecommendation(
             id=rec_id,
             rec_type="stockout",
@@ -1104,13 +1191,7 @@ def get_guided_recommendations(
             title=f"Reorder {r.description} at {r.dealer_id}",
             summary=f"Stock: {on_hand} units. ROP: {rop}. Shortfall: {gap} units.",
             status=_approval_store.get(rec_id, {}).get("status", "Pending"),
-            data={
-                "part_name": r.description, "sku": str(r.part_number),
-                "dealer_id": r.dealer_id, "qty_on_hand": on_hand,
-                "reorder_point": rop, "quantity_gap": gap,
-                "recommended_order_qty": max(rop * 2, 10),
-                "alert_type": "stockout",
-            },
+            data=rec_data,
             generated_message=_approval_store.get(rec_id, {}).get("message"),
         ))
 
@@ -1121,9 +1202,48 @@ def get_guided_recommendations(
 
 
 @app.post("/api/v1/guided/approve/{rec_id}")
-def approve_recommendation(rec_id: str, message: Optional[str] = None):
-    _approval_store[rec_id] = {"status": "Approved", "message": message}
-    return {"status": "Approved", "rec_id": rec_id}
+def approve_recommendation(rec_id: str, message: Optional[str] = None, db: Session = Depends(get_db)):
+    # Preserve existing rec_data if already seeded, else re-derive from DB
+    existing = _approval_store.get(rec_id, {})
+    rec_data = existing.get("rec_data") or _derive_rec_data(rec_id, db)
+    _approval_store[rec_id] = {"status": "Approved", "message": message, "rec_data": rec_data}
+
+    email_result = {}
+    try:
+        if rec_id.startswith("transfer_") and rec_data:
+            email_result = email_service.send_transfer_emails(
+                source_dealer=rec_data.get("source_dealer", ""),
+                source_city=rec_data.get("source_city", ""),
+                target_dealer=rec_data.get("target_dealer", ""),
+                target_city=rec_data.get("target_city", ""),
+                model=rec_data.get("model", ""),
+                variant=rec_data.get("variant", ""),
+                fuel_type=rec_data.get("fuel_type", ""),
+                vin=rec_data.get("vin", ""),
+                days_in_inventory=rec_data.get("days_in_inventory", 0),
+                floorplan_cost=rec_data.get("floorplan_cost", 0),
+                transport_cost=rec_data.get("transport_cost", 0),
+                demand_score=rec_data.get("demand_score", 0),
+                net_utility=rec_data.get("net_utility", 0),
+                gemini_message=message or "",
+            )
+        elif rec_id.startswith("reorder_") and rec_data:
+            email_result = email_service.send_rop_email(
+                dealer_id=rec_data.get("dealer_id", ""),
+                part_name=rec_data.get("part_name", ""),
+                sku=str(rec_data.get("sku", "")),
+                qty_on_hand=rec_data.get("qty_on_hand", 0),
+                reorder_point=rec_data.get("reorder_point", 0),
+                quantity_gap=rec_data.get("quantity_gap", 0),
+                recommended_order_qty=rec_data.get("recommended_order_qty", 10),
+                gemini_message=message or "",
+            )
+        else:
+            email_result = {"error": f"Could not resolve rec_data for {rec_id}"}
+    except Exception as e:
+        email_result = {"error": str(e)}
+
+    return {"status": "Approved", "rec_id": rec_id, "email": email_result}
 
 
 @app.post("/api/v1/guided/reject/{rec_id}")

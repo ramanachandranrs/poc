@@ -474,8 +474,10 @@ export async function callGemini(endpoint: string, payload: Record<string, any>)
   return res.json();
 }
 
-export async function approveRecommendation(id: string, message?: string): Promise<void> {
-  await fetch(`${API_BASE}/guided/approve/${id}?message=${encodeURIComponent(message || "")}`, { method: "POST" });
+export async function approveRecommendation(id: string, message?: string): Promise<{ email?: Record<string, unknown> }> {
+  const res = await fetch(`${API_BASE}/guided/approve/${id}?message=${encodeURIComponent(message || "")}`, { method: "POST" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
 export async function rejectRecommendation(id: string, reason?: string): Promise<void> {

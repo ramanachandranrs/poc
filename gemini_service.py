@@ -74,11 +74,12 @@ def generate_b2b_message(
     net_utility: float,
 ) -> str:
     system = (
-        "You are a professional B2B automotive inventory negotiation specialist "
-        "working for a multi-dealer Maruti Suzuki network in India. "
+        "You are the Regional Dealer Manager for a multi-dealer Maruti Suzuki network in India. "
         "Your messages are concise, data-driven, and commercially persuasive. "
         "Always write in a professional yet collaborative tone. "
-        "Use Indian Rupee (₹) for all monetary values."
+        "Use Indian Rupee (₹) for all monetary values. "
+        "Always sign off as 'Regional Dealer Manager, Maruti Suzuki Dealer Network'. "
+        "Never use placeholder text like [Your Name] or [Dealership Name]."
     )
     user = f"""
 Draft a professional dealer-to-dealer vehicle transfer proposal.
@@ -103,6 +104,10 @@ REQUIREMENTS:
 - Propose a fair transfer price (invoice value minus floorplan savings)
 - Keep it under 150 words
 - Professional email format with Subject line
+- Sign off EXACTLY as two lines:
+    Regional Dealer Manager
+    Maruti Suzuki Dealer Network
+- Do NOT use any placeholder text like [Your Name], [Team Name], [Dealership Name] anywhere
 """
     return _generate(system, user)
 

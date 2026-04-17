@@ -45,7 +45,7 @@ const ROIReport = () => {
       <div>
         <h2 className="text-2xl font-bold text-foreground">ROI Impact Report</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Week 1 Baseline vs AI Copilot Projected Impact · Gemini 2.5 Flash + XGBoost
+          Week 1 Baseline vs AI Copilot Projected Impact
         </p>
       </div>
 
