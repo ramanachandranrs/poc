@@ -49,7 +49,7 @@ const DemandForecast = () => {
 
   // Derived data — safe because hooks are all above
   const dealers = useMemo(
-    () => [...new Set((summary?.top_pairs ?? []).map((p) => p.dealer_id))],
+    () => summary?.all_dealers ?? [],
     [summary]
   );
   const variants = useMemo(
@@ -201,7 +201,7 @@ const DemandForecast = () => {
           className="bg-muted/30 border border-border/50 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="">All Dealers</option>
-          {dealers.map((d) => <option key={d} value={d}>{d}</option>)}
+          {dealers.map((d) => <option key={d.dealer_id} value={d.dealer_id}>{d.dealer_id} — {d.dealer_name}</option>)}
         </select>
         <select
           value={selectedVariant}
@@ -303,6 +303,8 @@ const DemandForecast = () => {
                 borderRadius: "8px",
                 fontSize: 12,
               }}
+              labelStyle={{ color: "hsl(210,40%,93%)", fontWeight: 600 }}
+              itemStyle={{ color: "hsl(210,40%,93%)" }}
               formatter={(v: number) => [`${fmt(v)} units`, "Demand"]}
             />
             <Bar dataKey="demand" radius={[0, 4, 4, 0]}>

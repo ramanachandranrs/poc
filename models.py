@@ -499,6 +499,7 @@ class ForecastSummary(BaseModel):
     top_pairs: List[dict]
     variant_totals: List[dict]
     model_metrics: dict
+    all_dealers: List[dict] = []
 
 
 if __name__ == "__main__":

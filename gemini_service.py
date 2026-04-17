@@ -281,22 +281,21 @@ def generate_nlq_answer(question: str, data: object, chart_type: str, context: l
     user = f"Question: {question}{ctx_str}\n\nData: {data_str}\n\nAnswer:"
     try:
         raw = _generate_groq(system, user)
-        # Split answer from follow-ups
-        lines = raw.strip().split("\n")
+        # Extract follow-up JSON array from anywhere in the response
+        import re as _re
         follow_ups = []
-        answer_lines = []
-        for line in lines:
-            stripped = line.strip()
-            if stripped.startswith("[") and stripped.endswith("]"):
-                try:
-                    parsed = _json.loads(stripped)
-                    if isinstance(parsed, list):
-                        follow_ups = parsed
-                        continue
-                except Exception:
-                    pass
-            answer_lines.append(line)
-        answer = "\n".join(answer_lines).strip()
+        answer = raw.strip()
+        # Find a JSON array of strings anywhere in the text
+        array_match = _re.search(r'\[(?:\s*"[^"]*"\s*,?\s*){1,10}\]', raw, _re.DOTALL)
+        if array_match:
+            try:
+                parsed = _json.loads(array_match.group())
+                if isinstance(parsed, list) and all(isinstance(q, str) for q in parsed):
+                    follow_ups = parsed
+                    # Remove the matched array (and any trailing punctuation/whitespace) from answer
+                    answer = (raw[:array_match.start()] + raw[array_match.end():]).strip().rstrip(".")
+            except Exception:
+                pass
         if not follow_ups:
             follow_ups = [
                 "Which dealer has the highest floorplan burn today?",

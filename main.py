@@ -403,6 +403,12 @@ def get_forecast_summary():
         for k, v in sorted(variant_map.items(), key=lambda x: -x[1])
     ]
 
+    # All unique dealers sorted by name
+    all_dealers = sorted(
+        {(r["dealer_id"], r["dealer_name"]) for r in records},
+        key=lambda x: x[0]
+    )
+
     return models.ForecastSummary(
         generated_at=data.get("generated_at", ""),
         forecast_horizon=data.get("forecast_horizon", 30),
@@ -420,6 +426,7 @@ def get_forecast_summary():
         ],
         variant_totals=variant_totals,
         model_metrics=data.get("model_metrics", {}),
+        all_dealers=[{"dealer_id": d[0], "dealer_name": d[1]} for d in all_dealers],
     )
 
 
