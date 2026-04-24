@@ -46,9 +46,13 @@ function B2CCard({ item, index }) {
   const generateMessage = async () => {
     setGenerating(true);
     try {
+      const token = localStorage.getItem("access_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`${API_BASE}/ai/generate-b2c`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           model: item.model,
           variant: item.variant,

@@ -250,13 +250,19 @@ export default function AlertFeed() {
   const [search, setSearch] = useState("");
   const [showActioned, setShowActioned] = useState(false);
   const [actioned, setActioned] = useState({});
+  const [dealerCount, setDealerCount] = useState(0);
 
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "100" });
-      if (role !== "all") params.set("role", role);
-      const res = await fetch(`${API_BASE}/alerts/daily-feed?${params}`);
+      const params = new URLSearchParams({ limit: "500" });
+      if (role !== "all" && role !== "mother_warehouse") params.set("role", role);
+      
+      const token = localStorage.getItem("access_token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/alerts/daily-feed?${params}`, { headers });
       const json = await res.json();
 
       // Filter out snoozed
@@ -269,6 +275,9 @@ export default function AlertFeed() {
       setAlerts(active);
       setTotalImpact(json.total_financial_impact_inr || 0);
       setLastUpdated(new Date());
+      // Derive unique dealer count from the alerts
+      const uniqueDealers = new Set((json.alerts || []).map(a => a.dealer_id).filter(Boolean));
+      setDealerCount(uniqueDealers.size);
     } catch {
       setAlerts([]);
     } finally {
@@ -321,7 +330,7 @@ export default function AlertFeed() {
               <h2 className="text-sm font-bold text-foreground">Today's Action Queue</h2>
             </div>
             <p className="mt-1 text-lg font-bold text-neon-red">
-              ₹{fmt(totalImpact)} at risk today across 30 dealers
+              ₹{fmt(totalImpact)} at risk today across {dealerCount} dealer{dealerCount !== 1 ? "s" : ""}
             </p>
             <div className="mt-2 flex items-center gap-3 flex-wrap">
               <span className="text-xs px-2 py-0.5 rounded-full bg-neon-red/10 text-neon-red border border-neon-red/20 font-semibold">

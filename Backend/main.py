@@ -1,15 +1,31 @@
-from fastapi import Depends, FastAPI, Query
+from fastapi import Depends, FastAPI, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+from datetime import timedelta
 import json
 from pathlib import Path
 
 import models
 from distance_service import get_transport_cost, get_distance_km
 import email_service
+from auth import (
+    Token,
+    authenticate_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    get_current_active_user,
+    check_role,
+    get_scope_condition,
+    get_scope_filters
+)
+
+import routers.inventory
+import routers.users
+import routers.dealers
 
 FORECAST_PATH = Path("data/forecast_output.json")
 _forecast_cache: Dict[str, Any] = {}
@@ -20,6 +36,7 @@ def _load_forecast() -> Dict[str, Any]:
         with open(FORECAST_PATH) as f:
             _forecast_cache = json.load(f)
     return _forecast_cache
+
 
 app = FastAPI(
     title="Automotive Dealer Network AI Copilot API",
@@ -42,109 +59,57 @@ def get_db():
         db.close()
 
 
-@app.get("/api/v1/wipro/inventory/summary")
-def get_inventory_summary(db: Session = Depends(get_db)):
-    # Only count UNSOLD vehicles (not present in vehicle_sales) — true showroom stock
-    row = db.execute(text("""
-        SELECT
-            COUNT(*) as total,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) <= 60 THEN 1 ELSE 0 END) as available,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 60 THEN 1 ELSE 0 END) as aging,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(stock_arrival_date) AS INTEGER) > 90 THEN 1 ELSE 0 END) as critical
-        FROM vehicles
-        WHERE stock_arrival_date IS NOT NULL
-          AND dealer_id IS NOT NULL
-          AND chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
-    """)).fetchone()
-    return {"total": row.total, "available": row.available, "aging": row.aging, "critical": row.critical}
-
-
-@app.get("/api/v1/wipro/inventory", response_model=List[models.InventoryResponse])
-def get_inventory(
-    dealer_id: Optional[str] = None,
-    zone: Optional[str] = None,
-    status: Optional[str] = None,
-    model: Optional[str] = None,
-    fuel_type: Optional[str] = None,
-    search: Optional[str] = None,
-    page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=200),
-    db: Session = Depends(get_db),
-):
-    conditions = [
-        "v.stock_arrival_date IS NOT NULL",
-        "v.dealer_id IS NOT NULL",
-        "v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)",
-    ]
-    params: dict = {"limit": limit, "offset": (page - 1) * limit}
-
-    if dealer_id:
-        conditions.append("UPPER(v.dealer_id) = UPPER(:dealer_id)")
-        params["dealer_id"] = dealer_id.strip()
-    if zone:
-        conditions.append("d.zone = :zone")
-        params["zone"] = zone.strip()
-    if model:
-        conditions.append("v.model_code = :model")
-        params["model"] = model.strip()
-    if fuel_type:
-        conditions.append("v.fuel_type = :fuel_type")
-        params["fuel_type"] = fuel_type.strip()
-    if status == "Available":
-        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) <= 60")
-    elif status == "Aging":
-        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 60")
-    if search:
-        conditions.append("(v.chassis_number LIKE :search OR v.model_code LIKE :search OR d.dealer_name LIKE :search OR v.variant_id LIKE :search)")
-        params["search"] = f"%{search.strip()}%"
-
-    where = " AND ".join(conditions)
-    rows = db.execute(text(f"""
-        SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
-            d.dealer_id, d.dealer_name, d.zone,
-            CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
-        FROM vehicles v
-        JOIN dealers d ON d.dealer_id = v.dealer_id
-        WHERE {where}
-        ORDER BY days DESC
-        LIMIT :limit OFFSET :offset
-    """), params).fetchall()
-
-    return [
-        models.InventoryResponse(
-            vin=row.chassis_number,
-            dealer_id=row.dealer_id,
-            dealer_name=row.dealer_name,
-            model=row.model_code or "Unknown",
-            variant=row.variant_id or "Unknown",
-            fuel_type=row.fuel_type,
-            days_in_inventory=int(row.days or 0),
-            status="Aging" if int(row.days or 0) > 60 else "Available",
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        for row in rows
-    ]
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "role": user.role.value if hasattr(user.role, 'value') else str(user.role) if user.role else None,
+            "zone": user.zone,
+            "dealer_id": user.dealer_id
+        }, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+app.include_router(routers.inventory.router)
+app.include_router(routers.users.router)
+app.include_router(routers.dealers.router)
+
+
+
 
 
 @app.get("/api/v1/sap/parts/summary")
-def get_parts_summary(db: Session = Depends(get_db)):
-    rows = db.execute(text("""
+def get_parts_summary(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
+    scope = get_scope_condition(current_user, dealer_field="dr.dealer_id", zone_field="d.zone")
+    rows = db.execute(text(f"""
         SELECT
             COUNT(*) as total,
             SUM(CASE WHEN on_hand < rop THEN 1 ELSE 0 END) as stockout,
             SUM(CASE WHEN on_hand >= rop THEN 1 ELSE 0 END) as adequate
         FROM (
-            SELECT dealer_id, part_number,
-                SUM(on_hand_qty) as on_hand,
-                AVG(reorder_point) as rop
-            FROM demand_records
-            GROUP BY dealer_id, part_number
+            SELECT dr.dealer_id, dr.part_number,
+                SUM(dr.on_hand_qty) as on_hand,
+                AVG(dr.reorder_point) as rop
+            FROM demand_records dr
+            JOIN dealers d ON d.dealer_id = dr.dealer_id
+            WHERE {scope}
+            GROUP BY dr.dealer_id, dr.part_number
         )
     """)).fetchone()
     sku_count = db.execute(text("SELECT COUNT(*) FROM parts")).fetchone()[0]
     return {
-        "total_dealer_part_combos": rows.total,
-        "stockout": rows.stockout,
-        "adequate": rows.adequate,
+        "total_dealer_part_combos": rows.total or 0,
+        "stockout": rows.stockout or 0,
+        "adequate": rows.adequate or 0,
         "unique_skus": sku_count,
     }
 
@@ -158,8 +123,10 @@ def get_sap_parts(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
-    conditions = ["1=1"]
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
+    conditions = [scope]
     params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
     if dealer_id:
@@ -212,20 +179,22 @@ def get_sap_parts(
 
 
 @app.get("/api/v1/rail/transit/summary")
-def get_transit_summary(db: Session = Depends(get_db)):
-    row = db.execute(text("""
+def get_transit_summary(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
+    scope = get_scope_condition(current_user, dealer_field="dealer_id", zone_field="zone")
+    row = db.execute(text(f"""
         SELECT
             COUNT(*) as total,
             SUM(CASE WHEN status = 'In Transit' THEN 1 ELSE 0 END) as in_transit,
             SUM(CASE WHEN status = 'Delivered'  THEN 1 ELSE 0 END) as delivered,
             SUM(CASE WHEN status IN ('Delayed', 'Past Due') THEN 1 ELSE 0 END) as delayed
         FROM shipments
+        WHERE {scope}
     """)).fetchone()
     return {
-        "total": row.total,
-        "in_transit": row.in_transit,
-        "delivered": row.delivered,
-        "delayed": row.delayed,
+        "total": row.total or 0,
+        "in_transit": row.in_transit or 0,
+        "delivered": row.delivered or 0,
+        "delayed": row.delayed or 0,
     }
 
 
@@ -239,8 +208,10 @@ def get_transit(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
-    conditions = ["1=1"]
+    scope = get_scope_condition(current_user, dealer_field="dealer_id", zone_field="zone")
+    conditions = [scope]
     params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
     if zone:
@@ -301,17 +272,39 @@ def get_transit(
 def get_overview_trends(
     dealer_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
-    query = db.query(
-        func.strftime("%Y-%m", models.DailyTrend.date).label("month"),
-        func.sum(models.DailyTrend.total_demand_qty).label("demand"),
-        func.sum(models.DailyTrend.total_demand_qty + models.DailyTrend.stockout_count).label(
-            "inventory"
-        ),
-    )
+    # For MANAGER scope by zone via join
+    role_str = str(current_user.role).lower()
+    if "manager" in role_str or "regional_distributor" in role_str:
+        zone_clause = f"JOIN dealers d ON d.dealer_id = dt.dealer_id AND d.zone = '{current_user.zone}'"
+    elif "user" in role_str or "dealership" in role_str:
+        zone_clause = f"WHERE dt.dealer_id = '{current_user.dealer_id}'"
+    else:
+        zone_clause = ""
+
+    # Adjust query to handle where/and correctly
+    where_literal = "WHERE 1=1" if not zone_clause.startswith("WHERE") else ""
+    if zone_clause.startswith("WHERE"):
+        final_zone_clause = zone_clause
+        final_where = ""
+    else:
+        final_zone_clause = zone_clause
+        final_where = "WHERE 1=1"
+
+    dealer_clause = ""
     if dealer_id:
-        query = query.filter(models.DailyTrend.dealer_id == dealer_id.upper().strip())
-    rows = query.group_by("month").order_by("month").all()
+        dealer_clause = f"AND dt.dealer_id = :dealer_id"
+    
+    rows = db.execute(text(f"""
+        SELECT strftime('%Y-%m', dt.date) AS month,
+               SUM(dt.total_demand_qty) AS demand,
+               SUM(dt.total_demand_qty + dt.stockout_count) AS inventory
+        FROM daily_trends dt
+        {final_zone_clause}
+        {final_where} {dealer_clause}
+        GROUP BY month ORDER BY month
+    """), {"dealer_id": dealer_id} if dealer_id else {}).fetchall()
     return [
         models.TrendResponse(
             month=row.month,
@@ -364,9 +357,21 @@ def get_forecast_variants(
     dealer_id: Optional[str] = None,
     variant_id: Optional[str] = None,
     limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
     data = _load_forecast()
     records = data.get("forecasts", [])
+
+    # Scope by zone: get dealer IDs belonging to the user's zone
+    # Scope by zone: get dealer IDs belonging to the user's zone
+    role_str = str(current_user.role).lower()
+    if "manager" in role_str or "regional_distributor" in role_str:
+        zone_dealers = {d.dealer_id for d in db.query(models.Dealer).filter(models.Dealer.zone == current_user.zone).all()}
+        records = [r for r in records if r["dealer_id"] in zone_dealers]
+    elif "user" in role_str or "dealership" in role_str:
+        records = [r for r in records if r["dealer_id"] == current_user.dealer_id]
+
     if dealer_id:
         records = [r for r in records if r["dealer_id"] == dealer_id.upper().strip()]
     if variant_id:
@@ -386,9 +391,21 @@ def get_forecast_variants(
 
 
 @app.get("/api/v1/forecast/summary", response_model=models.ForecastSummary)
-def get_forecast_summary():
+def get_forecast_summary(
+    db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
+):
     data = _load_forecast()
     records = data.get("forecasts", [])
+
+    # Scope by zone
+    # Scope by zone
+    role_str = str(current_user.role).lower()
+    if "manager" in role_str or "regional_distributor" in role_str:
+        zone_dealers = {d.dealer_id for d in db.query(models.Dealer).filter(models.Dealer.zone == current_user.zone).all()}
+        records = [r for r in records if r["dealer_id"] in zone_dealers]
+    elif "user" in role_str or "dealership" in role_str:
+        records = [r for r in records if r["dealer_id"] == current_user.dealer_id]
 
     # Top 10 dealer-variant pairs by 30d demand
     top_pairs = sorted(records, key=lambda x: x["total_30d"], reverse=True)[:10]
@@ -490,18 +507,21 @@ def _build_ai_prompt(v: dict, target: dict, net_utility: float) -> str:
 # ── Aging Stock Endpoints ─────────────────────────────────────────────────────
 
 @app.get("/api/v1/aging/summary", response_model=models.AgingSummary)
-def get_aging_summary(db: Session = Depends(get_db)):
+def get_aging_summary(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
     # Only unsold vehicles — true aging showroom stock
     rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 v.chassis_number,
                 v.model_code,
                 CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
             FROM vehicles v
+            JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
               AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
+              AND {scope}
         """)
     ).fetchall()
 
@@ -537,9 +557,11 @@ def get_aging_vehicles(
     min_days: int = Query(60, ge=0),
     limit: int = Query(200, ge=1, le=1000),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
     rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 v.chassis_number,
                 v.model_code,
@@ -554,6 +576,7 @@ def get_aging_vehicles(
             WHERE v.stock_arrival_date IS NOT NULL
               AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+              AND {scope}
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -586,10 +609,12 @@ def get_transfer_recommendations(
     min_days: int = Query(60, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
     # Get aging UNSOLD vehicles only
     aging_rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
                 v.dealer_id, d.dealer_name, d.city,
@@ -599,6 +624,7 @@ def get_transfer_recommendations(
             WHERE v.stock_arrival_date IS NOT NULL
               AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+              AND {scope}
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -735,10 +761,12 @@ def get_b2c_prompts(
     min_days: int = Query(60, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
     # Use unsold vehicles with stock_arrival_date — correct aging stock for B2C outreach
     rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
                 v.dealer_id, d.dealer_name,
@@ -748,6 +776,7 @@ def get_b2c_prompts(
             WHERE v.stock_arrival_date IS NOT NULL
               AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
+              AND {scope}
             ORDER BY days DESC
             LIMIT :lim
         """),
@@ -782,12 +811,14 @@ def get_b2c_prompts(
 def get_operational_alerts(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
     alerts = []
 
+    scope_dealer = get_scope_filters(current_user, dealer_table_alias="dr")
     # ── Stockout alerts ───────────────────────────────────────────────────────
     stockout_rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 dr.part_number, p.description,
                 dr.dealer_id,
@@ -795,6 +826,7 @@ def get_operational_alerts(
                 AVG(dr.reorder_point) as rop
             FROM demand_records dr
             JOIN parts p ON p.part_number = dr.part_number
+            WHERE {scope_dealer}
             GROUP BY dr.part_number, p.description, dr.dealer_id
             HAVING on_hand < rop
             ORDER BY (rop - on_hand) DESC
@@ -825,14 +857,15 @@ def get_operational_alerts(
         ))
 
     # ── Transit delay alerts ──────────────────────────────────────────────────
+    scope_transit = get_scope_condition(current_user, dealer_field="s.dealer_id", zone_field="s.zone")
     delay_rows = db.execute(
-        text("""
+        text(f"""
             SELECT
                 s.shipment_id, s.description,
                 s.origin_city, s.destination_city,
                 s.delay_days, s.carrier_name, s.dealer_id
             FROM shipments s
-            WHERE s.delay_days > 0
+            WHERE s.delay_days > 0 AND {scope_transit}
             ORDER BY s.delay_days DESC
             LIMIT :lim
         """),
@@ -1104,18 +1137,21 @@ def _derive_rec_data(rec_id: str, db: Session) -> dict:
 def get_guided_recommendations(
     limit: int = Query(30, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
     recs = []
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
 
     # Transfer recommendations
     aging_rows = db.execute(
-        text("""
+        text(f"""
             SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
                    j.dealer_id, d.dealer_name, d.city,
                    CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
             FROM vehicles v
             JOIN job_cards j ON j.chassis_number = v.chassis_number
             JOIN dealers d ON d.dealer_id = j.dealer_id
+            WHERE {scope}
             GROUP BY v.chassis_number, v.model_code, v.variant_id,
                      v.fuel_type, j.dealer_id, d.dealer_name, d.city
             HAVING days >= 60
@@ -1161,12 +1197,14 @@ def get_guided_recommendations(
         ))
 
     # Stockout reorder recommendations
+    stockout_scope = get_scope_filters(current_user, dealer_table_alias="dr")
     stockout_rows = db.execute(
-        text("""
+        text(f"""
             SELECT dr.part_number, p.description, dr.dealer_id,
                    SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
             FROM demand_records dr
             JOIN parts p ON p.part_number = dr.part_number
+            WHERE {stockout_scope}
             GROUP BY dr.part_number, p.description, dr.dealer_id
             HAVING on_hand < rop
             ORDER BY (rop - on_hand) DESC
@@ -1262,15 +1300,17 @@ def reject_recommendation(rec_id: str, reason: Optional[str] = None):
 # ── Week 3: ROI Report ────────────────────────────────────────────────────────
 
 @app.get("/api/v1/roi/report", response_model=models.ROIReport)
-def get_roi_report(db: Session = Depends(get_db)):
+def get_roi_report(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
     import pandas as pd
+    scope = get_scope_filters(current_user, dealer_table_alias="d")
 
-    # Baseline: aging vehicles count and floorplan cost
     aging_rows = db.execute(
-        text("""
+        text(f"""
             SELECT CAST(MAX(julianday('now') - julianday(j.date_in)) AS INTEGER) AS days
             FROM vehicles v
             JOIN job_cards j ON j.chassis_number = v.chassis_number
+            JOIN dealers d ON d.dealer_id = j.dealer_id
+            WHERE {scope}
             GROUP BY v.chassis_number
             HAVING days > 60
         """)
@@ -1287,12 +1327,14 @@ def get_roi_report(db: Session = Depends(get_db)):
     )
     floorplan_saved = baseline_floorplan - ai_floorplan
 
-    # Stockout baseline
+    stockout_scope = get_scope_condition(current_user, dealer_field="dr.dealer_id", zone_field="d.zone")
     stockout_rows = db.execute(
-        text("""
+        text(f"""
             SELECT COUNT(*) as cnt FROM (
                 SELECT dr.part_number, dr.dealer_id
                 FROM demand_records dr
+                JOIN dealers d ON d.dealer_id = dr.dealer_id
+                WHERE {stockout_scope}
                 GROUP BY dr.part_number, dr.dealer_id
                 HAVING SUM(dr.on_hand_qty) < AVG(dr.reorder_point)
             )
@@ -1385,8 +1427,9 @@ def get_all_cities(db: Session = Depends(get_db)):
 # ── Vehicle Sales Endpoints ───────────────────────────────────────────────────
 
 @app.get("/api/v1/sales/summary")
-def get_sales_summary(db: Session = Depends(get_db)):
-    row = db.execute(text("""
+def get_sales_summary(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
+    scope = get_scope_condition(current_user, dealer_field="dealer_id", zone_field="zone")
+    row = db.execute(text(f"""
         SELECT
             COUNT(*)                          AS total_sales,
             ROUND(AVG(days_to_sell), 1)       AS avg_days_to_sell,
@@ -1396,11 +1439,14 @@ def get_sales_summary(db: Session = Depends(get_db)):
             SUM(finance_taken)                AS finance_count,
             SUM(festive_sale)                 AS festive_count
         FROM vehicle_sales
+        WHERE {scope}
     """)).fetchone()
 
-    unsold = db.execute(text("""
+    unsold = db.execute(text(f"""
         SELECT COUNT(*) FROM vehicles v
-        WHERE NOT EXISTS (
+        JOIN dealers d ON d.dealer_id = v.dealer_id
+        WHERE {get_scope_filters(current_user, dealer_table_alias='d')}
+          AND NOT EXISTS (
             SELECT 1 FROM vehicle_sales s WHERE s.chassis_number = v.chassis_number
         )
     """)).fetchone()[0]
@@ -1432,8 +1478,10 @@ def get_sales(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
-    conditions = ["1=1"]
+    scope = get_scope_condition(current_user, dealer_field="dealer_id", zone_field="zone")
+    conditions = [scope]
     params: dict = {"limit": limit, "offset": (page - 1) * limit}
 
     if dealer_id:
@@ -1783,15 +1831,20 @@ def nlq_query(req: NLQRequest, db: Session = Depends(get_db)):
 @app.get("/api/v1/alerts/daily-feed")
 def get_daily_alert_feed(
     role: Optional[str] = None,
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
     """Generate ranked daily alert feed from aging vehicles, parts stockouts, and transit delays."""
     from datetime import datetime
     alerts = []
+    
+    # Use robust scoping functions
+    zone_filter = f"AND {get_scope_condition(current_user, dealer_field='d.dealer_id', zone_field='d.zone')}"
+    dealer_filter = "" # Handled by the condition above for both manager and user
 
     # ── Aging vehicle alerts (grouped by dealer) ──────────────────────────────
-    aging_rows = db.execute(text("""
+    aging_rows = db.execute(text(f"""
         SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
                d.dealer_id, d.dealer_name, d.city,
                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
@@ -1799,7 +1852,8 @@ def get_daily_alert_feed(
         JOIN dealers d ON d.dealer_id = v.dealer_id
         WHERE v.stock_arrival_date IS NOT NULL
           AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
-          AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= 60
+          AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= 30
+          {zone_filter} {dealer_filter}
         ORDER BY days DESC
     """)).fetchall()
 
@@ -1812,59 +1866,101 @@ def get_daily_alert_feed(
     for dealer_id, vehicles in dealer_aging.items():
         critical = [v for v in vehicles if v.days >= 90]
         aging_only = [v for v in vehicles if 60 <= v.days < 90]
+        low_aging = [v for v in vehicles if 30 <= v.days < 60]
         daily_burn = round(FLOORPLAN_RATE_MONTHLY * AVG_INVOICE_VALUE / 30, 0)
 
         if critical:
             total_burn = len(critical) * daily_burn
             top_v = critical[0]
-            severity = "critical"
-            action_type = "transfer"
-            action_label = f"Transfer {top_v.model_code} {top_v.variant_id}"
-            title = f"{len(critical)} critical vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day burning"
-            summary = f"Vehicles unsold 90+ days. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)"
-            financial_impact = int(total_burn)
-        else:
+            alerts.append({
+                "alert_id": f"aging_crit_{dealer_id}_20251231",
+                "type": "aging_vehicle",
+                "severity": "critical",
+                "title": f"{len(critical)} critical vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day burning",
+                "summary": f"Vehicles unsold 90+ days. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)",
+                "financial_impact_inr": int(total_burn),
+                "dealer_name": top_v.dealer_name,
+                "dealer_id": dealer_id,
+                "action_type": "transfer",
+                "action_label": f"Transfer {top_v.model_code} {top_v.variant_id}",
+                "entity_id": top_v.chassis_number,
+                "entity_detail": {
+                    "count": len(critical),
+                    "max_days": max(v.days for v in critical),
+                    "daily_burn": daily_burn,
+                    "top_model": top_v.model_code,
+                    "variant": top_v.variant_id,
+                    "city": top_v.city,
+                },
+                "gemini_message": None,
+                "status": "pending",
+                "created_at": "2025-12-31T00:00:00",
+            })
+            
+        if aging_only:
             total_burn = len(aging_only) * daily_burn
             top_v = aging_only[0]
-            severity = "medium"
-            action_type = "discount"
-            action_label = f"Apply discount on {top_v.model_code}"
-            title = f"{len(aging_only)} aging vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day"
-            summary = f"Vehicles 60-89 days unsold. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)"
-            financial_impact = int(total_burn)
-
-        alerts.append({
-            "alert_id": f"aging_{dealer_id}_20251231",
-            "type": "aging_vehicle",
-            "severity": severity,
-            "title": title,
-            "summary": summary,
-            "financial_impact_inr": financial_impact,
-            "dealer_name": top_v.dealer_name,
-            "dealer_id": dealer_id,
-            "action_type": action_type,
-            "action_label": action_label,
-            "entity_id": top_v.chassis_number,
-            "entity_detail": {
-                "count": len(critical) if critical else len(aging_only),
-                "max_days": max(v.days for v in vehicles),
+            alerts.append({
+                "alert_id": f"aging_med_{dealer_id}_20251231",
+                "type": "aging_vehicle",
+                "severity": "medium",
+                "title": f"{len(aging_only)} aging vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day",
+                "summary": f"Vehicles 60-89 days unsold. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)",
+                "financial_impact_inr": int(total_burn),
+                "dealer_name": top_v.dealer_name,
+                "dealer_id": dealer_id,
+                "action_type": "discount",
+                "action_label": f"Apply discount on {top_v.model_code}",
+                "entity_id": top_v.chassis_number,
+                "entity_detail": {
+                    "count": len(aging_only),
+                    "max_days": max(v.days for v in aging_only),
                 "daily_burn": daily_burn,
-                "top_model": top_v.model_code,
-                "variant": top_v.variant_id,
-                "city": top_v.city,
-            },
-            "gemini_message": None,
-            "status": "pending",
-            "created_at": "2025-12-31T00:00:00",
-        })
+                    "top_model": top_v.model_code,
+                    "variant": top_v.variant_id,
+                    "city": top_v.city,
+                },
+                "gemini_message": None,
+                "status": "pending",
+                "created_at": "2025-12-31T00:00:00",
+            })
+            
+        if low_aging:
+            total_burn = len(low_aging) * daily_burn
+            top_v = low_aging[0]
+            alerts.append({
+                "alert_id": f"aging_low_{dealer_id}_20251231",
+                "type": "aging_vehicle",
+                "severity": "low",
+                "title": f"{len(low_aging)} slow-moving vehicles at {top_v.dealer_name} — ₹{int(total_burn):,}/day",
+                "summary": f"Vehicles 30-59 days unsold. Top: {top_v.model_code} {top_v.variant_id} ({top_v.days} days)",
+                "financial_impact_inr": int(total_burn),
+                "dealer_name": top_v.dealer_name,
+                "dealer_id": dealer_id,
+                "action_type": "monitor",
+                "action_label": f"Monitor {top_v.model_code}",
+                "entity_id": top_v.chassis_number,
+                "entity_detail": {
+                    "count": len(low_aging),
+                    "max_days": max(v.days for v in low_aging),
+                    "daily_burn": daily_burn,
+                    "top_model": top_v.model_code,
+                    "variant": top_v.variant_id,
+                    "city": top_v.city,
+                },
+                "gemini_message": None,
+                "status": "pending",
+                "created_at": "2025-12-31T00:00:00",
+            })
 
     # ── Parts stockout alerts (grouped by dealer) ─────────────────────────────
-    stockout_rows = db.execute(text("""
+    stockout_rows = db.execute(text(f"""
         SELECT dr.part_number, p.description, dr.dealer_id, d.dealer_name,
                SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
         FROM demand_records dr
         JOIN parts p ON p.part_number = dr.part_number
         JOIN dealers d ON d.dealer_id = dr.dealer_id
+        WHERE 1=1 {zone_filter} {dealer_filter}
         GROUP BY dr.part_number, p.description, dr.dealer_id, d.dealer_name
         HAVING on_hand < rop
         ORDER BY on_hand ASC
@@ -1877,40 +1973,65 @@ def get_daily_alert_feed(
     for dealer_id, parts in dealer_stockout.items():
         zero_stock = [p for p in parts if int(p.on_hand or 0) == 0]
         below_rop = [p for p in parts if int(p.on_hand or 0) > 0]
-        top_part = parts[0]
-        severity = "critical" if zero_stock else "medium"
-        impact = len(zero_stock) * 5000
-        title = f"{len(zero_stock)} zero-stock SKUs at {top_part.dealer_name}" if zero_stock else \
-                f"{len(below_rop)} SKUs below ROP at {top_part.dealer_name}"
-        summary = f"Top critical: {top_part.description} — {int(top_part.on_hand or 0)} units (ROP: {int(top_part.rop or 0)})"
-
-        alerts.append({
-            "alert_id": f"stockout_{dealer_id}_20251231",
-            "type": "parts_stockout",
-            "severity": severity,
-            "title": title,
-            "summary": summary,
-            "financial_impact_inr": max(impact, 1000),
-            "dealer_name": top_part.dealer_name,
-            "dealer_id": dealer_id,
-            "action_type": "reorder",
-            "action_label": f"Order {max(int(top_part.rop or 10) * 2, 10)} units of {top_part.description}",
-            "entity_id": str(top_part.part_number),
-            "entity_detail": {
-                "zero_stock_count": len(zero_stock),
-                "below_rop_count": len(below_rop),
-                "part_name": top_part.description,
-                "qty_on_hand": int(top_part.on_hand or 0),
-                "rop": int(top_part.rop or 0),
-                "impact": impact,
-            },
-            "gemini_message": None,
-            "status": "pending",
-            "created_at": "2025-12-31T00:00:00",
-        })
+        
+        if zero_stock:
+            top_part = zero_stock[0]
+            impact = len(zero_stock) * 5000
+            alerts.append({
+                "alert_id": f"stockout_crit_{dealer_id}_20251231",
+                "type": "parts_stockout",
+                "severity": "critical",
+                "title": f"{len(zero_stock)} zero-stock SKUs at {top_part.dealer_name}",
+                "summary": f"Top critical: {top_part.description} — 0 units (ROP: {int(top_part.rop or 0)})",
+                "financial_impact_inr": max(impact, 1000),
+                "dealer_name": top_part.dealer_name,
+                "dealer_id": dealer_id,
+                "action_type": "reorder",
+                "action_label": f"Order {max(int(top_part.rop or 10) * 2, 10)} units of {top_part.description}",
+                "entity_id": str(top_part.part_number),
+                "entity_detail": {
+                    "zero_stock_count": len(zero_stock),
+                    "below_rop_count": len(below_rop),
+                    "part_name": top_part.description,
+                    "qty_on_hand": 0,
+                    "rop": int(top_part.rop or 0),
+                    "impact": impact,
+                },
+                "gemini_message": None,
+                "status": "pending",
+                "created_at": "2025-12-31T00:00:00",
+            })
+            
+        if below_rop:
+            top_part = below_rop[0]
+            impact = len(below_rop) * 2000
+            alerts.append({
+                "alert_id": f"stockout_med_{dealer_id}_20251231",
+                "type": "parts_stockout",
+                "severity": "medium",
+                "title": f"{len(below_rop)} SKUs below ROP at {top_part.dealer_name}",
+                "summary": f"Top part: {top_part.description} — {int(top_part.on_hand or 0)} units (ROP: {int(top_part.rop or 0)})",
+                "financial_impact_inr": max(impact, 1000),
+                "dealer_name": top_part.dealer_name,
+                "dealer_id": dealer_id,
+                "action_type": "reorder",
+                "action_label": f"Order {max(int(top_part.rop or 10) * 2, 10)} units of {top_part.description}",
+                "entity_id": str(top_part.part_number),
+                "entity_detail": {
+                    "zero_stock_count": len(zero_stock),
+                    "below_rop_count": len(below_rop),
+                    "part_name": top_part.description,
+                    "qty_on_hand": int(top_part.on_hand or 0),
+                    "rop": int(top_part.rop or 0),
+                    "impact": impact,
+                },
+                "gemini_message": None,
+                "status": "pending",
+                "created_at": "2025-12-31T00:00:00",
+            })
 
     # ── Transit delay alerts (one per shipment) ───────────────────────────────
-    delay_rows = db.execute(text("""
+    delay_rows = db.execute(text(f"""
         SELECT s.shipment_id, s.description, s.origin_city, s.destination_city,
                s.carrier_name, s.dealer_id, d.dealer_name,
                s.expected_arrival,
@@ -1923,7 +2044,8 @@ def get_daily_alert_feed(
                END AS real_delay
         FROM shipments s
         LEFT JOIN dealers d ON d.dealer_id = s.dealer_id
-        WHERE s.status IN ('Delayed','Past Due') OR s.delay_days > 0
+        WHERE (s.status IN ('Delayed','Past Due') OR s.delay_days > 0)
+        {zone_filter} {dealer_filter}
         ORDER BY real_delay DESC LIMIT 50
     """)).fetchall()
 

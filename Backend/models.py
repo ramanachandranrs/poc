@@ -2,10 +2,11 @@ from datetime import date
 from typing import Optional, List
 
 from pydantic import BaseModel
+import os
 from sqlalchemy import Date, Float, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-DATABASE_URL = "sqlite:///dealer_network.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///dealer_network.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
 
@@ -278,6 +279,7 @@ class VehicleSale(Base):
 
 
 class VehicleSaleResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
     sale_id: str
     chassis_number: str
     dealer_id: str
@@ -500,6 +502,25 @@ class ForecastSummary(BaseModel):
     variant_totals: List[dict]
     model_metrics: dict
     all_dealers: List[dict] = []
+
+import enum
+from sqlalchemy import Enum as SQLEnum
+
+class UserRole(str, enum.Enum):
+    ADMIN = "mother_warehouse"
+    MANAGER = "regional_distributor"
+    USER = "dealership"
+
+class AppUser(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), default=UserRole.USER)
+    
+    zone: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    dealer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("dealers.dealer_id"), nullable=True)
+
 
 
 if __name__ == "__main__":

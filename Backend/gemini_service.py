@@ -19,9 +19,11 @@ def _get_client():
     from google import genai
     from google.genai import types
 
-    project  = os.getenv("GOOGLE_CLOUD_PROJECT",  "project-70591921-7d7a-4043-ba8")
+    project  = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     model    = os.getenv("GEMINI_MODEL",           "gemini-2.5-flash")
+    if not project:
+        raise ValueError("GOOGLE_CLOUD_PROJECT environment variable is missing")
 
     client = genai.Client(
         vertexai=True,
@@ -372,7 +374,9 @@ def _generate_groq(system_prompt: str, user_prompt: str) -> str:
         from langchain_core.messages import SystemMessage, HumanMessage
         import os
 
-        api_key = os.getenv("GROQ_API_KEY", "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")
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY environment variable is missing")
         llm = ChatGroq(
             model="llama-3.3-70b-versatile",
             api_key=api_key,

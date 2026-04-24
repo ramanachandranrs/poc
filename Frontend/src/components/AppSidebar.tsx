@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Car, Package, Train, Users, Flame,
-  TrendingUp, Bot, ShieldCheck, BarChart3, Zap, Network,
+  TrendingUp, Bot, ShieldCheck, BarChart3, Zap, Network, UserCog, Store
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -9,7 +9,7 @@ import {
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
-import { useRole, ROLES, TAB_VISIBILITY } from "@/context/RoleContext";
+import { useRole, TAB_VISIBILITY } from "@/context/RoleContext";
 
 const ALL_NAV_ITEMS = [
   { id: "alerts",       title: "Today's Actions",    url: "/",          icon: Zap },
@@ -20,17 +20,19 @@ const ALL_NAV_ITEMS = [
   { id: "transit",      title: "Transit Logistics",  url: "/transit",   icon: Train },
   { id: "forecast",     title: "Demand Forecast",    url: "/forecast",  icon: TrendingUp },
   { id: "ai-workspace", title: "AI Workspace",       url: "/ai",        icon: Bot },
+  { id: "dealers",      title: "Dealer Management",  url: "/dealers",   icon: Store },
   { id: "customers",    title: "Customers",          url: "/customers", icon: Users },
   { id: "roi",          title: "ROI Report",         url: "/roi",       icon: BarChart3 },
+  { id: "users",        title: "User Management",    url: "/users",     icon: UserCog },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { role, setRole } = useRole();
+  const { role } = useRole();
 
-  const visible = TAB_VISIBILITY[role] || TAB_VISIBILITY["all"];
+  const visible = TAB_VISIBILITY[role] || TAB_VISIBILITY["dealership"];
   const navItems = ALL_NAV_ITEMS.filter((item) => visible.includes(item.id));
 
   return (
@@ -42,8 +44,8 @@ export function AppSidebar() {
               <Network className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-foreground tracking-wide">DEALER AI</h1>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Copilot Network</p>
+              <h1 className="text-sm font-bold text-sidebar-foreground tracking-wide">DEALER AI</h1>
+              <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">Copilot Network</p>
             </div>
           </div>
         )}
@@ -57,23 +59,8 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Role switcher */}
-        {!collapsed && (
-          <div className="px-3 pb-2">
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg bg-muted/30 border border-border/40 px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary/50 cursor-pointer"
-            >
-              {Object.entries(ROLES).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50">
             {!collapsed && "Navigation"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -88,8 +75,8 @@ export function AppSidebar() {
                         end
                         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
                           active
-                            ? "bg-primary/10 text-primary glow-blue font-medium"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            ? "bg-primary/20 text-sidebar-foreground glow-blue font-medium"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         }`}
                         activeClassName=""
                       >

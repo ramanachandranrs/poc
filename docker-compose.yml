@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: dealer_admin
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: dealer_network
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dealer_admin -d dealer_network"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./Backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://dealer_admin:secure_password@db:5432/dealer_network
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SECRET_KEY: ${SECRET_KEY:-09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

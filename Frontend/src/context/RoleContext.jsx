@@ -1,34 +1,76 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const RoleContext = createContext(null);
 
-export const ROLES = {
-  all: "All Views",
-  dealer_principal: "Dealer Principal",
-  parts_manager: "Parts Manager",
-  logistics_coordinator: "Logistics Coordinator",
-};
-
-// Tab visibility per role
 export const TAB_VISIBILITY = {
-  all:                   ["alerts","overview","inventory","aging","parts","transit","forecast","ai-workspace","customers","roi"],
-  dealer_principal:      ["alerts","overview","inventory","aging","forecast","ai-workspace","customers","roi"],
-  parts_manager:         ["alerts","parts","ai-workspace"],
-  logistics_coordinator: ["alerts","transit","forecast","ai-workspace"],
+  mother_warehouse: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "customers", "roi", "users"],
+  regional_distributor: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "dealers"],
+  dealership: ["alerts", "inventory", "aging", "parts", "transit"],
 };
 
 export function RoleProvider({ children }) {
-  const [role, setRoleState] = useState(
-    () => localStorage.getItem("dealer_ai_role") || "all"
-  );
+  const [token, setToken] = useState(() => localStorage.getItem("access_token"));
+  const [user, setUser] = useState(null);
+  
+  // To avoid breaking old code that expects `role`
+  const role = user?.role || "mother_warehouse";
 
-  const setRole = (r) => {
-    setRoleState(r);
-    localStorage.setItem("dealer_ai_role", r);
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUser({
+          username: decoded.sub,
+          role: decoded.role,
+          zone: decoded.zone,
+          dealer_id: decoded.dealer_id
+        });
+        localStorage.setItem("access_token", token);
+      } catch (e) {
+        console.error("Invalid token", e);
+        logout();
+      }
+    } else {
+      setUser(null);
+      localStorage.removeItem("access_token");
+    }
+  }, [token]);
+
+  const login = async (username, password) => {
+    const formData = new URLSearchParams();
+    formData.append("username", username);
+    formData.append("password", password);
+
+    const res = await fetch("http://127.0.0.1:8000/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData
+    });
+
+    if (!res.ok) {
+      throw new Error("Invalid credentials");
+    }
+
+    const data = await res.json();
+    localStorage.setItem("access_token", data.access_token);
+    setToken(data.access_token);
+    window.dispatchEvent(new Event("auth_changed"));
+  };
+
+  const logout = () => {
+    setToken(null);
+    window.dispatchEvent(new Event("auth_changed"));
+  };
+
+  // Provide a dummy setRole so AppSidebar doesn't crash if it calls it, 
+  // but it won't actually do anything meaningful since role is derived from JWT.
+  const setRole = (newRole) => {
+    console.warn("setRole called but roles are now strictly driven by JWT claims.");
   };
 
   return (
-    <RoleContext.Provider value={{ role, setRole }}>
+    <RoleContext.Provider value={{ token, user, role, login, logout, setRole }}>
       {children}
     </RoleContext.Provider>
   );

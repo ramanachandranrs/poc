@@ -47,7 +47,11 @@ function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]):
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}${endpoint}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}${endpoint}`, { signal: controller.signal, headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -75,7 +79,11 @@ export const useAgingSummary = () => {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/aging/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/aging/summary`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json) => { setData(json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
@@ -96,7 +104,11 @@ export const useInventorySummary = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/wipro/inventory/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/wipro/inventory/summary`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
@@ -131,7 +143,11 @@ export const useInventory = (filters: InventoryFilters = {}) => {
 
     const controller = new AbortController();
     setLoading(true);
-    fetch(`${API_BASE}/wipro/inventory?${params.toString()}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/wipro/inventory?${params.toString()}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
         setData(json.map(v => ({
@@ -160,7 +176,11 @@ export const usePartsSummary = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/sap/parts/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/sap/parts/summary`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
@@ -193,7 +213,11 @@ export const usePartsList = (filters: PartsFilters = {}) => {
 
     const controller = new AbortController();
     setLoading(true);
-    fetch(`${API_BASE}/sap/parts?${params.toString()}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/sap/parts?${params.toString()}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
         setData(json.map(p => ({
@@ -222,7 +246,11 @@ export const useTransitSummary = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/rail/transit/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/rail/transit/summary`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
@@ -257,7 +285,11 @@ export const useTransit = (filters: TransitFilters = {}) => {
 
     const controller = new AbortController();
     setLoading(true);
-    fetch(`${API_BASE}/rail/transit?${params.toString()}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/rail/transit?${params.toString()}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
         setData(json.map(t => ({
@@ -455,7 +487,11 @@ export const useROIReport = () => {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/roi/report`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/roi/report`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json) => { setData(json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
@@ -467,7 +503,10 @@ export const useROIReport = () => {
 export async function callGemini(endpoint: string, payload: Record<string, any>): Promise<GeminiResponse> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      ...(localStorage.getItem("access_token") ? { "Authorization": `Bearer ${localStorage.getItem("access_token")}` } : {})
+    },
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -475,13 +514,19 @@ export async function callGemini(endpoint: string, payload: Record<string, any>)
 }
 
 export async function approveRecommendation(id: string, message?: string): Promise<{ email?: Record<string, unknown> }> {
-  const res = await fetch(`${API_BASE}/guided/approve/${id}?message=${encodeURIComponent(message || "")}`, { method: "POST" });
+  const res = await fetch(`${API_BASE}/guided/approve/${id}?message=${encodeURIComponent(message || "")}`, { 
+    method: "POST",
+    headers: localStorage.getItem("access_token") ? { "Authorization": `Bearer ${localStorage.getItem("access_token")}` } : {}
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 export async function rejectRecommendation(id: string, reason?: string): Promise<void> {
-  await fetch(`${API_BASE}/guided/reject/${id}?reason=${encodeURIComponent(reason || "")}`, { method: "POST" });
+  await fetch(`${API_BASE}/guided/reject/${id}?reason=${encodeURIComponent(reason || "")}`, { 
+    method: "POST",
+    headers: localStorage.getItem("access_token") ? { "Authorization": `Bearer ${localStorage.getItem("access_token")}` } : {}
+  });
 }
 
 // ── Demand Forecast ───────────────────────────────────────────────────────────
@@ -516,7 +561,11 @@ export const useForecastSummary = () => {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/forecast/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/forecast/summary`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json) => { setData(json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
@@ -542,7 +591,11 @@ export const useForecastVariants = (dealerId?: string, variantId?: string) => {
     if (dealerId)  params.set("dealer_id",  dealerId);
     if (variantId) params.set("variant_id", variantId);
     const controller = new AbortController();
-    fetch(`${API_BASE}/forecast/variants?${params.toString()}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/forecast/variants?${params.toString()}`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json) => { setData(json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
@@ -587,7 +640,11 @@ export const useSalesSummary = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/sales/summary`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/sales/summary`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
@@ -603,7 +660,11 @@ export const useSalesMonthlyTrend = (dealerId?: string) => {
     const params = new URLSearchParams();
     if (dealerId) params.set("dealer_id", dealerId);
     const controller = new AbortController();
-    fetch(`${API_BASE}/sales/monthly-trend?${params.toString()}`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/sales/monthly-trend?${params.toString()}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
@@ -617,7 +678,11 @@ export const useSalesByModel = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/sales/by-model`, { signal: controller.signal })
+    
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`${API_BASE}/sales/by-model`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(json => { setData(json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
