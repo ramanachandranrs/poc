@@ -7,6 +7,7 @@ import {
 import { TrendingUp, Brain, Target, Activity } from "lucide-react";
 import { useForecastSummary, useForecastVariants } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { useRole } from "@/context/RoleContext";
 
 const VARIANT_COLORS: Record<string, string> = {
   LXI:   "hsl(205, 100%, 55%)",
@@ -38,6 +39,7 @@ function MapeChip({ mape }: { mape: number }) {
 
 const DemandForecast = () => {
   // ── ALL hooks at the top — no early returns before this ──────────────────
+  const { role } = useRole();
   const { data: summary, loading: sumLoading, error: sumError } = useForecastSummary();
   const [selectedDealer,  setSelectedDealer]  = useState("");
   const [selectedVariant, setSelectedVariant] = useState("");
@@ -100,7 +102,9 @@ const DemandForecast = () => {
   }
 
   const topVariant = summary.variant_totals[0]?.variant_id ?? "N/A";
-  const topDealer  = summary.top_pairs[0]?.dealer_name ?? "N/A";
+  const avgMape = summary.top_pairs.length > 0
+    ? summary.top_pairs.reduce((s, p) => s + p.model_mape, 0) / summary.top_pairs.length
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -113,12 +117,13 @@ const DemandForecast = () => {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Network Demand (30d)", value: fmt(totalNetwork), sub: "units forecasted",  icon: TrendingUp },
+          { label: "Total Demand (30d)", value: fmt(totalNetwork), sub: "units forecasted",  icon: TrendingUp },
           { label: "Top Variant",          value: topVariant,        sub: "highest demand",    icon: Target },
-          { label: "Top Dealer",           value: topDealer,         sub: "by variant demand", icon: Brain },
-          { label: "Models Trained",       value: variants.length,   sub: "XGBoost models",    icon: Activity },
+          role === "dealership" 
+            ? { label: "Forecast Confidence", value: `${(100 - avgMape).toFixed(1)}%`, sub: "based on historical MAPE", icon: Brain }
+            : { label: "Top Dealer",           value: summary.top_pairs[0]?.dealer_name ?? "N/A", sub: "by variant demand", icon: Brain },
         ].map((c, i) => (
           <motion.div
             key={c.label}
@@ -137,61 +142,6 @@ const DemandForecast = () => {
         ))}
       </div>
 
-      {/* Model accuracy chips */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass rounded-xl p-4"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-muted-foreground">Two-Stage Model Accuracy (Classifier + Regressor) per Variant</p>
-          <span className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
-            Source: {summary.data_source ?? "vehicle_sales_transactions.csv"}
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border/30">
-                {["Variant", "MAE", "RMSE", "R²", "MAPE (non-zero)", "SMAPE", "F1 (sale detect)"].map((h) => (
-                  <th key={h} className="text-left px-3 py-2 text-muted-foreground font-medium">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(summary.model_metrics).sort().map(([v, m]) => (
-                <tr key={v} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full" style={{ background: getColor(v) }} />
-                      <span className="font-semibold text-foreground">{v}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-foreground">{m.mae}</td>
-                  <td className="px-3 py-2 text-foreground">{m.rmse}</td>
-                  <td className="px-3 py-2">
-                    <span className={m.r2 > 0.3 ? "text-emerald-400" : "text-yellow-400"}>
-                      {m.r2.toFixed(3)}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2"><MapeChip mape={m.mape} /></td>
-                  <td className="px-3 py-2">
-                    <span className={m.smape < 70 ? "text-emerald-400" : "text-yellow-400"}>
-                      {m.smape.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className={`font-semibold ${m.f1_sale > 0.85 ? "text-emerald-400" : m.f1_sale > 0.75 ? "text-yellow-400" : "text-neon-amber"}`}>
-                      {m.f1_sale.toFixed(3)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -289,7 +239,7 @@ const DemandForecast = () => {
         className="glass rounded-xl p-6"
       >
         <h3 className="text-base font-semibold text-foreground mb-4">
-          Total 30-Day Demand by Variant (Network-wide)
+          Total 30-Day Demand by Variant ({role === "dealership" ? "Dealership" : "Across Scope"})
         </h3>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={variantBarData} layout="vertical" margin={{ left: 10 }}>
@@ -316,53 +266,55 @@ const DemandForecast = () => {
         </ResponsiveContainer>
       </motion.div>
 
-      {/* Top dealer-variant table */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="glass rounded-xl overflow-hidden"
-      >
-        <div className="p-4 border-b border-border/50">
-          <h3 className="text-base font-semibold text-foreground">Top Dealer × Variant Forecasts</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Ranked by 30-day forecasted demand</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/30">
-                {["Rank", "Dealer", "Variant", "30d Forecast", "Model MAPE"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {summary.top_pairs.map((p, i) => (
-                <tr
-                  key={`${p.dealer_id}-${p.variant_id}`}
-                  className="border-b border-border/20 hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-4 py-3 text-muted-foreground text-xs">#{i + 1}</td>
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-foreground">{p.dealer_name}</span>
-                    <span className="text-[10px] text-muted-foreground ml-2 font-mono">{p.dealer_id}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
-                      style={{ background: getColor(p.variant_id) + "25", color: getColor(p.variant_id) }}
-                    >
-                      {p.variant_id}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-foreground">{fmt(p.total_30d)} units</td>
-                  <td className="px-4 py-3"><MapeChip mape={p.model_mape} /></td>
+      {/* Top dealer-variant table — hide for dealership as it's redundant with the bar chart */}
+      {role !== "dealership" && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="glass rounded-xl overflow-hidden"
+        >
+          <div className="p-4 border-b border-border/50">
+            <h3 className="text-base font-semibold text-foreground">Top Dealer × Variant Forecasts</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Ranked by 30-day forecasted demand</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/30">
+                  {["Rank", "Dealer", "Variant", "30d Forecast", "Model MAPE"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+              </thead>
+              <tbody>
+                {summary.top_pairs.map((p, i) => (
+                  <tr
+                    key={`${p.dealer_id}-${p.variant_id}`}
+                    className="border-b border-border/20 hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-muted-foreground text-xs">#{i + 1}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-foreground">{p.dealer_name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-2 font-mono">{p.dealer_id}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                        style={{ background: getColor(p.variant_id) + "25", color: getColor(p.variant_id) }}
+                      >
+                        {p.variant_id}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-foreground">{fmt(p.total_30d)} units</td>
+                    <td className="px-4 py-3"><MapeChip mape={p.model_mape} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

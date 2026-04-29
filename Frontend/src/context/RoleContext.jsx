@@ -4,9 +4,9 @@ import { jwtDecode } from "jwt-decode";
 const RoleContext = createContext(null);
 
 export const TAB_VISIBILITY = {
-  mother_warehouse: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "customers", "roi", "users"],
-  regional_distributor: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "dealers"],
-  dealership: ["alerts", "inventory", "aging", "parts", "transit"],
+  mother_warehouse: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "customers", "roi", "users", "ml-status"],
+  regional_distributor: ["alerts", "overview", "inventory", "aging", "parts", "transit", "forecast", "ai-workspace", "dealers", "customers"],
+  dealership: ["alerts", "inventory", "aging", "parts", "transit", "customers", "forecast"],
 };
 
 export function RoleProvider({ children }) {

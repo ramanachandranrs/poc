@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Car, Package, Train, Users, Flame,
-  TrendingUp, Bot, ShieldCheck, BarChart3, Zap, Network, UserCog, Store
+  TrendingUp, Bot, BarChart3, Zap, Network, UserCog, Store, Brain
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -12,18 +12,19 @@ import {
 import { useRole, TAB_VISIBILITY } from "@/context/RoleContext";
 
 const ALL_NAV_ITEMS = [
-  { id: "alerts",       title: "Today's Actions",    url: "/",          icon: Zap },
-  { id: "overview",     title: "Network Overview",   url: "/overview",  icon: LayoutDashboard },
-  { id: "inventory",    title: "Vehicle Inventory",  url: "/inventory", icon: Car },
-  { id: "aging",        title: "Aging Stock",        url: "/aging",     icon: Flame },
-  { id: "parts",        title: "Spare Parts & ROP",  url: "/parts",     icon: Package },
-  { id: "transit",      title: "Transit Logistics",  url: "/transit",   icon: Train },
-  { id: "forecast",     title: "Demand Forecast",    url: "/forecast",  icon: TrendingUp },
-  { id: "ai-workspace", title: "AI Workspace",       url: "/ai",        icon: Bot },
-  { id: "dealers",      title: "Dealer Management",  url: "/dealers",   icon: Store },
-  { id: "customers",    title: "Customers",          url: "/customers", icon: Users },
-  { id: "roi",          title: "ROI Report",         url: "/roi",       icon: BarChart3 },
-  { id: "users",        title: "User Management",    url: "/users",     icon: UserCog },
+  { id: "alerts",       title: "Today's Actions",    url: "/",            icon: Zap },
+  { id: "overview",     title: "Network Overview",   url: "/overview",    icon: LayoutDashboard },
+  { id: "inventory",    title: "Vehicle Inventory",  url: "/inventory",   icon: Car },
+  { id: "aging",        title: "Aging Stock",        url: "/aging",       icon: Flame },
+  { id: "parts",        title: "Spare Parts & ROP",  url: "/parts",       icon: Package },
+  { id: "transit",      title: "Transit Logistics",  url: "/transit",     icon: Train },
+  { id: "forecast",     title: "Demand Forecast",    url: "/forecast",    icon: TrendingUp },
+  { id: "ai-workspace", title: "AI Workspace",       url: "/ai",          icon: Bot },
+  { id: "dealers",      title: "Dealer Management",  url: "/dealers",     icon: Store },
+  { id: "customers",    title: "Customers",          url: "/customers",   icon: Users },
+  { id: "roi",          title: "ROI Report",         url: "/roi",         icon: BarChart3 },
+  { id: "users",        title: "User Management",    url: "/users",       icon: UserCog },
+  { id: "ml-status",    title: "ML Auto-Retrain",   url: "/ml-status",   icon: Brain },
 ];
 
 export function AppSidebar() {

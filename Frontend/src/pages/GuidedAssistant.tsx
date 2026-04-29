@@ -19,7 +19,7 @@ const fmt = (n: number) =>
 const PRIORITY_STYLE: Record<string, string> = {
   Critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
   Medium:   "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
-  Low:      "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  Low:      "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -218,13 +218,6 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
           >
             <XCircle className="h-3.5 w-3.5" /> Reject
           </button>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 rounded-lg bg-muted/30 hover:bg-muted/50 text-muted-foreground px-3 py-2 text-xs transition-colors ml-auto"
-          >
-            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            Raw Data
-          </button>
         </div>
       )}
 
@@ -277,21 +270,6 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
         )}
       </AnimatePresence>
 
-      {/* Raw data */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/50 px-4 py-3"
-          >
-            <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded-lg p-3 overflow-x-auto">
-              {JSON.stringify(rec.data, null, 2)}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

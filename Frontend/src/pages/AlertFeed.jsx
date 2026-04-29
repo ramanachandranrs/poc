@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle, Package, Train, Car, Zap, RefreshCw,
-  ChevronDown, ChevronUp, Check, X, Clock, Sparkles,
+  ChevronDown, ChevronUp, Check, X, Clock, Sparkles, Filter, ListFilter
 } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 
@@ -13,7 +13,7 @@ const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).
 const SEV_STYLE = {
   critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
   medium:   "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
-  low:      "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  low:      "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
 };
 
 const TYPE_ICON = {
@@ -251,12 +251,19 @@ export default function AlertFeed() {
   const [showActioned, setShowActioned] = useState(false);
   const [actioned, setActioned] = useState({});
   const [dealerCount, setDealerCount] = useState(0);
+  const [selectedZone, setSelectedZone] = useState("");
+  const [selectedDealer, setSelectedDealer] = useState("");
+  const [zones, setZones] = useState([]);
+  const [dealers, setDealers] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ limit: "500" });
       if (role !== "all" && role !== "mother_warehouse") params.set("role", role);
+      if (selectedZone) params.set("zone", selectedZone);
+      if (selectedDealer) params.set("dealer_id", selectedDealer);
       
       const token = localStorage.getItem("access_token");
       const headers = {};
@@ -283,7 +290,31 @@ export default function AlertFeed() {
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, selectedZone, selectedDealer]);
+
+  const fetchFilters = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const headers = { "Authorization": `Bearer ${token}` };
+      
+      const [zonesRes, dealersRes] = await Promise.all([
+        fetch(`${API_BASE}/dealers/zones`, { headers }),
+        fetch(`${API_BASE}/dealers`, { headers })
+      ]);
+      
+      const zonesData = await zonesRes.json();
+      const dealersData = await dealersRes.json();
+      
+      if (Array.isArray(zonesData)) setZones(zonesData);
+      if (Array.isArray(dealersData)) setDealers(dealersData);
+    } catch (err) {
+      console.error("Failed to fetch filters", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFilters();
+  }, [fetchFilters]);
 
   useEffect(() => {
     fetchAlerts();
@@ -339,7 +370,7 @@ export default function AlertFeed() {
               <span className="text-xs px-2 py-0.5 rounded-full bg-neon-amber/10 text-neon-amber border border-neon-amber/20 font-semibold">
                 {counts.medium} Medium
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-semibold">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
                 {counts.low} Low
               </span>
               {minutesAgo !== null && (
@@ -359,58 +390,35 @@ export default function AlertFeed() {
         </div>
       </motion.div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        {/* Type pills */}
-        <div className="flex gap-1 flex-wrap">
-          {["all", "aging_vehicle", "parts_stockout", "transit_delay"].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                typeFilter === t
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              {t === "all" ? "All" : t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-            </button>
-          ))}
-        </div>
-        {/* Severity pills */}
-        <div className="flex gap-1 flex-wrap">
-          {["all", "critical", "medium", "low"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setSevFilter(s)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors capitalize ${
-                sevFilter === s
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        {/* Search */}
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search dealer..."
-          className="rounded-lg bg-muted/30 border border-border/40 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 w-40"
-        />
-        {/* Show actioned toggle */}
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+      {/* Filters Bar */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <button
+          onClick={() => setShowFilters(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border/50 text-foreground hover:bg-muted/50 transition-all shadow-sm"
+        >
+          <Filter className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold">Filters</span>
+          {(selectedZone || selectedDealer || typeFilter !== "all" || sevFilter !== "all") && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+              {[selectedZone, selectedDealer, typeFilter !== "all", sevFilter !== "all"].filter(Boolean).length}
+            </span>
+          )}
+        </button>
+
+        <div className="relative flex-1 max-w-sm">
           <input
-            type="checkbox"
-            checked={showActioned}
-            onChange={(e) => setShowActioned(e.target.checked)}
-            className="rounded"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search alerts or dealers..."
+            className="w-full rounded-xl bg-card border border-border/50 px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all shadow-sm"
           />
-          Show Actioned
-        </label>
+        </div>
+
+
       </div>
+
+
+
 
       {/* Alert feed */}
       {loading ? (
@@ -434,6 +442,159 @@ export default function AlertFeed() {
           </AnimatePresence>
         </div>
       )}
+      {/* Categorized Filter Drawer (Moved to end for Z-Index) */}
+      <AnimatePresence>
+        {showFilters && (
+          <div className="fixed inset-0 z-[2147483647]">
+            <style>{`#ai-copilot-button { display: none !important; }`}</style>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFilters(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute right-0 top-0 bottom-0 w-80 border-l border-border shadow-2xl flex flex-col bg-background text-foreground"
+              style={{ 
+                backgroundColor: 'hsl(var(--background))', 
+                color: 'hsl(var(--foreground))',
+                opacity: 1 
+              }}
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <ListFilter className="h-5 w-5 text-primary" />
+                  Filter Options
+                </h3>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 hover:bg-muted rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {(role === "mother_warehouse" || role === "admin") && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Regional Isolation</h4>
+                    <select 
+                      value={selectedZone}
+                      onChange={(e) => {
+                        setSelectedZone(e.target.value);
+                        setSelectedDealer("");
+                      }}
+                      className="w-full rounded-lg bg-background border border-border/50 p-2.5 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+                    >
+                      <option value="" className="bg-background text-foreground">All Regions</option>
+                      {Array.isArray(zones) && zones.map(z => (
+                        <option key={z} value={z} className="bg-background text-foreground">{z}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Dealer Scope</h4>
+                  <select 
+                    value={selectedDealer}
+                    onChange={(e) => setSelectedDealer(e.target.value)}
+                    className="w-full rounded-lg bg-background border border-border/50 p-2.5 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+                  >
+                    <option value="" className="bg-background text-foreground">All Dealers</option>
+                    {Array.isArray(dealers) && dealers
+                      .filter(d => !selectedZone || d.zone === selectedZone)
+                      .map(d => (
+                        <option key={d.dealer_id} value={d.dealer_id} className="bg-background text-foreground">
+                          {d.dealer_name}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Alert Category</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {["all", "aging_vehicle", "parts_stockout", "transit_delay"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTypeFilter(t)}
+                        className={`text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                          typeFilter === t
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "bg-muted/5 text-muted-foreground hover:bg-muted/20 border border-transparent"
+                        }`}
+                      >
+                        {t === "all" ? "All Categories" : t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Severity Level</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {["all", "critical", "medium", "low"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSevFilter(s)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                          sevFilter === s
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted/5 text-muted-foreground border-border/50 hover:bg-muted/20"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category: Display Settings */}
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Display Settings</h4>
+                  <label className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border border-border/50 cursor-pointer hover:bg-muted/20 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={showActioned}
+                      onChange={(e) => setShowActioned(e.target.checked)}
+                      className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/20"
+                    />
+                    <span className="text-sm font-medium text-foreground">Include Actioned Alerts</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-4 pb-24 border-t border-border bg-muted/10 shrink-0">
+                <button
+                  onClick={() => {
+                    setSelectedZone("");
+                    setSelectedDealer("");
+                    setTypeFilter("all");
+                    setSevFilter("all");
+                    setSearch("");
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-semibold hover:bg-muted/50 transition-all mb-3"
+                >
+                  Clear All Filters
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

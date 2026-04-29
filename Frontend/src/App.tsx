@@ -23,6 +23,7 @@ import ROIReport from "@/pages/ROIReport";
 import AIWorkspace from "@/pages/AIWorkspace";
 import UserManagement from "@/pages/UserManagement";
 import DealerManagement from "@/pages/DealerManagement";
+import MLStatus from "@/pages/MLStatus";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const ProtectedApp = () => {
           <Route path="/roi" element={<ROIReport />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/dealers" element={<DealerManagement />} />
+          <Route path="/ml-status" element={<MLStatus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </DashboardLayout>

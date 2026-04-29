@@ -263,7 +263,7 @@ const Inventory = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Total Sold"        value={salesSummary?.total_sales       ?? 0} icon={ShoppingCart} accentColor="green" delay={0}   />
               <StatCard title="Unsold Stock"       value={salesSummary?.total_unsold      ?? 0} icon={Car}          accentColor="amber" delay={0.1} />
-              <StatCard title="Sell-Through %"     value={`${salesSummary?.sell_through_pct ?? 0}%`} icon={TrendingUp} accentColor="blue" delay={0.2} />
+              <StatCard title="Sell-Through %"     value={salesSummary?.sell_through_pct ?? 0} suffix="%" icon={TrendingUp} accentColor="blue" delay={0.2} />
               <StatCard title="Avg Days to Sell"   value={salesSummary?.avg_days_to_sell  ?? 0} icon={Clock}        accentColor="red"   delay={0.3} />
             </div>
           )}

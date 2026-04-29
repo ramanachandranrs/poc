@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Any
 import jwt
 import bcrypt
 from fastapi import Depends, HTTPException, status
@@ -76,33 +76,64 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 async def get_current_active_user(current_user: models.AppUser = Depends(get_current_user)) -> models.AppUser:
     return current_user
 
-def check_role(required_roles: List[str]):
+def check_role(required_roles: List[Any]):
     async def role_checker(current_user: models.AppUser = Depends(get_current_active_user)):
-        if current_user.role not in required_roles:
-            raise HTTPException(status_code=403, detail="Insufficient permissions")
-        return current_user
+        # Convert user role to a clean lowercase string
+        user_role = str(current_user.role).lower()
+        if hasattr(current_user.role, 'value'):
+            user_role = str(current_user.role.value).lower()
+            
+        # Convert required roles to a set of allowed lowercase strings
+        allowed = set()
+        for r in required_roles:
+            allowed.add(str(r).lower())
+            if hasattr(r, 'value'):
+                allowed.add(str(r.value).lower())
+            # Also add common variations
+            if "admin" in str(r).lower(): allowed.add("mother_warehouse")
+            if "manager" in str(r).lower(): allowed.add("regional_distributor")
+            if "user" in str(r).lower(): allowed.add("dealership")
+
+        # Check if the user's role (either as enum name or value) matches any allowed string
+        user_role_clean = user_role.split('.')[-1] # Handle "UserRole.ADMIN" -> "admin"
+        
+        is_allowed = False
+        for a in allowed:
+            if a == user_role or a == user_role_clean or user_role_clean in a or a in user_role_clean:
+                is_allowed = True
+                break
+        
+        if is_allowed:
+            return current_user
+
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Insufficient permissions. Role '{user_role}' not in allowed list."
+        )
     return role_checker
 
 def get_scope_condition(current_user: models.AppUser, dealer_field="dealer_id", zone_field="zone") -> str:
-    # Robust role check: handles both Enum members and raw string values from DB
-    role = str(current_user.role).lower()
+    # Robust role check
+    role = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role).lower()
+    role = role.lower()
     
-    if "admin" in role or "mother_warehouse" in role:
+    if "mother_warehouse" in role or role == "admin" or ".admin" in role:
         return "1=1"
-    elif "manager" in role or "regional_distributor" in role:
+    elif "regional_distributor" in role or "manager" in role:
         return f"{zone_field} = '{current_user.zone}'"
-    elif "user" in role or "dealership" in role:
+    elif "dealership" in role or role == "user" or ".user" in role:
         return f"{dealer_field} = '{current_user.dealer_id}'"
     return "1=0"
 
 def get_scope_filters(current_user: models.AppUser, dealer_table_alias="d", entity_table_alias=None) -> str:
-    role = str(current_user.role).lower()
+    role = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role).lower()
+    role = role.lower()
     
-    if "admin" in role or "mother_warehouse" in role:
+    if "mother_warehouse" in role or role == "admin" or ".admin" in role:
         return "1=1"
-    elif "manager" in role or "regional_distributor" in role:
+    elif "regional_distributor" in role or "manager" in role:
         return f"{dealer_table_alias}.zone = '{current_user.zone}'"
-    elif "user" in role or "dealership" in role:
+    elif "dealership" in role or role == "user" or ".user" in role:
         if entity_table_alias:
             return f"{entity_table_alias}.dealer_id = '{current_user.dealer_id}'"
         return f"{dealer_table_alias}.dealer_id = '{current_user.dealer_id}'"

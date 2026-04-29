@@ -39,7 +39,6 @@ function CopyButton({ text }) {
 
 // ── B2C Card with "Generate with Gemini" ─────────────────────────────────────
 function B2CCard({ item, index }) {
-  const [expanded, setExpanded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState("");
 
@@ -133,36 +132,13 @@ function B2CCard({ item, index }) {
           {generating ? "Drafting..." : "Generate AI Message"}
         </button>
         {generated && <CopyButton text={generated} />}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 rounded-lg bg-muted/30 hover:bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs transition-colors ml-auto"
-        >
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          {expanded ? "Hide Prompt" : "View Prompt"}
-        </button>
       </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/50 px-4 py-3"
-          >
-            <pre className="text-xs text-muted-foreground bg-muted/20 rounded-xl p-4 whitespace-pre-wrap leading-relaxed font-mono">
-              {item.prompt}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
 
 // ── Operational Alert Card ────────────────────────────────────────────────────
 function OpAlertCard({ item, index }) {
-  const [expanded, setExpanded] = useState(false);
   const Icon = item.alert_type === "stockout" ? Package : Train;
 
   return (
@@ -207,29 +183,7 @@ function OpAlertCard({ item, index }) {
 
       <div className="px-4 pb-4 flex items-center gap-2">
         <CopyButton text={item.prompt} />
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 rounded-lg bg-muted/30 hover:bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs transition-colors ml-auto"
-        >
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          {expanded ? "Hide" : "Preview"}
-        </button>
       </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/50 px-4 py-3"
-          >
-            <pre className="text-xs text-muted-foreground bg-muted/20 rounded-xl p-4 whitespace-pre-wrap leading-relaxed font-mono">
-              {item.prompt}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

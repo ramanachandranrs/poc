@@ -62,7 +62,8 @@ def run():
             username=username,
             hashed_password=get_password_hash(pw),
             role=models.UserRole.USER,
-            dealer_id=d.dealer_id
+            dealer_id=d.dealer_id,
+            zone=d.zone
         ))
         csv_data.append(["Dealership", d.dealer_name, username, pw, d.zone, d.dealer_id])
         

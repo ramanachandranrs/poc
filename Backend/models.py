@@ -278,6 +278,17 @@ class VehicleSale(Base):
     year: Mapped[int] = mapped_column(Integer, default=2025)
 
 
+class Booking(Base):
+    __tablename__ = "bookings"
+    booking_id: Mapped[str] = mapped_column(String(20), primary_key=True, index=True)
+    dealer_id: Mapped[str] = mapped_column(ForeignKey("dealers.dealer_id"), index=True)
+    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.customer_id"), index=True)
+    requested_model: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    requested_variant: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    date_booked: Mapped[date] = mapped_column(Date, index=True)
+    status: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+
 class VehicleSaleResponse(BaseModel):
     model_config = {"protected_namespaces": ()}
     sale_id: str

@@ -19,6 +19,8 @@ from models import (
     SOQTransaction,
     Shipment,
     Vehicle,
+    VehicleSale,
+    Booking,
     Warehouse,
     engine,
 )
@@ -289,6 +291,88 @@ def load_data():
                 )
             )
 
+        # Sales
+        sales_df = read_csv("vehicle_sales.csv")
+        sale_ids = set()
+        for row in sales_df.to_dict(orient="records"):
+            sale_id = clean_id(row.get("sale_id"))
+            chassis = clean_id(row.get("chassis_number"))
+            dealer = clean_id(row.get("dealer_id"))
+            customer = clean_id(row.get("customer_id"))
+
+            if not sale_id:
+                continue
+            if sale_id in sale_ids:
+                continue
+            sale_ids.add(sale_id)
+
+            if chassis and chassis not in vehicle_ids:
+                chassis = None
+            if dealer and dealer not in dealer_ids:
+                dealer = None
+            if customer and customer not in customer_ids:
+                customer = None
+
+            session.add(
+                VehicleSale(
+                    sale_id=sale_id,
+                    chassis_number=chassis,
+                    dealer_id=dealer,
+                    dealer_name=clean_str(row.get("dealer_name")),
+                    customer_id=customer,
+                    model_code=clean_str(row.get("model_code")),
+                    variant_id=clean_str(row.get("variant_id")),
+                    fuel_type=clean_str(row.get("fuel_type")),
+                    transmission_type=clean_str(row.get("transmission_type")),
+                    sale_date=to_date(row.get("sale_date")),
+                    stock_arrival_date=to_date(row.get("stock_arrival_date")),
+                    days_to_sell=to_int(row.get("days_to_sell")),
+                    invoice_value_inr=to_float(row.get("invoice_value_inr")),
+                    discount_given_inr=to_float(row.get("discount_given_inr")),
+                    final_sale_price_inr=to_float(row.get("final_sale_price_inr")),
+                    exchange_vehicle=to_int(row.get("exchange_vehicle")),
+                    finance_taken=to_int(row.get("finance_taken")),
+                    insurance_bundled=to_int(row.get("insurance_bundled")),
+                    accessories_value_inr=to_float(row.get("accessories_value_inr")),
+                    sales_executive_id=clean_str(row.get("sales_executive_id")),
+                    payment_mode=clean_str(row.get("payment_mode")),
+                    sale_channel=clean_str(row.get("sale_channel")),
+                    zone=clean_str(row.get("zone")),
+                    dealer_type=clean_str(row.get("dealer_type")),
+                    festive_sale=to_int(row.get("festive_sale")),
+                    promotion_active=to_int(row.get("promotion_active")),
+                    month=to_int(row.get("month")),
+                    quarter=to_int(row.get("quarter")),
+                    year=to_int(row.get("year")),
+                )
+            )
+
+        # Bookings
+        bookings_df = pd.read_csv("Customer_Bookings.csv") # Root dir
+        booking_ids = set()
+        customer_list = sorted(list(customer_ids))
+        for row in bookings_df.to_dict(orient="records"):
+            bid = clean_id(row.get("booking_id"))
+            dealer = clean_id(row.get("dealer_id"))
+            if not bid: continue
+            if bid in booking_ids: continue
+            booking_ids.add(bid)
+            
+            # Randomly assign a customer since the CSV is missing it
+            assigned_customer = random.choice(customer_list)
+            
+            session.add(
+                Booking(
+                    booking_id=bid,
+                    dealer_id=dealer,
+                    customer_id=assigned_customer,
+                    requested_model=clean_str(row.get("requested_model")),
+                    requested_variant=clean_str(row.get("requested_variant")),
+                    date_booked=to_date(row.get("date_booked")),
+                    status=clean_str(row.get("status")),
+                )
+            )
+
         soq_df = read_csv("aos_soq_log.csv")
         soq_ids = set()
         for row in soq_df.to_dict(orient="records"):
@@ -529,6 +613,8 @@ def load_data():
             "vehicles",
             "job_cards",
             "job_card_line_items",
+            "vehicle_sales",
+            "bookings",
             "soq_transactions",
             "demand_records",
             "daily_trends",

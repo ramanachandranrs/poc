@@ -163,9 +163,15 @@ export default function NLQChat() {
     <>
       {/* Floating toggle button — plain button, no animation wrapper to avoid render issues */}
       {!open && (
-        <button
+        <motion.button
+          id="ai-copilot-button"
           onClick={() => setOpen(true)}
           aria-label="Open AI Copilot"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ y: -4, scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="glow-blue"
           style={{
             position: "fixed",
             bottom: "24px",
@@ -175,29 +181,27 @@ export default function NLQChat() {
             alignItems: "center",
             gap: "10px",
             borderRadius: "9999px",
-            background: "hsl(var(--primary, 210 100% 50%))",
-            backgroundColor: "#2563eb",
-            color: "#fff",
-            padding: "12px 20px",
+            background: "hsl(var(--primary))",
+            color: "hsl(var(--primary-foreground))",
+            padding: "12px 24px",
             border: "none",
             cursor: "pointer",
-            boxShadow: "0 8px 32px rgba(37,99,235,0.45)",
             fontSize: "14px",
             fontWeight: 600,
           }}
         >
-          <Bot style={{ width: 20, height: 20, flexShrink: 0 }} />
+          <Bot className="h-5 w-5 shrink-0" />
           <span>AI Copilot</span>
           {unread > 0 && (
             <span style={{
               display: "flex", alignItems: "center", justifyContent: "center",
               width: 20, height: 20, borderRadius: "50%",
-              background: "#fff", color: "#2563eb", fontSize: 10, fontWeight: 700,
+              background: "hsl(var(--primary-foreground))", color: "hsl(var(--primary))", fontSize: 10, fontWeight: 700,
             }}>
               {unread}
             </span>
           )}
-        </button>
+        </motion.button>
       )}
 
       {/* Chat panel */}
@@ -209,10 +213,11 @@ export default function NLQChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, width: 380, height: 560, background: "#0f1117", border: "1px solid rgba(255,255,255,0.08)" }}
-            className="flex flex-col rounded-2xl shadow-2xl overflow-hidden"          >
+            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, width: 380, height: 560 }}
+            className="flex flex-col rounded-2xl shadow-2xl overflow-hidden glass-strong glow-blue"
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0" style={{ background: "#161b27" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 shrink-0 bg-muted/10">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                   <Bot className="h-4 w-4 text-primary" />
@@ -305,7 +310,7 @@ export default function NLQChat() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-white/10 p-3 shrink-0" style={{ background: "#161b27" }}>
+            <div className="border-t border-border/50 p-3 shrink-0 bg-muted/10">
               <form
                 onSubmit={(e) => { e.preventDefault(); send(input); }}
                 className="flex items-center gap-2"

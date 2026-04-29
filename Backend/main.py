@@ -1,4 +1,5 @@
-from fastapi import Depends, FastAPI, Query, HTTPException, status
+from contextlib import asynccontextmanager
+from fastapi import BackgroundTasks, Depends, FastAPI, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, text
@@ -7,7 +8,10 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import timedelta
 import json
+import logging
 from pathlib import Path
+
+logging.basicConfig(level=logging.INFO)
 
 import models
 from distance_service import get_transport_cost, get_distance_km
@@ -37,10 +41,27 @@ def _load_forecast() -> Dict[str, Any]:
             _forecast_cache = json.load(f)
     return _forecast_cache
 
+def _invalidate_forecast_cache() -> None:
+    """Called by the retraining scheduler after a successful retrain."""
+    global _forecast_cache
+    _forecast_cache = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ── Startup ──────────────────────────────────────────────────────────────
+    from retraining_scheduler import start_scheduler
+    start_scheduler(cache_invalidator=_invalidate_forecast_cache)
+    yield
+    # ── Shutdown ─────────────────────────────────────────────────────────────
+    from retraining_scheduler import stop_scheduler
+    stop_scheduler()
+
 
 app = FastAPI(
     title="Automotive Dealer Network AI Copilot API",
     description="Relational APIs backed by realistic synthetic CSV/XLSX datasets",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -274,44 +295,30 @@ def get_overview_trends(
     db: Session = Depends(get_db),
     current_user: models.AppUser = Depends(get_current_active_user),
 ):
-    # For MANAGER scope by zone via join
-    role_str = str(current_user.role).lower()
-    if "manager" in role_str or "regional_distributor" in role_str:
-        zone_clause = f"JOIN dealers d ON d.dealer_id = dt.dealer_id AND d.zone = '{current_user.zone}'"
-    elif "user" in role_str or "dealership" in role_str:
-        zone_clause = f"WHERE dt.dealer_id = '{current_user.dealer_id}'"
-    else:
-        zone_clause = ""
+    query = db.query(
+        func.strftime('%Y-%m', models.DailyTrend.date).label("month"),
+        func.sum(models.DailyTrend.total_demand_qty).label("demand"),
+        func.sum(models.DailyTrend.total_demand_qty + models.DailyTrend.stockout_count).label("inventory")
+    )
 
-    # Adjust query to handle where/and correctly
-    where_literal = "WHERE 1=1" if not zone_clause.startswith("WHERE") else ""
-    if zone_clause.startswith("WHERE"):
-        final_zone_clause = zone_clause
-        final_where = ""
-    else:
-        final_zone_clause = zone_clause
-        final_where = "WHERE 1=1"
-
-    dealer_clause = ""
-    if dealer_id:
-        dealer_clause = f"AND dt.dealer_id = :dealer_id"
+    if current_user.role == models.UserRole.MANAGER:
+        query = query.join(models.Dealer, models.DailyTrend.dealer_id == models.Dealer.dealer_id)\
+                     .filter(models.Dealer.zone == current_user.zone)
+    elif current_user.role == models.UserRole.USER:
+        query = query.filter(models.DailyTrend.dealer_id == current_user.dealer_id)
     
-    rows = db.execute(text(f"""
-        SELECT strftime('%Y-%m', dt.date) AS month,
-               SUM(dt.total_demand_qty) AS demand,
-               SUM(dt.total_demand_qty + dt.stockout_count) AS inventory
-        FROM daily_trends dt
-        {final_zone_clause}
-        {final_where} {dealer_clause}
-        GROUP BY month ORDER BY month
-    """), {"dealer_id": dealer_id} if dealer_id else {}).fetchall()
+    if dealer_id:
+        query = query.filter(models.DailyTrend.dealer_id == dealer_id)
+
+    results = query.group_by("month").order_by("month").all()
+
     return [
         models.TrendResponse(
             month=row.month,
             inventory=round(float(row.inventory or 0), 2),
             demand=round(float(row.demand or 0), 2),
         )
-        for row in rows
+        for row in results
     ]
 
 
@@ -321,10 +328,30 @@ def get_customers(
     state: Optional[str] = None,
     city: Optional[str] = None,
     ownership: Optional[str] = None,
-    limit: int = Query(200, ge=1, le=2000),
+    limit: int = Query(50000, ge=1, le=50000),
     db: Session = Depends(get_db),
+    current_user: models.AppUser = Depends(get_current_active_user),
 ):
     query = db.query(models.Customer)
+
+    if current_user.role != models.UserRole.ADMIN:
+        if current_user.role == models.UserRole.MANAGER:
+            dealer_ids_query = db.query(models.Dealer.dealer_id).filter(models.Dealer.zone == current_user.zone)
+            
+            query = query.filter(
+                models.Customer.customer_id.in_(db.query(models.Vehicle.customer_id).filter(models.Vehicle.dealer_id.in_(dealer_ids_query))) |
+                models.Customer.customer_id.in_(db.query(models.VehicleSale.customer_id).filter(models.VehicleSale.dealer_id.in_(dealer_ids_query))) |
+                models.Customer.customer_id.in_(db.query(models.JobCard.customer_id).filter(models.JobCard.dealer_id.in_(dealer_ids_query))) |
+                models.Customer.customer_id.in_(db.query(models.Booking.customer_id).filter(models.Booking.dealer_id.in_(dealer_ids_query)))
+            )
+        else: # Dealer
+            query = query.filter(
+                models.Customer.customer_id.in_(db.query(models.Vehicle.customer_id).filter(models.Vehicle.dealer_id == current_user.dealer_id)) |
+                models.Customer.customer_id.in_(db.query(models.VehicleSale.customer_id).filter(models.VehicleSale.dealer_id == current_user.dealer_id)) |
+                models.Customer.customer_id.in_(db.query(models.JobCard.customer_id).filter(models.JobCard.dealer_id == current_user.dealer_id)) |
+                models.Customer.customer_id.in_(db.query(models.Booking.customer_id).filter(models.Booking.dealer_id == current_user.dealer_id))
+            )
+
     if search:
         term = f"%{search.strip()}%"
         query = query.filter(
@@ -364,12 +391,10 @@ def get_forecast_variants(
     records = data.get("forecasts", [])
 
     # Scope by zone: get dealer IDs belonging to the user's zone
-    # Scope by zone: get dealer IDs belonging to the user's zone
-    role_str = str(current_user.role).lower()
-    if "manager" in role_str or "regional_distributor" in role_str:
+    if current_user.role == models.UserRole.MANAGER:
         zone_dealers = {d.dealer_id for d in db.query(models.Dealer).filter(models.Dealer.zone == current_user.zone).all()}
         records = [r for r in records if r["dealer_id"] in zone_dealers]
-    elif "user" in role_str or "dealership" in role_str:
+    elif current_user.role == models.UserRole.USER:
         records = [r for r in records if r["dealer_id"] == current_user.dealer_id]
 
     if dealer_id:
@@ -399,12 +424,10 @@ def get_forecast_summary(
     records = data.get("forecasts", [])
 
     # Scope by zone
-    # Scope by zone
-    role_str = str(current_user.role).lower()
-    if "manager" in role_str or "regional_distributor" in role_str:
+    if current_user.role == models.UserRole.MANAGER:
         zone_dealers = {d.dealer_id for d in db.query(models.Dealer).filter(models.Dealer.zone == current_user.zone).all()}
         records = [r for r in records if r["dealer_id"] in zone_dealers]
-    elif "user" in role_str or "dealership" in role_str:
+    elif current_user.role == models.UserRole.USER:
         records = [r for r in records if r["dealer_id"] == current_user.dealer_id]
 
     # Top 10 dealer-variant pairs by 30d demand
@@ -445,6 +468,47 @@ def get_forecast_summary(
         model_metrics=data.get("model_metrics", {}),
         all_dealers=[{"dealer_id": d[0], "dealer_name": d[1]} for d in all_dealers],
     )
+
+
+# ── ML Retraining Endpoints ───────────────────────────────────────────────────
+
+@app.post("/api/v1/ml/retrain")
+def trigger_retrain(
+    background_tasks: BackgroundTasks,
+    current_user: models.AppUser = Depends(get_current_active_user),
+):
+    """Manually trigger an ML retraining job (Admin only). Runs in the background."""
+    if current_user.role != models.UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required.")
+
+    from ml_retraining import get_retrain_status
+    current = get_retrain_status()
+    if current.get("status") == "running":
+        return {"message": "Retraining already in progress.", "status": current}
+
+    def _run():
+        from ml_retraining import run_retraining
+        try:
+            run_retraining()
+            _invalidate_forecast_cache()
+        except Exception as e:
+            logging.getLogger("ml_retraining").error("Manual retrain failed: %s", e)
+
+    background_tasks.add_task(_run)
+    return {"message": "Retraining triggered. Check /api/v1/ml/status for progress."}
+
+
+@app.get("/api/v1/ml/status")
+def get_ml_status(
+    current_user: models.AppUser = Depends(get_current_active_user),
+):
+    """Return the current retraining status and auto-scheduler state."""
+    from ml_retraining import get_retrain_status
+    from retraining_scheduler import get_scheduler_status
+    return {
+        "retrain": get_retrain_status(),
+        "scheduler": get_scheduler_status(),
+    }
 
 
 # ── Aging Stock Helpers ───────────────────────────────────────────────────────
@@ -1831,6 +1895,8 @@ def nlq_query(req: NLQRequest, db: Session = Depends(get_db)):
 @app.get("/api/v1/alerts/daily-feed")
 def get_daily_alert_feed(
     role: Optional[str] = None,
+    zone: Optional[str] = None,
+    dealer_id: Optional[str] = None,
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user: models.AppUser = Depends(get_current_active_user),
@@ -1840,8 +1906,20 @@ def get_daily_alert_feed(
     alerts = []
     
     # Use robust scoping functions
-    zone_filter = f"AND {get_scope_condition(current_user, dealer_field='d.dealer_id', zone_field='d.zone')}"
-    dealer_filter = "" # Handled by the condition above for both manager and user
+    base_scope = get_scope_condition(current_user, dealer_field='d.dealer_id', zone_field='d.zone')
+    
+    # Build dynamic filters
+    dynamic_filters = []
+    if zone:
+        dynamic_filters.append(f"d.zone = '{zone}'")
+    if dealer_id:
+        dynamic_filters.append(f"d.dealer_id = '{dealer_id}'")
+    
+    filter_str = " AND ".join(dynamic_filters)
+    if filter_str:
+        filter_str = f" AND ({filter_str})"
+    
+    scoped_filter = f"AND {base_scope} {filter_str}"
 
     # ── Aging vehicle alerts (grouped by dealer) ──────────────────────────────
     aging_rows = db.execute(text(f"""
@@ -1853,7 +1931,7 @@ def get_daily_alert_feed(
         WHERE v.stock_arrival_date IS NOT NULL
           AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
           AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= 30
-          {zone_filter} {dealer_filter}
+          {scoped_filter}
         ORDER BY days DESC
     """)).fetchall()
 
@@ -1960,7 +2038,7 @@ def get_daily_alert_feed(
         FROM demand_records dr
         JOIN parts p ON p.part_number = dr.part_number
         JOIN dealers d ON d.dealer_id = dr.dealer_id
-        WHERE 1=1 {zone_filter} {dealer_filter}
+        WHERE 1=1 {scoped_filter}
         GROUP BY dr.part_number, p.description, dr.dealer_id, d.dealer_name
         HAVING on_hand < rop
         ORDER BY on_hand ASC
@@ -2045,7 +2123,7 @@ def get_daily_alert_feed(
         FROM shipments s
         LEFT JOIN dealers d ON d.dealer_id = s.dealer_id
         WHERE (s.status IN ('Delayed','Past Due') OR s.delay_days > 0)
-        {zone_filter} {dealer_filter}
+        {scoped_filter}
         ORDER BY real_delay DESC LIMIT 50
     """)).fetchall()
 

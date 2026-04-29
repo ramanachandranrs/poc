@@ -58,10 +58,10 @@ const Overview = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Vehicles" value={totalVehicles} icon={Car} trend="+12% vs last month" trendUp accentColor="blue" delay={0} />
-        <StatCard title="Aging Stock" value={agingCount} suffix="units" icon={AlertTriangle} trend="Needs attention" accentColor="amber" delay={0.1} />
-        <StatCard title="Parts Alerts" value={stockouts} suffix="items" icon={Package} trend="Below ROP" accentColor="red" delay={0.2} />
-        <StatCard title="Active Shipments" value={inTransit} icon={Train} trend="On schedule" trendUp accentColor="green" delay={0.3} />
+        <StatCard title="Total Vehicles" value={totalVehicles} icon={Car} accentColor="blue" delay={0} />
+        <StatCard title="Aging Stock" value={agingCount} suffix="units" icon={AlertTriangle} accentColor="amber" delay={0.1} />
+        <StatCard title="Parts Alerts" value={stockouts} suffix="items" icon={Package} accentColor="red" delay={0.2} />
+        <StatCard title="Active Shipments" value={inTransit} icon={Train} accentColor="green" delay={0.3} />
       </div>
 
       {/* Chart */}
@@ -74,7 +74,9 @@ const Overview = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-foreground">Inventory vs Projected Demand</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Network-wide 7-month trend analysis</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {role === "mother_warehouse" ? "Network-wide" : role === "regional_distributor" ? "Regional" : "Dealership"} 7-month trend analysis
+            </p>
           </div>
           <div className="flex items-center gap-1.5">
             <Activity className="h-4 w-4 text-primary" />
