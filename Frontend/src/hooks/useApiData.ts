@@ -2,6 +2,24 @@ import { useState, useEffect } from "react";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
+// Simple in-memory cache for API requests
+const apiCache: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCache(key: string) {
+  const item = apiCache[key];
+  if (!item) return null;
+  if (Date.now() - item.timestamp > CACHE_TTL) {
+    delete apiCache[key];
+    return null;
+  }
+  return item.data;
+}
+
+function setCache(key: string, data: any) {
+  apiCache[key] = { data, timestamp: Date.now() };
+}
+
 export interface InventoryItem {
   vin: string;
   dealer_id: string;
@@ -41,8 +59,11 @@ export interface TrendItem {
 }
 
 function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]): { data: R[]; loading: boolean; error: string | null } {
-  const [data, setData] = useState<R[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = endpoint;
+  const cached = getCache(cacheKey);
+  
+  const [data, setData] = useState<R[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,19 +72,22 @@ function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]):
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
+
     fetch(`${API_BASE}${endpoint}`, { signal: controller.signal, headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .then((json) => { 
-        setData(transform ? transform(json) : json as unknown as R[]); 
+        const transformed = transform ? transform(json) : json as unknown as R[];
+        setData(transformed); 
+        setCache(cacheKey, transformed);
         setLoading(false); 
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
           setError(err.message);
-          setData([]);
+          if (!cached) setData([]);
           setLoading(false);
         }
       });
@@ -74,18 +98,19 @@ function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]):
 }
 
 export const useAgingSummary = () => {
-  const [data, setData] = useState<AgingSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/aging/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<AgingSummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/aging/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json) => { setData(json); setLoading(false); })
+      .then((json) => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
   }, []);
@@ -100,17 +125,18 @@ export interface InventorySummary {
 }
 
 export const useInventorySummary = () => {
-  const [data, setData] = useState<InventorySummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/wipro/inventory/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<InventorySummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/wipro/inventory/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
   }, []);
@@ -127,39 +153,44 @@ export interface InventoryFilters {
 }
 
 export const useInventory = (filters: InventoryFilters = {}) => {
-  const [data, setData] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params = new URLSearchParams();
+  if (filters.status)    params.set("status",    filters.status);
+  if (filters.model)     params.set("model",     filters.model);
+  if (filters.fuel_type) params.set("fuel_type", filters.fuel_type);
+  if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+  if (filters.search)    params.set("search",    filters.search);
+  params.set("page",  String(filters.page  ?? 1));
+  params.set("limit", "50");
+
+  const cacheKey = `/wipro/inventory?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<InventoryItem[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.status)    params.set("status",    filters.status);
-    if (filters.model)     params.set("model",     filters.model);
-    if (filters.fuel_type) params.set("fuel_type", filters.fuel_type);
-    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
-    if (filters.search)    params.set("search",    filters.search);
-    params.set("page",  String(filters.page  ?? 1));
-    params.set("limit", "50");
-
     const controller = new AbortController();
-    setLoading(true);
+    if (!cached) setLoading(true);
     
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/wipro/inventory?${params.toString()}`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
-        setData(json.map(v => ({
+        const transformed = json.map(v => ({
           vin: v.vin, dealer_id: v.dealer_id, dealer_name: v.dealer_name,
           model: v.model, variant: v.variant, fuel_type: v.fuel_type,
           days_in_inventory: v.days_in_inventory, status: v.status,
-        })));
+        }));
+        setData(transformed);
+        setCache(cacheKey, transformed);
         setLoading(false);
       })
       .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
-  }, [filters.status, filters.model, filters.fuel_type, filters.dealer_id, filters.search, filters.page]);
+  }, [cacheKey]);
 
   return { data, loading, error };
 };
@@ -172,17 +203,18 @@ export interface PartsSummary {
 }
 
 export const usePartsSummary = () => {
-  const [data, setData] = useState<PartsSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/sap/parts/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<PartsSummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/sap/parts/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
   }, []);
@@ -198,38 +230,43 @@ export interface PartsFilters {
 }
 
 export const usePartsList = (filters: PartsFilters = {}) => {
-  const [data, setData] = useState<PartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params = new URLSearchParams();
+  if (filters.status)    params.set("status",    filters.status);
+  if (filters.category)  params.set("category",  filters.category);
+  if (filters.search)    params.set("search",    filters.search);
+  if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+  params.set("page",  String(filters.page ?? 1));
+  params.set("limit", "50");
+
+  const cacheKey = `/sap/parts?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<PartItem[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.status)    params.set("status",    filters.status);
-    if (filters.category)  params.set("category",  filters.category);
-    if (filters.search)    params.set("search",    filters.search);
-    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
-    params.set("page",  String(filters.page ?? 1));
-    params.set("limit", "50");
-
     const controller = new AbortController();
-    setLoading(true);
+    if (!cached) setLoading(true);
     
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/sap/parts?${params.toString()}`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
-        setData(json.map(p => ({
+        const transformed = json.map(p => ({
           sku: p.sku, name: p.part_name, category: p.category,
           quantity_on_hand: p.quantity_on_hand, reorder_point: p.reorder_point,
           unit_price: p.unit_cost, stockout_rate: p.stockout_rate,
-        })));
+        }));
+        setData(transformed);
+        setCache(cacheKey, transformed);
         setLoading(false);
       })
       .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
-  }, [filters.status, filters.category, filters.search, filters.dealer_id, filters.page]);
+  }, [cacheKey]);
 
   return { data, loading, error };
 };
@@ -242,17 +279,18 @@ export interface TransitSummary {
 }
 
 export const useTransitSummary = () => {
-  const [data, setData] = useState<TransitSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/rail/transit/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<TransitSummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/rail/transit/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
   }, []);
@@ -269,39 +307,44 @@ export interface TransitFilters {
 }
 
 export const useTransit = (filters: TransitFilters = {}) => {
-  const [data, setData] = useState<TransitItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params = new URLSearchParams();
+  if (filters.status)    params.set("status",    filters.status);
+  if (filters.search)    params.set("search",    filters.search);
+  if (filters.zone)      params.set("zone",      filters.zone);
+  if (filters.mode)      params.set("mode",      filters.mode);
+  if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+  params.set("page",  String(filters.page ?? 1));
+  params.set("limit", "50");
+
+  const cacheKey = `/rail/transit?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<TransitItem[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.status)    params.set("status",    filters.status);
-    if (filters.search)    params.set("search",    filters.search);
-    if (filters.zone)      params.set("zone",      filters.zone);
-    if (filters.mode)      params.set("mode",      filters.mode);
-    if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
-    params.set("page",  String(filters.page ?? 1));
-    params.set("limit", "50");
-
     const controller = new AbortController();
-    setLoading(true);
+    if (!cached) setLoading(true);
     
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/rail/transit?${params.toString()}`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((json: any[]) => {
-        setData(json.map(t => ({
+        const transformed = json.map(t => ({
           shipment_id: t.shipment_id, origin: t.origin, destination: t.destination,
           status: t.status, expected_delivery: String(t.expected_delivery ?? ""),
           carrier: t.carrier, items: t.items, delay_days: t.delay_days,
-        })));
+        }));
+        setData(transformed);
+        setCache(cacheKey, transformed);
         setLoading(false);
       })
       .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
-  }, [filters.status, filters.search, filters.zone, filters.mode, filters.dealer_id, filters.page]);
+  }, [cacheKey]);
 
   return { data, loading, error };
 };
@@ -482,18 +525,19 @@ export const useGuidedRecommendations = () =>
   );
 
 export const useROIReport = () => {
-  const [data, setData] = useState<ROIReport | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/roi/report";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<ROIReport | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/roi/report`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json) => { setData(json); setLoading(false); })
+      .then((json) => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
   }, []);
@@ -556,18 +600,19 @@ export interface ForecastSummary {
 }
 
 export const useForecastSummary = () => {
-  const [data, setData] = useState<ForecastSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/forecast/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<ForecastSummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/forecast/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json) => { setData(json); setLoading(false); })
+      .then((json) => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
   }, []);
@@ -575,32 +620,35 @@ export const useForecastSummary = () => {
 };
 
 export const useForecastVariants = (dealerId?: string, variantId?: string) => {
-  const [data, setData] = useState<DealerVariantForecast[]>([]);
+  const params = new URLSearchParams();
+  if (dealerId)  params.set("dealer_id",  dealerId);
+  if (variantId) params.set("variant_id", variantId);
+  
+  const cacheKey = `/forecast/variants?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<DealerVariantForecast[]>(cached || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Don't fetch unless at least one filter is active
     if (!dealerId && !variantId) {
       setData([]);
       setLoading(false);
       return;
     }
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (dealerId)  params.set("dealer_id",  dealerId);
-    if (variantId) params.set("variant_id", variantId);
+    if (!cached) setLoading(true);
     const controller = new AbortController();
     
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/forecast/variants?${params.toString()}`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json) => { setData(json); setLoading(false); })
+      .then((json) => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();
-  }, [dealerId, variantId]);
+  }, [cacheKey]);
 
   return { data, loading, error };
 };
@@ -636,17 +684,18 @@ export interface SalesByModel {
 }
 
 export const useSalesSummary = () => {
-  const [data, setData] = useState<SalesSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/sales/summary";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<SalesSummary | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/sales/summary`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
   }, []);
@@ -654,37 +703,40 @@ export const useSalesSummary = () => {
 };
 
 export const useSalesMonthlyTrend = (dealerId?: string) => {
-  const [data, setData] = useState<SalesByMonth[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params = new URLSearchParams();
+  if (dealerId) params.set("dealer_id", dealerId);
+  const cacheKey = `/sales/monthly-trend?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<SalesByMonth[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (dealerId) params.set("dealer_id", dealerId);
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/sales/monthly-trend?${params.toString()}`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
-  }, [dealerId]);
+  }, [cacheKey]);
   return { data, loading };
 };
 
 export const useSalesByModel = () => {
-  const [data, setData] = useState<SalesByModel[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = "/sales/by-model";
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<SalesByModel[]>(cached || []);
+  const [loading, setLoading] = useState(!cached);
   useEffect(() => {
     const controller = new AbortController();
-    
     const token = localStorage.getItem("access_token");
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    fetch(`${API_BASE}/sales/by-model`, { signal: controller.signal, headers })
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(json => { setData(json); setLoading(false); })
+      .then(json => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch(err => { if (err.name !== "AbortError") setLoading(false); });
     return () => controller.abort();
   }, []);

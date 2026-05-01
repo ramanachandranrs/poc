@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRole } from "@/context/RoleContext";
 import { Plus, Trash2, Edit2, Shield, Loader2, Store } from "lucide-react";
 import { motion } from "framer-motion";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
@@ -221,7 +222,7 @@ export default function DealerManagement() {
           </h3>
 
           {loading ? (
-            <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            <LoadingSkeleton rows={4} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

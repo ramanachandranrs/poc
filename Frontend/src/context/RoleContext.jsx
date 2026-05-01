@@ -10,7 +10,11 @@ export const TAB_VISIBILITY = {
 };
 
 export function RoleProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("access_token"));
+  const [token, setToken] = useState(() => {
+    const t = localStorage.getItem("access_token");
+    if (t === "undefined" || t === "null") return null;
+    return t;
+  });
   const [user, setUser] = useState(null);
   
   // To avoid breaking old code that expects `role`
@@ -20,6 +24,7 @@ export function RoleProvider({ children }) {
     if (token) {
       try {
         const decoded = jwtDecode(token);
+        console.log("RoleProvider: Decoded user", decoded);
         setUser({
           username: decoded.sub,
           role: decoded.role,

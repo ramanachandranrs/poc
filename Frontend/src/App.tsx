@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -28,15 +29,32 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import ErrorBoundary from "@/components/ErrorBoundary";
+
 const ProtectedApp = () => {
-  const { token } = useRole();
+  const { token, user } = useRole();
+  
+  useEffect(() => {
+    console.log("ProtectedApp: token state changed", !!token, "user =", !!user);
+  }, [token, user]);
 
   if (!token) {
     return <Login />;
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0c14] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium animate-pulse">Initializing session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <ErrorBoundary>
       <DashboardLayout>
         <Routes>
           <Route path="/" element={<AlertFeed />} />
@@ -58,7 +76,7 @@ const ProtectedApp = () => {
         </Routes>
       </DashboardLayout>
       <NLQChat />
-    </>
+    </ErrorBoundary>
   );
 };
 

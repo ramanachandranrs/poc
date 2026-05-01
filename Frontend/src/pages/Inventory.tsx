@@ -25,8 +25,10 @@ const DEALERS = Array.from({ length: 30 }, (_, i) => ({
   name: `Maruti Dealer ${String(i + 1).padStart(2, "0")}`,
 }));
 
-const fmt = (n: number) =>
-  n >= 1e7 ? `₹${(n / 1e7).toFixed(1)}Cr` : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)}L` : `₹${n.toLocaleString("en-IN")}`;
+const fmt = (n: number | null | undefined) => {
+  if (n === null || n === undefined) return "₹0";
+  return n >= 1e7 ? `₹${(n / 1e7).toFixed(1)}Cr` : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)}L` : `₹${n.toLocaleString("en-IN")}`;
+};
 
 const TABS = ["Stock Inventory", "Sales Analytics"] as const;
 type Tab = typeof TABS[number];
@@ -68,13 +70,13 @@ const Inventory = () => {
   const { data: monthlyTrend, loading: trendLoading }  = useSalesMonthlyTrend();
   const { data: byModel,      loading: modelLoading }  = useSalesByModel();
 
-  const chartMonthly = monthlyTrend.map(r => ({
-    month: MONTH_NAMES[r.month],
+  const chartMonthly = (monthlyTrend || []).map(r => ({
+    month: MONTH_NAMES[r.month] || r.month,
     "Units Sold": r.units_sold,
     "Avg Days to Sell": r.avg_days_to_sell,
   }));
 
-  const chartModel = byModel.slice(0, 10).map(r => ({
+  const chartModel = (byModel || []).slice(0, 10).map(r => ({
     model: r.model,
     units: r.units_sold,
     revenue: Math.round(r.total_revenue / 1e5),
@@ -127,7 +129,7 @@ const Inventory = () => {
           )}
 
           {/* Filter Bar */}
-          <div className="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+          <div className="bg-card rounded-xl border border-border/10 shadow-sm p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input value={search} onChange={e => setSearch(e.target.value)}
@@ -200,14 +202,14 @@ const Inventory = () => {
                   const aging = vehicle.days_in_inventory > 60;
                   return (
                     <motion.div key={vehicle.vin} layout
-                      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.25) }}
-                      className={`glass card-hover rounded-xl p-5 ${aging ? "glow-border-amber" : "glow-blue"}`}>
+                      className="bg-card rounded-xl border border-border/10 shadow-sm p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`rounded-lg p-2 ${aging ? "bg-neon-amber/10" : "bg-primary/10"}`}>
-                            <Car className={`h-5 w-5 ${aging ? "text-neon-amber" : "text-primary"}`} />
+                          <div className={`rounded-lg p-2 ${aging ? "bg-amber-500/10" : "bg-primary/10"}`}>
+                            <Car className={`h-5 w-5 ${aging ? "text-amber-500" : "text-primary"}`} />
                           </div>
                           <div>
                             <h3 className="font-semibold text-foreground">{vehicle.model}</h3>
@@ -349,7 +351,7 @@ const Inventory = () => {
           </div>
 
           {/* Model table */}
-          <div className="glass rounded-xl overflow-hidden">
+          <div className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/5 text-muted-foreground">

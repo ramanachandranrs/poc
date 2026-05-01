@@ -328,29 +328,33 @@ def get_customers(
     state: Optional[str] = None,
     city: Optional[str] = None,
     ownership: Optional[str] = None,
-    limit: int = Query(50000, ge=1, le=50000),
+    limit: int = Query(30000, ge=1, le=50000),
     db: Session = Depends(get_db),
     current_user: models.AppUser = Depends(get_current_active_user),
 ):
     query = db.query(models.Customer)
 
     if current_user.role != models.UserRole.ADMIN:
+        from sqlalchemy import exists
         if current_user.role == models.UserRole.MANAGER:
+            # Check if customer has any relationship with dealers in the manager's zone
             dealer_ids_query = db.query(models.Dealer.dealer_id).filter(models.Dealer.zone == current_user.zone)
             
-            query = query.filter(
-                models.Customer.customer_id.in_(db.query(models.Vehicle.customer_id).filter(models.Vehicle.dealer_id.in_(dealer_ids_query))) |
-                models.Customer.customer_id.in_(db.query(models.VehicleSale.customer_id).filter(models.VehicleSale.dealer_id.in_(dealer_ids_query))) |
-                models.Customer.customer_id.in_(db.query(models.JobCard.customer_id).filter(models.JobCard.dealer_id.in_(dealer_ids_query))) |
-                models.Customer.customer_id.in_(db.query(models.Booking.customer_id).filter(models.Booking.dealer_id.in_(dealer_ids_query)))
-            )
+            # Using EXISTS is usually faster than multiple OR'd IN clauses
+            has_vehicle = exists().where(models.Vehicle.customer_id == models.Customer.customer_id).where(models.Vehicle.dealer_id.in_(dealer_ids_query))
+            has_sale    = exists().where(models.VehicleSale.customer_id == models.Customer.customer_id).where(models.VehicleSale.dealer_id.in_(dealer_ids_query))
+            has_job     = exists().where(models.JobCard.customer_id == models.Customer.customer_id).where(models.JobCard.dealer_id.in_(dealer_ids_query))
+            has_booking = exists().where(models.Booking.customer_id == models.Customer.customer_id).where(models.Booking.dealer_id.in_(dealer_ids_query))
+            
+            query = query.filter(has_vehicle | has_sale | has_job | has_booking)
         else: # Dealer
-            query = query.filter(
-                models.Customer.customer_id.in_(db.query(models.Vehicle.customer_id).filter(models.Vehicle.dealer_id == current_user.dealer_id)) |
-                models.Customer.customer_id.in_(db.query(models.VehicleSale.customer_id).filter(models.VehicleSale.dealer_id == current_user.dealer_id)) |
-                models.Customer.customer_id.in_(db.query(models.JobCard.customer_id).filter(models.JobCard.dealer_id == current_user.dealer_id)) |
-                models.Customer.customer_id.in_(db.query(models.Booking.customer_id).filter(models.Booking.dealer_id == current_user.dealer_id))
-            )
+            # Check if customer has any relationship with this specific dealer
+            has_vehicle = exists().where(models.Vehicle.customer_id == models.Customer.customer_id).where(models.Vehicle.dealer_id == current_user.dealer_id)
+            has_sale    = exists().where(models.VehicleSale.customer_id == models.Customer.customer_id).where(models.VehicleSale.dealer_id == current_user.dealer_id)
+            has_job     = exists().where(models.JobCard.customer_id == models.Customer.customer_id).where(models.JobCard.dealer_id == current_user.dealer_id)
+            has_booking = exists().where(models.Booking.customer_id == models.Customer.customer_id).where(models.Booking.dealer_id == current_user.dealer_id)
+            
+            query = query.filter(has_vehicle | has_sale | has_job | has_booking)
 
     if search:
         term = f"%{search.strip()}%"
@@ -583,7 +587,7 @@ def get_aging_summary(db: Session = Depends(get_db), current_user: models.AppUse
             FROM vehicles v
             JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
               AND {scope}
         """)
@@ -638,7 +642,7 @@ def get_aging_vehicles(
             FROM vehicles v
             JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
               AND {scope}
             ORDER BY days DESC
@@ -686,7 +690,7 @@ def get_transfer_recommendations(
             FROM vehicles v
             JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
               AND {scope}
             ORDER BY days DESC
@@ -698,21 +702,44 @@ def get_transfer_recommendations(
     # Get all dealers for target matching
     all_dealers = db.query(models.Dealer).all()
 
+    # Pre-calculate/Cache demand for aging variants to avoid repeated JSON lookups
+    variants = {r.variant_id for r in aging_rows if r.variant_id}
+    fc = _load_forecast()
+    demand_cache = {}
+    for f_rec in fc.get("forecasts", []):
+        if f_rec["variant_id"] in variants:
+            demand_cache[(f_rec["variant_id"], f_rec["dealer_id"])] = float(f_rec["total_30d"])
+
+    transport_cache = {}
     recommendations = []
+    
     for r in aging_rows:
         total_fp = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
 
-        # Find best target dealer using real road distances from DB
+        # Find best target dealer
         best_target = None
         best_utility = -999_999
         best_transport = 0
         best_demand = 0
 
+        # Optimization: Filter potential targets by same zone if many dealers exist
+        # For POC, we just use a cached lookup to keep it fast
         for d in all_dealers:
             if d.dealer_id == r.dealer_id:
                 continue
-            transport = get_transport_cost(r.city, d.city, db)
-            demand = _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
+            
+            # Cached transport cost
+            cities = tuple(sorted([r.city, d.city]))
+            if cities not in transport_cache:
+                transport_cache[cities] = get_transport_cost(r.city, d.city, db)
+            transport = transport_cache[cities]
+            
+            # Cached demand score
+            demand = demand_cache.get((r.variant_id, d.dealer_id))
+            if demand is None:
+                # fall back to a zero or small proxy if not in forecast to avoid DB hits in loop
+                demand = 0.0
+            
             # Net utility = floorplan saved + demand value - transport
             utility = total_fp + (demand * 500) - transport
             if utility > best_utility:
@@ -838,7 +865,7 @@ def get_b2c_prompts(
             FROM vehicles v
             JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
-              AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+              AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
               AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) >= :min_days
               AND {scope}
             ORDER BY days DESC
@@ -884,16 +911,15 @@ def get_operational_alerts(
     stockout_rows = db.execute(
         text(f"""
             SELECT
-                dr.part_number, p.description,
+                dr.part_number, dr.description,
                 dr.dealer_id,
-                SUM(dr.on_hand_qty) as on_hand,
-                AVG(dr.reorder_point) as rop
+                dr.on_hand_qty as on_hand,
+                dr.reorder_point as rop
             FROM demand_records dr
-            JOIN parts p ON p.part_number = dr.part_number
-            WHERE {scope_dealer}
-            GROUP BY dr.part_number, p.description, dr.dealer_id
-            HAVING on_hand < rop
-            ORDER BY (rop - on_hand) DESC
+            WHERE dr.date = (SELECT MAX(date) FROM demand_records)
+              AND {scope_dealer}
+              AND dr.on_hand_qty < dr.reorder_point
+            ORDER BY (dr.reorder_point - dr.on_hand_qty) DESC
             LIMIT :lim
         """),
         {"lim": limit // 2},
@@ -1225,14 +1251,42 @@ def get_guided_recommendations(
     ).fetchall()
 
     all_dealers = db.query(models.Dealer).all()
+    
+    # Pre-calculate/Cache demand for aging variants to avoid repeated nested loops
+    variants = {r.variant_id for r in aging_rows if r.variant_id}
+    fc = _load_forecast()
+    demand_cache = {}
+    for f_rec in fc.get("forecasts", []):
+        v_id = f_rec.get("variant_id")
+        d_id = f_rec.get("dealer_id")
+        if v_id in variants:
+            demand_cache[(v_id, d_id)] = float(f_rec["total_30d"])
+
     for r in aging_rows:
         rec_id = f"transfer_{r.chassis_number}"
         fp_cost = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
-        best = max(
-            all_dealers,
-            key=lambda d: _demand_score_for_variant(r.variant_id or "", d.dealer_id, db)
-            if d.dealer_id != r.dealer_id else -1
-        )
+        
+        # Find best target dealer using demand_cache
+        best = None
+        best_utility = -999_999
+        best_demand = 0.0
+        
+        for d in all_dealers:
+            if d.dealer_id == r.dealer_id:
+                continue
+            
+            # Use cached demand or 0.0 fallback (to avoid DB hits in loop)
+            demand = demand_cache.get((r.variant_id, d.dealer_id), 0.0)
+            
+            # Simplified utility for Guided Assistant (Transfer benefit)
+            utility = fp_cost + (demand * 500) - 6000.0 # 6k est transport
+            if utility > best_utility:
+                best_utility = utility
+                best = d
+                best_demand = demand
+        
+        if not best: continue
+
         priority = "Critical" if r.days >= 90 else "Medium"
         rec_data = {
             "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,
@@ -1240,8 +1294,8 @@ def get_guided_recommendations(
             "source_city": r.city, "target_dealer": best.dealer_name,
             "target_city": best.city, "days_in_inventory": r.days,
             "floorplan_cost": fp_cost, "transport_cost": 6000.0,
-            "demand_score": _demand_score_for_variant(r.variant_id or "", best.dealer_id, db),
-            "net_utility": fp_cost - 6000.0,
+            "demand_score": best_demand,
+            "net_utility": round(best_utility, 2),
         }
         # Stash rec_data so approve endpoint can send the right email
         if rec_id not in _approval_store:
@@ -1264,14 +1318,13 @@ def get_guided_recommendations(
     stockout_scope = get_scope_filters(current_user, dealer_table_alias="dr")
     stockout_rows = db.execute(
         text(f"""
-            SELECT dr.part_number, p.description, dr.dealer_id,
-                   SUM(dr.on_hand_qty) as on_hand, AVG(dr.reorder_point) as rop
+            SELECT dr.part_number, dr.description, dr.dealer_id,
+                   dr.on_hand_qty as on_hand, dr.reorder_point as rop
             FROM demand_records dr
-            JOIN parts p ON p.part_number = dr.part_number
-            WHERE {stockout_scope}
-            GROUP BY dr.part_number, p.description, dr.dealer_id
-            HAVING on_hand < rop
-            ORDER BY (rop - on_hand) DESC
+            WHERE dr.date = (SELECT MAX(date) FROM demand_records)
+              AND {stockout_scope}
+              AND dr.on_hand_qty < dr.reorder_point
+            ORDER BY (dr.reorder_point - dr.on_hand_qty) DESC
             LIMIT 10
         """)
     ).fetchall()

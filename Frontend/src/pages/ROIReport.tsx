@@ -43,28 +43,29 @@ const ROIReport = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground">ROI Impact Report</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h2 className="text-3xl font-extrabold text-foreground tracking-tight">ROI Impact Report</h2>
+        <p className="text-base text-muted-foreground mt-1.5 font-medium">
           Week 1 Baseline vs AI Copilot Projected Impact
         </p>
       </div>
 
       {/* Hero summary */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-        className="glass glow-blue rounded-xl p-6"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-6"
       >
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-primary/10 p-3">
-            <BarChart3 className="h-6 w-6 text-primary" />
+        <div className="flex items-start gap-5">
+          <div className="rounded-2xl bg-primary/10 p-4 shadow-inner">
+            <BarChart3 className="h-8 w-8 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground mb-1">AI Copilot Projected Impact</p>
-            <p className="text-3xl font-bold text-foreground">
+            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground/70 mb-2">AI Copilot Projected Impact</p>
+            <p className="text-4xl font-black text-foreground tracking-tight">
               ₹{new Intl.NumberFormat("en-IN").format(report.total_floorplan_saved)}
             </p>
-            <p className="text-sm text-emerald-400 mt-1">projected floorplan interest saved</p>
-            <p className="text-xs text-muted-foreground mt-3 leading-relaxed max-w-2xl">
+            <p className="text-lg font-bold text-emerald-400 mt-2">projected floorplan interest saved</p>
+            <p className="text-base text-muted-foreground mt-5 leading-relaxed max-w-3xl font-medium">
               {report.summary}
             </p>
           </div>
@@ -72,7 +73,7 @@ const ROIReport = () => {
       </motion.div>
 
       {/* Metric cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {report.metrics.map((m, i) => {
           const Icon = METRIC_ICONS[m.metric] ?? CheckCircle2;
           const isReduction = m.metric !== "Vehicles Recommended for Transfer";
@@ -81,49 +82,49 @@ const ROIReport = () => {
             <motion.div key={m.metric}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="glass rounded-xl p-5 space-y-4"
+              className="bg-card rounded-xl border border-border/10 shadow-sm p-6 space-y-6"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-lg bg-primary/10 p-2">
-                    <Icon className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-2.5">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <p className="text-sm font-semibold text-foreground">{m.metric}</p>
+                  <p className="text-base font-bold text-foreground">{m.metric}</p>
                 </div>
-                <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${
-                  improved ? "bg-emerald-500/10 text-emerald-400" : "bg-muted/40 text-muted-foreground"
+                <span className={`flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider ${
+                  improved ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-muted/40 text-muted-foreground"
                 }`}>
-                  {improved && <ArrowDown className="h-3 w-3" />}
+                  {improved && <ArrowDown className="h-3.5 w-3.5" />}
                   {m.improvement_pct.toFixed(1)}% {isReduction ? "reduction" : "increase"}
                 </span>
               </div>
 
               {/* Before / After */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-muted/20 rounded-lg p-3">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Week 1 Baseline</p>
-                  <p className="text-lg font-bold text-foreground">{fmt(m.baseline_value, m.unit)}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/20 rounded-xl p-4 border border-border/20">
+                  <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mb-2">Week 1 Baseline</p>
+                  <p className="text-xl font-extrabold text-foreground">{fmt(m.baseline_value, m.unit)}</p>
                 </div>
-                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
-                  <p className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">With AI Copilot</p>
-                  <p className="text-lg font-bold text-emerald-400">{fmt(m.ai_value, m.unit)}</p>
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
+                  <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">With AI Copilot</p>
+                  <p className="text-xl font-extrabold text-emerald-400">{fmt(m.ai_value, m.unit)}</p>
                 </div>
               </div>
 
               {/* Progress bar */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-muted-foreground">
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
                   <span>Improvement</span>
-                  <span className="text-emerald-400 font-semibold">
+                  <span className="text-emerald-400 font-black">
                     {m.unit === "₹" ? `₹${new Intl.NumberFormat("en-IN").format(m.improvement)}` : `${m.improvement} ${m.unit}`}
                   </span>
                 </div>
-                <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                <div className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(m.improvement_pct, 100)}%` }}
                     transition={{ duration: 1, delay: i * 0.1 }}
-                    className="h-full bg-emerald-500 rounded-full"
+                    className="h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                   />
                 </div>
               </div>
@@ -136,42 +137,45 @@ const ROIReport = () => {
       <motion.div
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="glass rounded-xl p-6"
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-8"
       >
-        <h3 className="text-base font-semibold text-foreground mb-4">
+        <h3 className="text-lg font-bold text-foreground mb-6">
           Baseline vs AI Copilot — Side by Side
         </h3>
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData.slice(0, 3)} margin={{ left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,18%)" />
-            <XAxis dataKey="name" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.2)" />
+            <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 13, fontWeight: 600 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 13, fontWeight: 600 }} axisLine={false} tickLine={false} />
             <Tooltip
+              cursor={{ fill: 'hsl(var(--muted) / 0.1)' }}
               contentStyle={{
-                background: "hsl(225,20%,10%)",
-                border: "1px solid hsl(225,15%,25%)",
-                borderRadius: "8px",
-                fontSize: 12,
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "12px",
+                fontSize: 14,
+                fontWeight: 600,
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
               }}
             />
-            <Bar dataKey="Baseline"  fill="hsl(215,15%,35%)" radius={[4,4,0,0]} />
-            <Bar dataKey="With AI"   fill="hsl(160,70%,50%)" radius={[4,4,0,0]} />
+            <Bar dataKey="Baseline"  fill="hsl(var(--muted-foreground) / 0.4)" radius={[6,6,0,0]} />
+            <Bar dataKey="With AI"   fill="hsl(var(--success))" radius={[6,6,0,0]} />
           </BarChart>
         </ResponsiveContainer>
-        <div className="flex items-center gap-6 mt-3">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-6 rounded-full bg-muted/60" />
-            <span className="text-xs text-muted-foreground">Week 1 Baseline</span>
+        <div className="flex items-center gap-8 mt-6">
+          <div className="flex items-center gap-2.5">
+            <div className="h-2.5 w-6 rounded-full bg-muted-foreground/30" />
+            <span className="text-sm font-bold text-muted-foreground">Week 1 Baseline</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-6 rounded-full bg-emerald-500" />
-            <span className="text-xs text-muted-foreground">With AI Copilot</span>
+          <div className="flex items-center gap-2.5">
+            <div className="h-2.5 w-6 rounded-full bg-emerald-500" />
+            <span className="text-sm font-bold text-muted-foreground">With AI Copilot</span>
           </div>
         </div>
       </motion.div>
 
       {/* Key stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
           { label: "Vehicles for Transfer",  value: report.vehicles_recommended_for_transfer, unit: "vehicles", color: "text-primary" },
           { label: "Avg Days Reduction",     value: report.avg_days_reduction,                unit: "days",     color: "text-emerald-400" },
@@ -181,10 +185,10 @@ const ROIReport = () => {
           <motion.div key={s.label}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 + i * 0.07 }}
-            className="glass rounded-xl p-4 text-center space-y-1"
+            className="bg-card rounded-xl border border-border/10 shadow-sm p-5 flex flex-col items-center justify-center gap-1"
           >
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-[11px] text-muted-foreground">{s.label}</p>
+            <p className={`text-3xl font-black tracking-tight ${s.color}`}>{s.value}</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
           </motion.div>
         ))}
       </div>

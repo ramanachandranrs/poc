@@ -27,11 +27,11 @@ const fmt = (n: number) =>
 
 function MapeChip({ mape }: { mape: number }) {
   const color =
-    mape < 30  ? "text-emerald-400 bg-emerald-500/10" :
-    mape < 60  ? "text-yellow-400 bg-yellow-500/10"   :
-                 "text-neon-amber bg-neon-amber/10";
+    mape < 30  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+    mape < 60  ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/20"   :
+                 "text-neon-amber bg-neon-amber/10 border-neon-amber/20";
   return (
-    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${color}`}>
+    <span className={`text-xs px-4 py-1.5 rounded-full font-black uppercase tracking-widest border ${color} shadow-sm`}>
       MAPE {mape.toFixed(1)}%
     </span>
   );
@@ -107,17 +107,17 @@ const DemandForecast = () => {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Demand Forecast</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Demand Forecast</h2>
+        <p className="text-lg font-bold text-muted-foreground mt-4 tracking-wide uppercase">
           XGBoost · 30-day forward forecast · {summary.total_dealer_variant_combos} dealer-variant combos
         </p>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
         {[
           { label: "Total Demand (30d)", value: fmt(totalNetwork), sub: "units forecasted",  icon: TrendingUp },
           { label: "Top Variant",          value: topVariant,        sub: "highest demand",    icon: Target },
@@ -127,28 +127,28 @@ const DemandForecast = () => {
         ].map((c, i) => (
           <motion.div
             key={c.label}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className="glass rounded-xl p-4 space-y-2"
+            className="bg-card rounded-xl p-5 space-y-3 border border-border/10 shadow-sm"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{c.label}</span>
-              <c.icon className="h-4 w-4 text-muted-foreground/50" />
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest opacity-60">{c.label}</span>
+              <c.icon className="h-5 w-5 text-primary/40" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{c.value}</p>
-            <p className="text-[11px] text-muted-foreground">{c.sub}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{c.value}</p>
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{c.sub}</p>
           </motion.div>
         ))}
       </div>
 
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-4 items-center mt-4">
         <select
           value={selectedDealer}
           onChange={(e) => setSelectedDealer(e.target.value)}
-          className="bg-muted/30 border border-border/50 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="bg-card border border-border/10 rounded-lg px-4 py-2 text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 min-w-[200px] cursor-pointer"
         >
           <option value="">All Dealers</option>
           {dealers.map((d) => <option key={d.dealer_id} value={d.dealer_id}>{d.dealer_id} — {d.dealer_name}</option>)}
@@ -156,7 +156,7 @@ const DemandForecast = () => {
         <select
           value={selectedVariant}
           onChange={(e) => setSelectedVariant(e.target.value)}
-          className="bg-muted/30 border border-border/50 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="bg-card border border-border/10 rounded-lg px-4 py-2 text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 min-w-[150px] cursor-pointer"
         >
           <option value="">All Variants</option>
           {variants.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -164,7 +164,7 @@ const DemandForecast = () => {
         {(selectedDealer || selectedVariant) && (
           <button
             onClick={() => { setSelectedDealer(""); setSelectedVariant(""); }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+            className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all uppercase tracking-widest px-4 py-2 rounded-lg bg-muted/20 border border-border/10"
           >
             Clear filters
           </button>
@@ -176,22 +176,22 @@ const DemandForecast = () => {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass glow-blue rounded-xl p-6"
+          className="bg-card rounded-xl border border-border/10 shadow-sm p-6"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-base font-semibold text-foreground">30-Day Daily Forecast</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-lg font-bold text-foreground tracking-tight">30-Day Daily Forecast</h3>
+              <p className="text-sm font-bold text-muted-foreground mt-2 uppercase tracking-widest">
                 {selectedDealer ? `Dealer: ${selectedDealer}` : "All dealers"}
                 {selectedVariant ? ` · Variant: ${selectedVariant}` : ""}
               </p>
             </div>
             {fcLoading && (
-              <span className="text-xs text-muted-foreground animate-pulse">Loading…</span>
+              <span className="text-sm font-black text-primary animate-pulse uppercase tracking-widest">Loading…</span>
             )}
           </div>
           {networkChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={networkChartData}>
                 <defs>
                   {activeVariants.map((v) => (
@@ -202,28 +202,29 @@ const DemandForecast = () => {
                   ))}
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,18%)" />
-                <XAxis dataKey="date" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} axisLine={false} tickLine={false} interval={4} />
-                <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="date" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} interval={4} />
+                <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
                     background: "hsl(225,20%,10%)",
                     border: "1px solid hsl(225,15%,25%)",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     color: "hsl(210,40%,93%)",
-                    fontSize: 12,
+                    fontSize: 14,
+                    fontWeight: 700,
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 14, fontWeight: 700, paddingTop: "16px" }} />
                 {activeVariants.map((v) => (
                   <Area key={v} type="monotone" dataKey={v}
                     stroke={getColor(v)} fill={`url(#grad_${v})`}
-                    strokeWidth={2} dot={false} />
+                    strokeWidth={3} dot={false} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
           ) : (
             !fcLoading && (
-              <p className="text-sm text-muted-foreground text-center py-8">
+              <p className="text-sm font-bold text-muted-foreground text-center py-12 uppercase tracking-widest">
                 No data for selected filters.
               </p>
             )
@@ -236,28 +237,29 @@ const DemandForecast = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="glass rounded-xl p-6"
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-6 border border-border/10 shadow-lg"
       >
-        <h3 className="text-base font-semibold text-foreground mb-4">
+        <h3 className="text-2xl font-black text-foreground mb-8">
           Total 30-Day Demand by Variant ({role === "dealership" ? "Dealership" : "Across Scope"})
         </h3>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={variantBarData} layout="vertical" margin={{ left: 10 }}>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={variantBarData} layout="vertical" margin={{ left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,18%)" horizontal={false} />
-            <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis type="category" dataKey="variant" tick={{ fill: "hsl(215,15%,55%)", fontSize: 12 }} axisLine={false} tickLine={false} width={55} />
+            <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="variant" tick={{ fill: "hsl(215,15%,55%)", fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={80} />
             <Tooltip
               contentStyle={{
                 background: "hsl(225,20%,10%)",
                 border: "1px solid hsl(225,15%,25%)",
-                borderRadius: "8px",
-                fontSize: 12,
+                borderRadius: "12px",
+                fontSize: 14,
+                fontWeight: 700,
               }}
-              labelStyle={{ color: "hsl(210,40%,93%)", fontWeight: 600 }}
+              labelStyle={{ color: "hsl(210,40%,93%)", fontWeight: 800 }}
               itemStyle={{ color: "hsl(210,40%,93%)" }}
               formatter={(v: number) => [`${fmt(v)} units`, "Demand"]}
             />
-            <Bar dataKey="demand" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="demand" radius={[0, 8, 8, 0]} barSize={40}>
               {variantBarData.map((entry) => (
                 <Cell key={entry.variant} fill={getColor(entry.variant)} />
               ))}
@@ -272,42 +274,42 @@ const DemandForecast = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="glass rounded-xl overflow-hidden"
+          className="glass rounded-2xl overflow-hidden border border-border/10 shadow-lg"
         >
-          <div className="p-4 border-b border-border/50">
-            <h3 className="text-base font-semibold text-foreground">Top Dealer × Variant Forecasts</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Ranked by 30-day forecasted demand</p>
+          <div className="p-6 border-b border-border/50 bg-muted/5">
+            <h3 className="text-xl font-bold text-foreground">Top Dealer × Variant Forecasts</h3>
+            <p className="text-sm font-bold text-muted-foreground/60 mt-1 uppercase tracking-widest">Ranked by 30-day forecasted demand</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-border/30">
+                <tr className="border-b border-border/30 bg-muted/5">
                   {["Rank", "Dealer", "Variant", "30d Forecast", "Model MAPE"].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">{h}</th>
+                    <th key={h} className="text-left px-6 py-5 text-xs font-black text-muted-foreground uppercase tracking-widest">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {summary.top_pairs.map((p, i) => (
+              <tbody className="divide-y divide-border/5">
+                {(summary?.top_pairs || []).map((p, i) => (
                   <tr
                     key={`${p.dealer_id}-${p.variant_id}`}
-                    className="border-b border-border/20 hover:bg-muted/20 transition-colors"
+                    className="hover:bg-muted/30 transition-colors group"
                   >
-                    <td className="px-4 py-3 text-muted-foreground text-xs">#{i + 1}</td>
-                    <td className="px-4 py-3">
-                      <span className="font-medium text-foreground">{p.dealer_name}</span>
-                      <span className="text-[10px] text-muted-foreground ml-2 font-mono">{p.dealer_id}</span>
+                    <td className="px-6 py-3 text-muted-foreground text-xs font-bold">#{i + 1}</td>
+                    <td className="px-6 py-3">
+                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">{p.dealer_name}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground/40 ml-2 font-mono tracking-widest">{p.dealer_id}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-3">
                       <span
-                        className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                        className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-border/10"
                         style={{ background: getColor(p.variant_id) + "25", color: getColor(p.variant_id) }}
                       >
                         {p.variant_id}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{fmt(p.total_30d)} units</td>
-                    <td className="px-4 py-3"><MapeChip mape={p.model_mape} /></td>
+                    <td className="px-6 py-3 font-bold text-foreground text-sm">{fmt(p.total_30d)} units</td>
+                    <td className="px-6 py-3"><MapeChip mape={p.model_mape} /></td>
                   </tr>
                 ))}
               </tbody>

@@ -7,6 +7,10 @@ import { useRole } from "@/context/RoleContext";
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useRole();
   
+  useEffect(() => {
+    console.log("DashboardLayout: user =", user);
+  }, [user]);
+  
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem("theme") === "dark" || 
       (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -34,15 +38,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
               <div className="h-5 w-px bg-border" />
               <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4 text-primary animate-pulse-soft" />
-                <span className="text-xs text-muted-foreground hidden sm:inline">AI Engine Online</span>
+                <Bot className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-foreground hidden sm:inline">AI Engine Online</span>
               </div>
             </div>
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mr-2">
-                <div className="h-2 w-2 rounded-full bg-neon-green animate-pulse" />
-                <span className="hidden md:inline">Systems Operational</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-primary/70 animate-pulse" />
+                <span className="hidden md:inline">Operational</span>
               </div>
               
               <button
@@ -55,14 +59,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               
               {user && (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/50 text-xs text-foreground">
-                    <UserCircle className="h-4 w-4 text-primary" />
-                    <span className="font-medium max-w-[120px] truncate" title={user.username}>{user.username}</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground text-xs font-medium border border-border/50">
+                    <UserCircle className="h-4 w-4 text-muted-foreground" />
+                    <span className="max-w-[120px] truncate" title={user.username}>{user.username}</span>
                   </div>
                   
                   <button
                     onClick={logout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neon-red/10 text-neon-red hover:bg-neon-red/20 transition-colors text-xs font-medium border border-neon-red/20"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors text-xs font-medium border border-transparent hover:border-destructive/20"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Sign Out</span>

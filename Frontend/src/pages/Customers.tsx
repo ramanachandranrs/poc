@@ -26,6 +26,9 @@ const Customers = () => {
     (window as any)._searchTimer = setTimeout(() => setDebouncedSearch(val), 400);
   };
 
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+
   const { data, loading } = useCustomers({
     search: debouncedSearch || undefined,
     state: stateFilter || undefined,
@@ -41,11 +44,19 @@ const Customers = () => {
   const totalSecond = data.filter((c) => c.ownership_history === "2nd owner").length;
   const withContact = data.filter((c) => c.contact).length;
 
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return data.slice(start, start + pageSize);
+  }, [data, page]);
+
+  const totalPages = Math.ceil(data.length / pageSize);
+
   const clearFilters = () => {
     setSearch("");
     setDebouncedSearch("");
     setStateFilter("");
     setOwnershipFilter("");
+    setPage(1);
   };
 
   const hasFilters = search || stateFilter || ownershipFilter;
@@ -55,17 +66,17 @@ const Customers = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Customer Registry</h2>
-          <p className="text-sm text-muted-foreground mt-1">Wipro DMS — {data.length} customers loaded</p>
+          <h2 className="text-3xl font-extrabold text-foreground tracking-tight">Customer Registry</h2>
+          <p className="text-base text-muted-foreground mt-1.5 font-medium">Wipro DMS — <span className="text-foreground font-black">{data.length.toLocaleString()}</span> customers found</p>
         </div>
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-muted/60 px-5 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-all active:scale-95"
           >
-            <X className="h-3 w-3" /> Clear filters
+            <X className="h-4 w-4" /> Clear filters
           </button>
         )}
       </div>
@@ -79,108 +90,110 @@ const Customers = () => {
       </div>
 
       {/* Filters */}
-      <div className="glass rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="bg-card rounded-xl border border-border/10 shadow-sm p-5 border border-border/20 mt-2">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative flex-1 min-w-[280px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search by name or customer ID..."
               value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full rounded-lg bg-muted/40 border border-border/50 pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              onChange={(e) => { handleSearch(e.target.value); setPage(1); }}
+              className="w-full rounded-xl bg-muted/40 border border-border/10 pl-12 pr-4 py-4 text-base font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
           </div>
 
-          {/* State filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <select
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              className="rounded-lg bg-muted/40 border border-border/50 pl-8 pr-8 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none min-w-[160px]"
-            >
-              <option value="">All States</option>
-              {states.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* State filter */}
+            <div className="relative">
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <select
+                value={stateFilter}
+                onChange={(e) => { setStateFilter(e.target.value); setPage(1); }}
+                className="rounded-xl bg-muted/40 border border-border/10 pl-11 pr-10 py-4 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none min-w-[200px] cursor-pointer"
+              >
+                <option value="">All States</option>
+                {states.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-          {/* Ownership filter */}
-          <div className="relative">
-            <Car className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <select
-              value={ownershipFilter}
-              onChange={(e) => setOwnershipFilter(e.target.value)}
-              className="rounded-lg bg-muted/40 border border-border/50 pl-8 pr-8 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none min-w-[150px]"
-            >
-              <option value="">All Ownership</option>
-              {ownershipOptions.map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
+            {/* Ownership filter */}
+            <div className="relative">
+              <Car className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <select
+                value={ownershipFilter}
+                onChange={(e) => { setOwnershipFilter(e.target.value); setPage(1); }}
+                className="rounded-xl bg-muted/40 border border-border/10 pl-11 pr-10 py-4 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none min-w-[180px] cursor-pointer"
+              >
+                <option value="">All Ownership</option>
+                {ownershipOptions.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="glass rounded-xl overflow-hidden">
+      <div className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden border border-border/10 shadow-lg mt-2">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead>
-              <tr className="border-b border-border/50">
-                <th className="text-left p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Customer ID</th>
-                <th className="text-left p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Name</th>
-                <th className="text-left p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Contact</th>
-                <th className="text-left p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Location</th>
-                <th className="text-center p-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">Ownership</th>
+              <tr className="border-b border-border/10 bg-muted/5">
+                <th className="text-left p-5 text-xs uppercase tracking-widest text-muted-foreground font-black">Customer ID</th>
+                <th className="text-left p-5 text-xs uppercase tracking-widest text-muted-foreground font-black">Name</th>
+                <th className="text-left p-5 text-xs uppercase tracking-widest text-muted-foreground font-black">Contact</th>
+                <th className="text-left p-5 text-xs uppercase tracking-widest text-muted-foreground font-black">Location</th>
+                <th className="text-center p-5 text-xs uppercase tracking-widest text-muted-foreground font-black">Ownership</th>
               </tr>
             </thead>
-            <tbody>
-              {data.length === 0 ? (
+            <tbody className="divide-y divide-border/5">
+              {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">
+                  <td colSpan={5} className="p-16 text-center text-muted-foreground text-lg font-medium">
                     No customers found matching your filters.
                   </td>
                 </tr>
               ) : (
-                data.map((customer, i) => (
+                paginatedData.map((customer, i) => (
                   <motion.tr
                     key={customer.customer_id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.25, delay: i * 0.02 }}
-                    className="border-b border-border/30 hover:bg-muted/20 transition-colors"
+                    transition={{ duration: 0.2, delay: Math.min(i * 0.01, 0.2) }}
+                    className="transition-colors hover:bg-muted/30 group"
                   >
-                    <td className="p-4 font-mono text-xs text-muted-foreground">{customer.customer_id}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                    <td className="p-5 font-mono text-xs text-muted-foreground/60">{customer.customer_id}</td>
+                    <td className="p-5">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-black shadow-inner">
                           {customer.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium text-foreground">{customer.name}</span>
+                        <span className="font-bold text-foreground group-hover:text-primary transition-colors">{customer.name}</span>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-5">
                       {customer.contact ? (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Phone className="h-3 w-3" />
+                        <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                          <Phone className="h-4 w-4 text-primary/60" />
                           <span>{customer.contact}</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground/40">—</span>
+                        <span className="text-sm font-bold text-muted-foreground/30">—</span>
                       )}
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3 shrink-0" />
+                    <td className="p-5">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <MapPin className="h-4 w-4 shrink-0 text-primary/60" />
                         <span>{[customer.city, customer.state].filter(Boolean).join(", ") || "—"}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${ownershipColor[customer.ownership_history ?? ""] ?? "text-muted-foreground bg-muted"}`}>
+                    <td className="p-5 text-center">
+                      <span className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest border border-border/10 shadow-sm ${ownershipColor[customer.ownership_history ?? ""] ?? "text-muted-foreground bg-muted"}`}>
                         {customer.ownership_history || "Unknown"}
                       </span>
                     </td>
@@ -190,6 +203,38 @@ const Customers = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-border/50 flex items-center justify-between gap-4">
+            <div className="text-xs text-muted-foreground">
+              Showing <span className="font-medium text-foreground">{((page - 1) * pageSize) + 1}</span> to{" "}
+              <span className="font-medium text-foreground">{Math.min(page * pageSize, data.length)}</span> of{" "}
+              <span className="font-medium text-foreground">{data.length.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(p => p - 1)}
+                className="px-3 py-1.5 rounded-lg bg-muted/40 text-xs font-medium text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1 px-2">
+                <span className="text-xs text-muted-foreground">Page</span>
+                <span className="text-xs font-bold text-foreground">{page}</span>
+                <span className="text-xs text-muted-foreground">of {totalPages}</span>
+              </div>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(p => p + 1)}
+                className="px-3 py-1.5 rounded-lg bg-muted/40 text-xs font-medium text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

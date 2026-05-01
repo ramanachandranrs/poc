@@ -34,7 +34,7 @@ def _get_client():
 
 
 def _generate(system_prompt: str, user_prompt: str) -> str:
-    """Call Gemini and return the text response."""
+    """Call Gemini and return the text response. Fallback to Groq if credentials fail."""
     try:
         client, model, types = _get_client()
         response = client.models.generate_content(
@@ -47,7 +47,6 @@ def _generate(system_prompt: str, user_prompt: str) -> str:
                 thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
         )
-        # Handle both direct text and candidates
         if hasattr(response, "text") and response.text:
             return response.text.strip()
         if hasattr(response, "candidates") and response.candidates:
@@ -55,7 +54,14 @@ def _generate(system_prompt: str, user_prompt: str) -> str:
             return "".join(p.text for p in parts if hasattr(p, "text")).strip()
         return "[No response generated]"
     except Exception as e:
-        return f"[Gemini error: {str(e)[:200]}]"
+        # If Gemini fails (likely credentials), try Groq as a fallback
+        error_msg = str(e)
+        if "credentials" in error_msg.lower() or "auth" in error_msg.lower() or "project" in error_msg.lower():
+            try:
+                return _generate_groq(system_prompt, user_prompt)
+            except:
+                pass
+        return f"[AI error: {error_msg[:200]}]"
 
 
 # ── B2B — Dealer-to-Dealer Transfer ──────────────────────────────────────────

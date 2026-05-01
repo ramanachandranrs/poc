@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  AlertTriangle, Package, Train, Car, Zap, RefreshCw,
-  ChevronDown, ChevronUp, Check, X, Clock, Sparkles, Filter, ListFilter
+  ChevronDown, ChevronUp, Check, X, Clock, Sparkles, Filter, ListFilter, Search,
+  Zap, RefreshCw, AlertTriangle, Car, Package, Train
 } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
-const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+const fmt = (n) => {
+  if (n === null || n === undefined) return "0";
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+};
 
 const SEV_STYLE = {
   critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
@@ -89,11 +92,9 @@ function AlertCard({ alert, onAction }) {
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className={`glass rounded-xl overflow-hidden border-l-4 ${
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={`bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden border-l-4 ${
         alert.severity === "critical" ? "border-neon-red" :
         alert.severity === "medium"   ? "border-neon-amber" : "border-yellow-500"
       }`}
@@ -350,42 +351,35 @@ export default function AlertFeed() {
     <div className="space-y-4">
       {/* Banner */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass glow-border-red rounded-xl p-4"
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-5"
       >
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-neon-red" />
-              <h2 className="text-sm font-bold text-foreground">Today's Action Queue</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neon-red/10 border border-neon-red/20">
+              <Zap className="h-5 w-5 text-neon-red" />
             </div>
-            <p className="mt-1 text-lg font-bold text-neon-red">
-              ₹{fmt(totalImpact)} at risk today across {dealerCount} dealer{dealerCount !== 1 ? "s" : ""}
-            </p>
-            <div className="mt-2 flex items-center gap-3 flex-wrap">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-neon-red/10 text-neon-red border border-neon-red/20 font-semibold">
-                {counts.critical} Critical
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-neon-amber/10 text-neon-amber border border-neon-amber/20 font-semibold">
-                {counts.medium} Medium
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-                {counts.low} Low
-              </span>
-              {minutesAgo !== null && (
-                <span className="text-[10px] text-muted-foreground">
-                  Last updated {minutesAgo === 0 ? "just now" : `${minutesAgo}m ago`}
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Action Queue</h2>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-neon-red/10 text-neon-red border border-neon-red/20 font-semibold">
+                  {counts.critical} Critical
                 </span>
-              )}
+                <span className="text-xs px-2 py-0.5 rounded-full bg-neon-amber/10 text-neon-amber border border-neon-amber/20 font-semibold">
+                  {counts.medium} Medium
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                  {counts.low} Low
+                </span>
+              </div>
             </div>
           </div>
           <button
             onClick={fetchAlerts}
-            className="flex items-center gap-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/40 hover:bg-muted/60 text-foreground transition-all border border-border/10"
           >
-            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </motion.div>
@@ -424,15 +418,15 @@ export default function AlertFeed() {
       {loading ? (
         <Skeleton />
       ) : filtered.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
+        <div className="bg-card rounded-xl border border-border/10 shadow-sm p-12 text-center">
           <Check className="h-8 w-8 text-emerald-400 mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">No critical alerts matching your filters</p>
           <p className="text-xs text-muted-foreground mt-1">Network is healthy for these criteria.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          <AnimatePresence>
-            {filtered.map((alert) => (
+          <AnimatePresence mode="popLayout">
+            {(filtered || []).map((alert) => (
               <AlertCard
                 key={alert.alert_id}
                 alert={alert}

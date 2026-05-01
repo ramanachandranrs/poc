@@ -10,7 +10,10 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 import GuidedAssistant from "@/pages/GuidedAssistant";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
-const fmt = (n) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+const fmt = (n) => {
+  if (n === null || n === undefined) return "0";
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+};
 
 const SEVERITY_STYLE = {
   Critical: "bg-neon-red/10 text-neon-red border border-neon-red/30",
@@ -76,59 +79,59 @@ function B2CCard({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="glass rounded-xl overflow-hidden"
+      className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden"
     >
-      <div className="p-4 flex items-start gap-3">
-        <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-          <MessageSquare className="h-4 w-4 text-primary" />
+      <div className="p-6 flex items-start gap-5">
+        <div className="rounded-2xl bg-primary/10 p-3.5 shadow-inner shrink-0">
+          <MessageSquare className="h-6 w-6 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground">{item.model} {item.variant}</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xl font-black text-foreground tracking-tight">{item.model} {item.variant}</span>
             {item.fuel_type && (
-              <span className="text-[10px] bg-muted/40 text-muted-foreground px-2 py-0.5 rounded-full">{item.fuel_type}</span>
+              <span className="text-xs font-bold bg-muted/40 text-muted-foreground px-3 py-1 rounded-full uppercase tracking-widest">{item.fuel_type}</span>
             )}
-            <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${BUCKET_STYLE[item.age_bucket] ?? "bg-muted/40 text-muted-foreground"}`}>
+            <span className={`text-xs px-4 py-1.5 rounded-full font-black uppercase tracking-widest border border-border/10 ${BUCKET_STYLE[item.age_bucket] ?? "bg-muted/40 text-muted-foreground"}`}>
               {item.age_bucket}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{item.dealer_name}</p>
+          <p className="text-sm font-bold text-muted-foreground/70 mt-2">{item.dealer_name}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs text-muted-foreground">Discount offer</p>
-          <p className="font-bold text-emerald-400 text-sm">₹{fmt(item.discount_estimate)}</p>
+          <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Discount offer</p>
+          <p className="text-2xl font-black text-emerald-400">₹{fmt(item.discount_estimate)}</p>
         </div>
       </div>
 
-      <div className="px-4 pb-3 grid grid-cols-2 gap-3 text-xs">
-        <div>
-          <p className="text-muted-foreground">Days in Showroom</p>
-          <p className={`font-semibold ${item.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
+      <div className="px-6 pb-5 grid grid-cols-2 gap-6 text-sm">
+        <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+          <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Days in Showroom</p>
+          <p className={`text-lg font-black ${item.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
             {item.days_in_inventory} days
           </p>
         </div>
-        <div>
-          <p className="text-muted-foreground">VIN</p>
-          <p className="font-mono text-[11px] text-foreground">{item.vin}</p>
+        <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+          <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Vehicle VIN</p>
+          <p className="font-mono text-sm font-bold text-foreground/80">{item.vin}</p>
         </div>
       </div>
 
       {/* Generated message */}
       {generated && (
-        <div className="px-4 pb-3">
-          <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3 text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
+        <div className="px-6 pb-5">
+          <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-6 text-base font-medium text-foreground/90 leading-relaxed shadow-inner">
             {generated}
           </div>
         </div>
       )}
 
-      <div className="px-4 pb-4 flex items-center gap-2 flex-wrap">
+      <div className="px-6 pb-6 flex items-center gap-3 flex-wrap">
         <button
           onClick={generateMessage}
           disabled={generating}
-          className="flex items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary px-6 py-3 text-sm font-black uppercase tracking-widest transition-all shadow-md disabled:opacity-50 active:scale-95"
         >
-          {generating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+          {generating ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {generating ? "Drafting..." : "Generate AI Message"}
         </button>
         {generated && <CopyButton text={generated} />}
@@ -146,42 +149,54 @@ function OpAlertCard({ item, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="glass rounded-xl overflow-hidden"
+      className="glass rounded-2xl overflow-hidden border border-border/10 shadow-lg"
     >
-      <div className="p-4 flex items-start gap-3">
-        <div className={`rounded-lg p-2 shrink-0 ${item.severity === "Critical" ? "bg-neon-red/10" : "bg-neon-amber/10"}`}>
-          <Icon className={`h-4 w-4 ${item.severity === "Critical" ? "text-neon-red" : "text-neon-amber"}`} />
+      <div className="p-6 flex items-start gap-5">
+        <div className={`rounded-2xl p-4 shadow-inner shrink-0 ${item.severity === "Critical" ? "bg-neon-red/10" : "bg-neon-amber/10"}`}>
+          <Icon className={`h-6 w-6 ${item.severity === "Critical" ? "text-neon-red" : "text-neon-amber"}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="font-semibold text-foreground text-sm">{item.subject}</span>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${SEVERITY_STYLE[item.severity]}`}>
+          <span className="text-lg font-black text-foreground tracking-tight">{item.subject}</span>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <span className={`text-xs px-3 py-1 rounded-full font-black uppercase tracking-widest border border-border/10 shadow-sm ${SEVERITY_STYLE[item.severity]}`}>
               {item.severity}
             </span>
-            <span className="text-[10px] bg-muted/40 text-muted-foreground px-2 py-0.5 rounded-full capitalize">
+            <span className="text-xs bg-muted/40 text-muted-foreground px-3 py-1 rounded-full font-bold uppercase tracking-widest">
               {item.alert_type.replace("_", " ")}
             </span>
-            {item.dealer_id && <span className="text-[10px] text-muted-foreground font-mono">{item.dealer_id}</span>}
+            {item.dealer_id && <span className="text-xs text-muted-foreground font-mono font-bold">{item.dealer_id}</span>}
           </div>
         </div>
       </div>
 
-      <div className="px-4 pb-3 grid grid-cols-2 gap-3 text-xs">
+      <div className="px-6 pb-5 grid grid-cols-2 gap-6 text-sm">
         {item.alert_type === "stockout" && (
           <>
-            <div><p className="text-muted-foreground">SKU</p><p className="font-mono text-foreground">{item.part_sku}</p></div>
-            <div><p className="text-muted-foreground">Gap</p><p className="font-semibold text-neon-red">{item.quantity_gap} units below ROP</p></div>
+            <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+              <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Part SKU</p>
+              <p className="font-mono text-base font-bold text-foreground">{item.part_sku}</p>
+            </div>
+            <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+              <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Stock Gap</p>
+              <p className="text-base font-black text-neon-red">{item.quantity_gap} units below ROP</p>
+            </div>
           </>
         )}
         {item.alert_type === "transit_delay" && (
           <>
-            <div><p className="text-muted-foreground">Shipment</p><p className="font-mono text-foreground">{item.shipment_id}</p></div>
-            <div><p className="text-muted-foreground">Delay</p><p className="font-semibold text-neon-red">{item.delay_days?.toFixed(0)} days late</p></div>
+            <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+              <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Shipment ID</p>
+              <p className="font-mono text-base font-bold text-foreground">{item.shipment_id}</p>
+            </div>
+            <div className="bg-muted/5 p-4 rounded-xl border border-border/5">
+              <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest mb-1">Delay Duration</p>
+              <p className="text-base font-black text-neon-red">{item.delay_days?.toFixed(0)} days late</p>
+            </div>
           </>
         )}
       </div>
 
-      <div className="px-4 pb-4 flex items-center gap-2">
+      <div className="px-6 pb-6 flex items-center gap-3">
         <CopyButton text={item.prompt} />
       </div>
     </motion.div>

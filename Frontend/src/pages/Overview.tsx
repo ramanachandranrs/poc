@@ -4,8 +4,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import StatCard from "@/components/StatCard";
 import { useInventorySummary, usePartsSummary, useTransitSummary, useTrends } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { useRole } from "@/context/RoleContext";
 
 const Overview = () => {
+  const { role } = useRole();
   const { data: invSummary,     loading: invLoading }     = useInventorySummary();
   const { data: partsSummary,   loading: partsLoading }   = usePartsSummary();
   const { data: transitSummary, loading: transitLoading } = useTransitSummary();
@@ -26,28 +28,30 @@ const Overview = () => {
       {/* AI Insights Alert */}
       {(agingCount > 0 || stockouts > 0 || delayed > 0) && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass glow-border-red rounded-xl p-4"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-xl p-6 border border-neon-red/10 shadow-sm"
         >
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-neon-red mt-0.5 shrink-0" />
+          <div className="flex items-center gap-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neon-red/10 border border-neon-red/20 shrink-0">
+              <ShieldAlert className="h-5 w-5 text-neon-red" />
+            </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">AI Insights — Critical Edge Cases Detected</h3>
-              <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              <h3 className="text-lg font-bold text-foreground tracking-tight leading-none">Critical Edge Cases Detected</h3>
+              <div className="mt-3 flex flex-wrap gap-3">
                 {agingCount > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-neon-amber/10 px-3 py-1 text-neon-amber">
-                    <AlertTriangle className="h-3 w-3" /> {agingCount} vehicles aging &gt; 60 days
+                  <span className="flex items-center gap-2 rounded-lg bg-neon-amber/10 border border-neon-amber/20 px-3 py-1 text-[10px] font-bold text-neon-amber uppercase tracking-widest shadow-sm">
+                    <AlertTriangle className="h-3 w-3" /> <span>{agingCount}</span> vehicles aging &gt; 60 days
                   </span>
                 )}
                 {stockouts > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-neon-red/10 px-3 py-1 text-neon-red">
-                    <Package className="h-3 w-3" /> {stockouts} parts at/below reorder point
+                  <span className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm">
+                    <Package className="h-3 w-3" /> <span>{stockouts}</span> parts below ROP
                   </span>
                 )}
                 {delayed > 0 && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-neon-red/10 px-3 py-1 text-neon-red">
-                    <Train className="h-3 w-3" /> {delayed} shipments delayed/past due
+                  <span className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm">
+                    <Train className="h-3 w-3" /> {delayed} shipments delayed
                   </span>
                 )}
               </div>
@@ -66,24 +70,24 @@ const Overview = () => {
 
       {/* Chart */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="glass glow-blue rounded-xl p-6"
+        className="bg-card rounded-xl p-6 border border-border/10 shadow-sm"
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Inventory vs Projected Demand</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">Inventory vs Projected Demand</h3>
+            <p className="text-[10px] font-bold text-muted-foreground/60 mt-1 uppercase tracking-widest">
               {role === "mother_warehouse" ? "Network-wide" : role === "regional_distributor" ? "Regional" : "Dealership"} 7-month trend analysis
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Activity className="h-4 w-4 text-primary" />
-            <span className="text-xs text-primary font-medium">Live</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20">
+            <Activity className="h-3.5 w-3.5 text-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Live</span>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={320}>
           <AreaChart data={trends}>
             <defs>
               <linearGradient id="inventoryGrad" x1="0" y1="0" x2="0" y2="1">
@@ -95,30 +99,32 @@ const Overview = () => {
                 <stop offset="95%" stopColor="hsl(270, 80%, 60%)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 15%, 18%)" />
-            <XAxis dataKey="month" tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 15%, 18%)" vertical={false} />
+            <XAxis dataKey="month" tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{
                 background: "hsl(225, 20%, 10%)",
                 border: "1px solid hsl(225, 15%, 25%)",
-                borderRadius: "8px",
+                borderRadius: "12px",
                 color: "hsl(210, 40%, 93%)",
-                fontSize: 12,
+                fontSize: 14,
+                fontWeight: 700,
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
               }}
             />
-            <Area type="monotone" dataKey="inventory" stroke="hsl(205, 100%, 55%)" fill="url(#inventoryGrad)" strokeWidth={2} />
-            <Area type="monotone" dataKey="demand" stroke="hsl(270, 80%, 60%)" fill="url(#demandGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="inventory" stroke="hsl(205, 100%, 55%)" fill="url(#inventoryGrad)" strokeWidth={4} />
+            <Area type="monotone" dataKey="demand" stroke="hsl(270, 80%, 60%)" fill="url(#demandGrad)" strokeWidth={4} />
           </AreaChart>
         </ResponsiveContainer>
-        <div className="flex items-center gap-6 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-6 rounded-full bg-primary" />
-            <span className="text-xs text-muted-foreground">Inventory</span>
+        <div className="flex items-center gap-10 mt-8">
+          <div className="flex items-center gap-4">
+            <div className="h-2 w-6 rounded-full bg-[#1e90ff]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Inventory</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-6 rounded-full bg-secondary" />
-            <span className="text-xs text-muted-foreground">Projected Demand</span>
+          <div className="flex items-center gap-4">
+            <div className="h-2 w-6 rounded-full bg-[#8a2be2]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Projected</span>
           </div>
         </div>
       </motion.div>

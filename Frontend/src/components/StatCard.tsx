@@ -31,27 +31,27 @@ const iconBgMap = {
 
 const StatCard = ({ title, value, suffix = "", icon: Icon, trend, trendUp, accentColor = "blue", delay = 0 }: StatCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
-    className={`glass card-hover rounded-xl p-5 ${accentMap[accentColor]}`}
+    className={`bg-card rounded-xl p-4 border border-border/10 shadow-sm ${accentMap[accentColor]}`}
   >
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{title}</p>
-        <div className="mt-2 flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-foreground">
+        <p className="text-[10px] uppercase tracking-widest text-primary/60 font-bold mb-2">{title}</p>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold text-foreground tracking-tight leading-none">
             <CountUp end={value} />
           </span>
-          {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
+          {suffix && <span className="text-[10px] font-bold text-muted-foreground ml-1 lowercase">{suffix}</span>}
         </div>
         {trend && (
-          <p className={`mt-1 text-xs font-medium ${trendUp ? "text-neon-green" : "text-neon-red"}`}>
+          <p className={`mt-2 text-xs font-bold ${trendUp ? "text-emerald-500" : "text-neon-red"}`}>
             {trend}
           </p>
         )}
       </div>
-      <div className={`rounded-lg p-2.5 ${iconBgMap[accentColor]}`}>
+      <div className={`rounded-lg p-2.5 ${iconBgMap[accentColor]} border border-white/5`}>
         <Icon className="h-5 w-5" />
       </div>
     </div>

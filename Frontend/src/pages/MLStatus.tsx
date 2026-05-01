@@ -5,6 +5,7 @@ import {
   PlayCircle, Activity, Database, TrendingUp, Zap, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
@@ -44,10 +45,10 @@ function authHeaders(): Record<string, string> {
 }
 
 const statusConfig = {
-  idle:    { color: "text-muted-foreground",  bg: "bg-muted/40",           icon: Clock,        label: "Idle" },
-  running: { color: "text-neon-amber",         bg: "bg-neon-amber/10",      icon: RefreshCw,    label: "Running" },
-  success: { color: "text-emerald-400",        bg: "bg-emerald-500/10",     icon: CheckCircle2, label: "Success" },
-  error:   { color: "text-neon-red",           bg: "bg-neon-red/10",        icon: AlertTriangle,label: "Error" },
+  idle:    { color: "text-muted-foreground",  bg: "bg-muted",           icon: Clock,        label: "Idle" },
+  running: { color: "text-primary",           bg: "bg-primary/10",      icon: RefreshCw,    label: "Running" },
+  success: { color: "text-success",           bg: "bg-success/10",     icon: CheckCircle2, label: "Success" },
+  error:   { color: "text-destructive",       bg: "bg-destructive/10",        icon: AlertTriangle,label: "Error" },
 };
 
 function ProgressBar({ pct }: { pct: number }) {
@@ -112,18 +113,7 @@ const MLStatus = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-muted/40 rounded-lg animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="glass rounded-xl h-28 animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton rows={6} />;
 
   const retrain   = mlData?.retrain;
   const scheduler = mlData?.scheduler;
@@ -139,9 +129,9 @@ const MLStatus = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
+      <div className="flex items-start justify-between flex-wrap gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">ML Auto-Retraining</h2>
+          <h2 className="text-2xl font-semibold text-foreground tracking-tight">ML Auto-Retraining</h2>
           <p className="text-sm text-muted-foreground mt-1">
             XGBoost · Two-stage demand forecasting · Auto-triggered on new data
           </p>
@@ -150,7 +140,7 @@ const MLStatus = () => {
           <button
             onClick={handleTrigger}
             disabled={triggering || retrain?.status === "running"}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-sm font-medium transition-colors disabled:opacity-40"
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {triggering || retrain?.status === "running"
               ? <><RefreshCw className="h-4 w-4 animate-spin" /> Training…</>
@@ -166,36 +156,36 @@ const MLStatus = () => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="glass rounded-xl p-3 flex items-center gap-2 text-sm text-primary border border-primary/20"
+            className="bg-card rounded-xl border border-border/10 shadow-sm p-4 flex items-center gap-3 text-base font-bold text-primary border border-primary/20"
           >
-            <Zap className="h-4 w-4 shrink-0" />
+            <Zap className="h-5 w-5 shrink-0" />
             {triggerMsg}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Status cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Retrain status */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className={`glass rounded-xl p-5 border ${
-            retrain?.status === "running" ? "border-neon-amber/30" :
-            retrain?.status === "success" ? "border-emerald-500/30" :
-            retrain?.status === "error"   ? "border-neon-red/30"   : "border-border/50"
+          className={`bg-card rounded-xl border p-6 shadow-sm ${
+            retrain?.status === "running" ? "border-primary/50 ring-1 ring-primary/20" :
+            retrain?.status === "success" ? "border-success/50" :
+            retrain?.status === "error"   ? "border-destructive/50" : "border-border"
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Retrain Status</span>
-            <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>
-              <StatusIcon className={`h-3 w-3 ${retrain?.status === "running" ? "animate-spin" : ""}`} />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Retrain Status</span>
+            <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border ${cfg.bg} ${cfg.color} border-transparent`}>
+              <StatusIcon className={`h-3.5 w-3.5 ${retrain?.status === "running" ? "animate-spin" : ""}`} />
               {cfg.label}
             </span>
           </div>
-          <p className="text-sm text-foreground leading-relaxed">{retrain?.message ?? "No status yet."}</p>
+          <p className="text-base font-medium text-foreground leading-relaxed">{retrain?.message ?? "No status yet."}</p>
           {retrain?.timestamp && (
-            <p className="text-[11px] text-muted-foreground mt-2">
-              {new Date(retrain.timestamp).toLocaleString("en-IN")}
+            <p className="text-xs text-muted-foreground mt-4">
+              Last Run: {new Date(retrain.timestamp).toLocaleString("en-IN")}
             </p>
           )}
         </motion.div>
@@ -203,47 +193,47 @@ const MLStatus = () => {
         {/* Forecast confidence */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
-          className="glass rounded-xl p-5"
+          className="bg-card rounded-xl border border-border/10 shadow-sm p-6 border border-border/10 shadow-lg"
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Forecast Confidence</span>
-            <Brain className="h-4 w-4 text-muted-foreground/50" />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Confidence Score</span>
+            <Brain className="h-4 w-4 text-muted-foreground" />
           </div>
           {confidence ? (
             <>
-              <p className={`text-3xl font-bold ${parseFloat(confidence) >= 70 ? "text-emerald-400" : parseFloat(confidence) >= 50 ? "text-neon-amber" : "text-neon-red"}`}>
+              <p className={`text-4xl font-semibold tracking-tight ${parseFloat(confidence) >= 70 ? "text-success" : parseFloat(confidence) >= 50 ? "text-warning" : "text-destructive"}`}>
                 {confidence}%
               </p>
-              <p className="text-[11px] text-muted-foreground mt-1">Based on avg MAPE {retrain?.metrics.avg_mape?.toFixed(1)}% across {retrain?.metrics.variants_trained} variants</p>
-              <div className="mt-3">
+              <p className="text-sm font-medium text-muted-foreground mt-2 leading-relaxed">Based on MAPE {retrain?.metrics.avg_mape?.toFixed(1)}% · {retrain?.metrics.variants_trained} variants</p>
+              <div className="mt-5">
                 <ProgressBar pct={parseFloat(confidence)} />
               </div>
             </>
           ) : (
-            <p className="text-2xl font-bold text-muted-foreground">—</p>
+            <p className="text-4xl font-black text-muted-foreground/30">—</p>
           )}
         </motion.div>
 
         {/* Scheduler */}
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
-          className="glass rounded-xl p-5"
+          className="bg-card rounded-xl border border-border/10 shadow-sm p-6 border border-border/10 shadow-lg"
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Auto-Scheduler</span>
-            <div className={`h-2 w-2 rounded-full ${scheduler?.running ? "bg-neon-green animate-pulse" : "bg-muted"}`} />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Auto-Scheduler</span>
+            <div className={`h-2.5 w-2.5 rounded-full ${scheduler?.running ? "bg-primary animate-pulse" : "bg-muted"}`} />
           </div>
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-xl font-semibold text-foreground">
             {scheduler?.running ? "Active" : "Stopped"}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {scheduler?.new_rows_since_baseline ?? 0} / {scheduler?.retrain_threshold ?? 50} new rows
+          <p className="text-sm font-medium text-muted-foreground mt-1">
+            {scheduler?.new_rows_since_baseline ?? 0} / {scheduler?.retrain_threshold ?? 50} data rows
           </p>
-          <div className="mt-2">
+          <div className="mt-5">
             <ProgressBar pct={newRowsPct} />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2">
-            Triggers retrain at {scheduler?.retrain_threshold} new rows · polls every {scheduler?.poll_interval_seconds}s
+          <p className="text-[11px] font-medium text-muted-foreground mt-4 leading-tight">
+            Trigger at {scheduler?.retrain_threshold} rows · Poll every {scheduler?.poll_interval_seconds}s
           </p>
         </motion.div>
       </div>
@@ -251,26 +241,26 @@ const MLStatus = () => {
       {/* How it works */}
       <motion.div
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="glass rounded-xl p-5"
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-8 border border-border/10 shadow-sm"
       >
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">How Auto-Retraining Works</p>
+        <div className="flex items-center gap-3 mb-6">
+          <Activity className="h-5 w-5 text-primary" />
+          <p className="text-lg font-bold text-foreground">How Auto-Retraining Works</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
           {[
             { step: "1", icon: Database,   title: "New Data Detected",     desc: `Every ${scheduler?.poll_interval_seconds ?? 60}s, the scheduler counts new rows in vehicle_sales` },
             { step: "2", icon: Zap,        title: "Threshold Triggered",   desc: `When ≥${scheduler?.retrain_threshold ?? 50} new rows accumulate, retraining is queued automatically` },
             { step: "3", icon: Brain,      title: "XGBoost Retrained",     desc: "Two-stage classifier + regressor retrained per variant with fresh lag & rolling features" },
             { step: "4", icon: TrendingUp, title: "Forecast Refreshed",    desc: "30-day dealer × variant forecasts regenerated and served live via the API" },
           ].map((s) => (
-            <div key={s.step} className="bg-muted/20 rounded-lg p-3 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="h-5 w-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">{s.step}</span>
-                <s.icon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <p className="font-semibold text-foreground">{s.title}</p>
+            <div key={s.step} className="bg-muted/20 rounded-xl p-5 space-y-3 border border-border/10">
+              <div className="flex items-center gap-3">
+                <span className="h-6 w-6 rounded-full bg-primary/20 text-primary text-xs font-black flex items-center justify-center shrink-0 shadow-inner">{s.step}</span>
+                <s.icon className="h-4 w-4 text-primary shrink-0" />
+                <p className="font-bold text-foreground">{s.title}</p>
               </div>
-              <p className="text-muted-foreground leading-relaxed">{s.desc}</p>
+              <p className="text-muted-foreground font-medium leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
@@ -280,17 +270,17 @@ const MLStatus = () => {
       {retrain?.status === "success" && retrain.metrics.variants_trained && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-          className="glass rounded-xl overflow-hidden"
+          className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden border border-border/10 shadow-sm"
         >
           <button
             onClick={() => setShowMetrics(!showMetrics)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/20 transition-colors"
+            className="w-full flex items-center justify-between px-6 py-5 hover:bg-muted/20 transition-colors"
           >
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm font-semibold text-foreground">Last Retrain Results</span>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <span className="text-base font-bold text-foreground">Last Retrain Performance Metrics</span>
             </div>
-            {showMetrics ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            {showMetrics ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
           </button>
           <AnimatePresence>
             {showMetrics && (
@@ -298,9 +288,9 @@ const MLStatus = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="px-5 pb-5 border-t border-border/50"
+                className="px-6 pb-6 border-t border-border/10 bg-muted/5"
               >
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pt-6">
                   {[
                     { label: "Variants Trained",      value: retrain.metrics.variants_trained },
                     { label: "Dealer-Variant Combos", value: retrain.metrics.dealer_variant_combos },
@@ -308,9 +298,9 @@ const MLStatus = () => {
                     { label: "Avg MAPE",              value: `${retrain.metrics.avg_mape?.toFixed(1)}%` },
                     { label: "Avg MAE",               value: retrain.metrics.avg_mae?.toFixed(2) },
                   ].map((m) => (
-                    <div key={m.label} className="bg-muted/20 rounded-lg p-3">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{m.label}</p>
-                      <p className="text-lg font-bold text-foreground mt-0.5">{m.value ?? "—"}</p>
+                    <div key={m.label} className="bg-card rounded-xl p-4 border border-border/10 shadow-inner text-center">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">{m.label}</p>
+                      <p className="text-xl font-black text-foreground">{m.value ?? "—"}</p>
                     </div>
                   ))}
                 </div>
@@ -319,6 +309,7 @@ const MLStatus = () => {
           </AnimatePresence>
         </motion.div>
       )}
+
 
       {/* Non-admin notice */}
       {!isAdmin && (

@@ -10,6 +10,8 @@ import {
   type TransferRecommendation,
 } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import StatCard from "@/components/StatCard";
+import { RefreshCw } from "lucide-react";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,13 +23,15 @@ const BUCKET_STYLE: Record<string, string> = {
 };
 
 const REC_STYLE: Record<string, string> = {
-  Transfer: "bg-primary/10 text-primary border border-primary/30",
-  Discount: "bg-neon-amber/10 text-neon-amber border border-neon-amber/30",
-  Hold:     "bg-muted/40 text-muted-foreground border border-border",
+  Transfer: "bg-primary/10 text-primary border border-primary/20",
+  Discount: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  Hold:     "bg-muted/40 text-muted-foreground border border-border/10",
 };
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+const fmt = (n: any) => {
+  if (n === null || n === undefined) return "0";
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+};
 
 // ── Prompt Modal ──────────────────────────────────────────────────────────────
 
@@ -47,7 +51,7 @@ function PromptModal({ rec, onClose }: { rec: TransferRecommendation; onClose: (
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="glass rounded-2xl p-6 max-w-lg w-full space-y-4"
+        className="bg-card rounded-xl border border-border/10 shadow-sm p-6 max-w-lg w-full space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -91,7 +95,7 @@ function TransferCard({ rec, index }: { rec: TransferRecommendation; index: numb
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: index * 0.04 }}
-        className="glass rounded-xl overflow-hidden"
+        className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden"
       >
         {/* Header row */}
         <div className="p-4 flex items-start gap-4">
@@ -296,69 +300,34 @@ const AgingStock = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Aging Stock Intelligence</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Transfer Utility Scores · Floorplan Burn · AI Copilot Prompts
-        </p>
+      <div className="flex items-center justify-between gap-4 mb-2">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Aging Stock Intelligence</h2>
+          <p className="text-xs text-muted-foreground mt-1">Transfer Utility Scores · Floorplan Burn · AI Copilot Prompts</p>
+        </div>
+        <button 
+          onClick={() => {}} 
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/40 hover:bg-muted/60 text-foreground transition-all border border-border/10"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Aging (>60d)",
-            value: summary?.total_aging ?? 0,
-            sub: `${summary?.critical_count ?? 0} critical`,
-            icon: AlertTriangle,
-            color: "amber",
-          },
-          {
-            label: "Floorplan Burn",
-            value: `₹${fmt(summary?.total_floorplan_burn ?? 0)}`,
-            sub: "cumulative cost",
-            icon: IndianRupee,
-            color: "red",
-          },
-          {
-            label: "Transfer Recs",
-            value: transferCount,
-            sub: `${discountCount} discount recs`,
-            icon: ArrowRightLeft,
-            color: "blue",
-          },
-          {
-            label: "Avg Days Aging",
-            value: summary?.avg_days_aging ?? 0,
-            sub: `Top model: ${summary?.top_aging_model ?? "N/A"}`,
-            icon: TrendingDown,
-            color: "purple",
-          },
-        ].map((card, i) => (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07 }}
-            className="glass rounded-xl p-4 space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{card.label}</span>
-              <card.icon className="h-4 w-4 text-muted-foreground/50" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{card.value}</p>
-            <p className="text-[11px] text-muted-foreground">{card.sub}</p>
-          </motion.div>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <StatCard title="Total Aging (>60d)" value={summary?.total_aging ?? 0} icon={AlertTriangle} accentColor="amber" delay={0} />
+        <StatCard title="Floorplan Burn" value={summary?.total_floorplan_burn ?? 0} icon={IndianRupee} accentColor="red" delay={0.1} />
+        <StatCard title="Transfer Recs" value={transferCount} icon={ArrowRightLeft} accentColor="blue" delay={0.2} />
+        <StatCard title="Avg Days Aging" value={summary?.avg_days_aging ?? 0} icon={TrendingDown} accentColor="purple" delay={0.3} />
       </div>
 
       {/* Tabs + Min Days + Dealer */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex rounded-lg bg-muted/30 p-1 gap-1">
+      <div className="flex items-center justify-between flex-wrap gap-4 mt-2">
+        <div className="flex rounded-lg bg-muted/20 p-1 gap-1">
           {(["transfers", "vehicles"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${
-                tab === t ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+              className={`px-4 py-2 rounded-md text-xs font-bold transition-all capitalize ${
+                tab === t ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
               }`}
             >
               {t === "transfers" ? "Transfer Recommendations" : "All Aging Vehicles"}
@@ -369,20 +338,22 @@ const AgingStock = () => {
           <select
             value={dealerFilter}
             onChange={e => setDealerFilter(e.target.value)}
-            className="bg-muted/40 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[160px]"
+            className="bg-muted/40 border border-border/10 rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[160px] cursor-pointer"
           >
             <option value="All">All Dealers</option>
             {DEALERS.map(d => <option key={d.id} value={d.id} className="bg-background">{d.name}</option>)}
           </select>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Min days:</span>
-            {[30, 60, 90].map((d) => (
-              <button key={d} onClick={() => setMinDays(d)}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  minDays === d ? "bg-primary/10 text-primary font-medium" : "bg-muted/30 hover:bg-muted/50"
-                }`}
-              >{d}+</button>
-            ))}
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            <span>Filter by Days:</span>
+            <div className="flex gap-1.5">
+              {[30, 60, 90].map((d) => (
+                <button key={d} onClick={() => setMinDays(d)}
+                  className={`px-3 py-1 rounded-md transition-all border border-border/10 ${
+                    minDays === d ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/30 hover:bg-muted/50 text-muted-foreground"
+                  }`}
+                >{d}+</button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -391,33 +362,33 @@ const AgingStock = () => {
       {tab === "transfers" && (
         <>
           {/* Transfer filter bar */}
-          <div className="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="bg-card rounded-xl border border-border/10 shadow-sm p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input value={transferSearch} onChange={e => setTransferSearch(e.target.value)}
                 placeholder="Search VIN, model, dealer…"
-                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
               {transferSearch && <button onClick={() => setTransferSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>}
             </div>
-            <div className="flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 mr-1" />
               {["All", "Transfer", "Discount", "Hold"].map(r => (
                 <button key={r} onClick={() => setRecFilter(r)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                    recFilter === r ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  className={`rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    recFilter === r ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground"
                   }`}
                 >{r}</button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground self-center whitespace-nowrap">
-              {filteredTransfers.length} of {transfers.length}
+            <p className="text-sm font-bold text-muted-foreground/60 self-center whitespace-nowrap lg:ml-4">
+              Showing <span className="text-foreground">{filteredTransfers.length}</span> of {transfers.length}
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredTransfers.length === 0 ? (
-              <div className="glass rounded-xl p-8 text-center text-muted-foreground text-sm">No transfer recommendations match your filters.</div>
+              <div className="bg-card rounded-xl border border-border/10 shadow-sm p-16 text-center text-muted-foreground text-lg font-medium border border-border/10">No transfer recommendations match your filters.</div>
             ) : (
               filteredTransfers.map((rec, i) => <TransferCard key={rec.vin} rec={rec} index={i} />)
             )}
@@ -429,78 +400,75 @@ const AgingStock = () => {
       {tab === "vehicles" && (
         <>
           {/* Vehicle filter bar */}
-          <div className="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[180px]">
+          <div className="bg-card rounded-xl border border-border/10 shadow-sm p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)}
                 placeholder="Search VIN, model, dealer…"
-                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                className="w-full bg-muted/40 rounded-lg pl-8 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
               {vehicleSearch && <button onClick={() => setVehicleSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>}
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 mr-1" />
               {["All", "Critical", "Aging", "Watch"].map(b => (
                 <button key={b} onClick={() => setBucketFilter(b)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                    bucketFilter === b ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  className={`rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    bucketFilter === b ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground"
                   }`}
                 >{b}</button>
               ))}
             </div>
             <select value={modelFilter} onChange={e => setModelFilter(e.target.value)}
-              className="bg-muted/40 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[130px]">
+              className="bg-muted/40 border border-border/10 rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 min-w-[140px] cursor-pointer">
               {vehicleModels.map(m => <option key={m} value={m} className="bg-background">{m === "All" ? "All Models" : m}</option>)}
             </select>
-            <p className="text-xs text-muted-foreground self-center whitespace-nowrap">
-              {filteredVehicles.length} of {vehicles.length}
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
               {filteredVehicles.length === 0 ? (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="col-span-full glass rounded-xl p-8 text-center text-muted-foreground text-sm">
+                  className="col-span-full bg-card rounded-xl border border-border/10 shadow-sm p-24 text-center text-muted-foreground text-lg font-medium">
                   No vehicles match your filters.
                 </motion.div>
               ) : (
                 filteredVehicles.map((v, i) => (
                   <motion.div key={v.vin} layout initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.97 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                    className="glass rounded-xl p-4 space-y-3"
+                    className="bg-card rounded-xl border border-border/10 shadow-sm p-6 space-y-5 border border-border/10 shadow-lg hover:border-primary/20 transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-semibold text-foreground">{v.model}</p>
-                        <p className="text-xs text-muted-foreground">{v.variant}</p>
+                        <p className="text-lg font-bold text-foreground tracking-tight">{v.model}</p>
+                        <p className="text-xs font-semibold text-muted-foreground/70">{v.variant}</p>
                       </div>
-                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${BUCKET_STYLE[v.age_bucket]}`}>
+                      <span className={`text-xs px-3 py-1 rounded-full font-black uppercase tracking-widest border border-border/10 ${BUCKET_STYLE[v.age_bucket]}`}>
                         {v.age_bucket}
                       </span>
                     </div>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">VIN</span>
-                        <span className="font-mono text-[11px] text-foreground">{v.vin}</span>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center bg-muted/5 p-2 rounded-lg">
+                        <span className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">VIN</span>
+                        <span className="font-mono text-xs font-bold text-foreground/80">{v.vin}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dealer</span>
-                        <span className="text-foreground">{v.source_dealer_name}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">Dealer</span>
+                        <span className="font-bold text-foreground">{v.source_dealer_name}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Days in Stock</span>
-                        <span className={`font-semibold flex items-center gap-1 ${v.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
-                          <Clock className="h-3 w-3" />{v.days_in_inventory}
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">Days in Stock</span>
+                        <span className={`font-black flex items-center gap-1.5 text-lg ${v.days_in_inventory >= 90 ? "text-neon-red" : "text-neon-amber"}`}>
+                          <Clock className="h-4 w-4" />{v.days_in_inventory}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Floorplan Cost</span>
-                        <span className="font-semibold text-neon-red">₹{fmt(v.total_floorplan_cost)}</span>
+                      <div className="flex justify-between items-center pt-2 border-t border-border/10">
+                        <span className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">Floorplan Cost</span>
+                        <span className="text-lg font-black text-neon-red">₹{fmt(v.total_floorplan_cost)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Daily Burn</span>
-                        <span className="text-foreground">₹{fmt(v.daily_floorplan_cost)}/day</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">Daily Burn</span>
+                        <span className="font-bold text-foreground">₹{fmt(v.daily_floorplan_cost)}/day</span>
                       </div>
                     </div>
                   </motion.div>
@@ -510,6 +478,7 @@ const AgingStock = () => {
           </div>
         </>
       )}
+
     </div>
   );
 };
