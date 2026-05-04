@@ -90,19 +90,32 @@ with open(DATA_DIR / "vehicle_master.csv", "w", newline="", encoding="utf-8") as
         model = random.choice(MODELS)
         w.writerow([vin, f"ENG-{vin}", model, "VXI", random.choice(["Arctic White", "Midnight Black", "Magma Grey"]), random.choice(["Petrol", "CNG"]), random.choice(["Manual", "Automatic"]), 2024])
 
+# Weighted model popularity for non-uniformity
+MODEL_WEIGHTS = {
+    "Brezza": 0.22, "Swift": 0.18, "Baleno": 0.15, "Ertiga": 0.12, 
+    "Alto": 0.10, "Dzire": 0.08, "Celerio": 0.06, "Ignis": 0.05, "Grand Vitara": 0.04
+}
+MODEL_LIST = list(MODEL_WEIGHTS.keys())
+MODEL_PROBS = list(MODEL_WEIGHTS.values())
+
 with open(DATA_DIR / "vehicle_sales.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     w.writerow(["sale_id", "chassis_number", "dealer_id", "customer_id", "sale_date", "month", "quarter", "year", "final_sale_price_inr", "days_to_sell", "discount_given_inr", "finance_taken", "exchange_vehicle", "model_code", "variant_id"])
     for i in range(2500):
+        # Pick model based on weights for realistic distribution
+        model = random.choices(MODEL_LIST, weights=MODEL_PROBS)[0]
         vin = VINS[i]
-        # Track what we generated for this vin in vehicle_master
-        # Since VINS are random, we need to match the logic in vehicle_master generation
-        random.seed(vin) # Deterministic for matching
-        model = random.choice(MODELS)
-        random.seed() # reset seed
         
         sdate = datetime(2025, random.randint(1, 12), random.randint(1, 28))
-        days_to_sell = random.randint(5, 120)
+        
+        # Model-specific aging (e.g., SUVs sell faster than hatchbacks in this simulation)
+        if model in ["Brezza", "Grand Vitara"]:
+            days_to_sell = random.randint(5, 45)
+        elif model in ["Alto", "Celerio"]:
+            days_to_sell = random.randint(40, 90)
+        else:
+            days_to_sell = random.randint(20, 70)
+
         discount = random.randint(5000, 45000)
         finance = 1 if random.random() < 0.65 else 0
         exchange = 1 if random.random() < 0.30 else 0
