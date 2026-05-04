@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useTransit, useTransitSummary } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
 
 const statusConfig: Record<string, { icon: typeof Train; color: string; bg: string }> = {
@@ -48,7 +49,10 @@ const Transit = () => {
     page,
   }), [statusFilter, debouncedSearch, modeFilter, zoneFilter, dealerFilter, page]);
 
-  const { data, loading } = useTransit(filters);
+  const { data: paginatedData, loading } = useTransit(filters);
+  const shipments = paginatedData.items || [];
+  const totalCount = paginatedData.total || 0;
+  const totalPages = Math.ceil(totalCount / 50);
 
   const hasFilters = search || statusFilter || modeFilter || zoneFilter || dealerFilter;
   const fmt = (n: any) => {
@@ -75,24 +79,26 @@ const Transit = () => {
         </button>
       </div>
 
-      {/* Stat Cards — clickable */}
       {sumLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => <div key={i} className="bg-card rounded-xl border border-border/10 shadow-sm h-32 animate-pulse" />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total Shipments" value={summary?.total      ?? 0} icon={Train}         accentColor="blue"   delay={0}   />
+          <div onClick={clearAll}
+            className={`cursor-pointer transition-all rounded-2xl ${!statusFilter ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+            <StatCard title="Total Shipments" value={summary?.total      ?? 0} icon={Train}         accentColor="blue"   delay={0}   />
+          </div>
           <div onClick={() => toggleStatus("In Transit")}
-            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "In Transit" ? "ring-2 ring-primary/60" : ""}`}>
+            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "In Transit" ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
             <StatCard title="In Transit"     value={summary?.in_transit ?? 0} icon={Train}         accentColor="purple" delay={0.1} />
           </div>
           <div onClick={() => toggleStatus("Delivered")}
-            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Delivered" ? "ring-2 ring-emerald-500/60" : ""}`}>
+            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Delivered" ? "ring-2 ring-emerald-500/60" : "hover:scale-[1.02]"}`}>
             <StatCard title="Delivered"      value={summary?.delivered  ?? 0} icon={CheckCircle2}  accentColor="green"  delay={0.2} />
           </div>
           <div onClick={() => toggleStatus("Delayed")}
-            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Delayed" ? "ring-2 ring-neon-red/60" : ""}`}>
+            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Delayed" ? "ring-2 ring-neon-red/60" : "hover:scale-[1.02]"}`}>
             <StatCard title="Delayed / Past Due" value={summary?.delayed ?? 0} icon={AlertTriangle} accentColor="amber" delay={0.3} />
           </div>
         </div>
@@ -118,31 +124,36 @@ const Transit = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">
-          Page <span className="text-foreground font-bold">{page}</span> · 50 per page
+          Page <span className="text-foreground font-bold">{page}</span> of <span className="text-foreground font-bold">{totalPages}</span> · <span className="text-foreground font-black">{totalCount.toLocaleString()}</span> shipments
         </p>
         <div className="flex items-center gap-3">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
             className="rounded-lg bg-muted/40 hover:bg-muted/70 disabled:opacity-30 px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors flex items-center gap-2">
             <ChevronLeft className="h-4 w-4" /> Prev
           </button>
-          <button onClick={() => setPage(p => p + 1)} disabled={data.length < 50}
-            className="rounded-lg bg-muted/40 hover:bg-muted/70 disabled:opacity-30 px-3 py-1.5 text-xs text-muted-foreground transition-colors flex items-center gap-1">
-            Next <ChevronRight className="h-3.5 w-3.5" />
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+            className="rounded-lg bg-muted/40 hover:bg-muted/70 disabled:opacity-30 px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors flex items-center gap-2">
+            Next <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Shipment Cards */}
-      {loading ? <LoadingSkeleton rows={6} /> : (
+      {loading && shipments.length === 0 ? (
+        <PageLoader icon={Train} title="Transit Logistics" message="Tracking active shipments..." rows={4} />
+      ) : loading ? (
+        <LoadingSkeleton rows={6} />
+      ) : (
+
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
-            {data.length === 0 ? (
+            {shipments.length === 0 ? (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="bg-card rounded-xl border border-border/10 shadow-sm p-10 text-center text-muted-foreground text-sm">
                 No shipments match your filters.
               </motion.div>
             ) : (
-              data.map((shipment, i) => {
+              shipments.map((shipment, i) => {
                 const isAlert = shipment.status === "Delayed" || shipment.status === "Past Due";
                 const cfg = statusConfig[shipment.status] || statusConfig["In Transit"];
                 const StatusIcon = cfg.icon;

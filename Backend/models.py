@@ -322,6 +322,15 @@ class CustomerResponse(BaseModel):
     ownership_history: Optional[str]
 
 
+class PaginatedCustomerResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    items: List[CustomerResponse]
+
+
+
+
 class InventoryResponse(BaseModel):
     vin: str
     dealer_id: str
@@ -331,6 +340,12 @@ class InventoryResponse(BaseModel):
     fuel_type: Optional[str]
     days_in_inventory: int
     status: str
+
+class PaginatedInventoryResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    items: List[InventoryResponse]
 
 
 class PartsResponse(BaseModel):
@@ -343,15 +358,28 @@ class PartsResponse(BaseModel):
     stockout_rate: float
 
 
+class PaginatedPartsResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    items: List[PartsResponse]
+
+
 class TransitResponse(BaseModel):
     shipment_id: str
     origin: str
     destination: str
     status: str
-    expected_delivery: Optional[date]
+    expected_delivery: Optional[str]
     carrier: str
     items: float
     delay_days: float
+
+class PaginatedTransitResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    items: List[TransitResponse]
 
 
 class TrendResponse(BaseModel):

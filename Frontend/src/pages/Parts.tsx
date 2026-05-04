@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { usePartsList, usePartsSummary } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
 
 const STATUS_OPTIONS = ["All", "Stockout Alert", "Adequate"];
@@ -44,7 +45,10 @@ const Parts = () => {
     page,
   }), [statusFilter, categoryFilter, debouncedSearch, dealerFilter, page]);
 
-  const { data, loading } = usePartsList(filters);
+  const { data: paginatedData, loading } = usePartsList(filters);
+  const parts = paginatedData.items || [];
+  const totalCount = paginatedData.total || 0;
+  const totalPages = Math.ceil(totalCount / 50);
 
   const hasFilters = search || statusFilter || categoryFilter || dealerFilter;
   const fmt = (n: any) => {
@@ -77,17 +81,23 @@ const Parts = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Unique SKUs"         value={summary?.unique_skus ?? 0}              icon={Package}       accentColor="blue"   delay={0}   />
-          <StatCard title="Dealer-Part Combos"  value={summary?.total_dealer_part_combos ?? 0} icon={Filter}        accentColor="purple" delay={0.1} />
+          <div onClick={clearAll}
+            className={`cursor-pointer transition-all rounded-2xl ${!statusFilter ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+            <StatCard title="Unique SKUs"         value={summary?.unique_skus ?? 0}              icon={Package}       accentColor="blue"   delay={0}   />
+          </div>
+          <div onClick={clearAll}
+            className={`cursor-pointer transition-all rounded-2xl ${!statusFilter ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+            <StatCard title="Dealer-Part Combos"  value={summary?.total_dealer_part_combos ?? 0} icon={Filter}        accentColor="purple" delay={0.1} />
+          </div>
           <div
             onClick={() => { handleFilter(setStatus, statusFilter === "Adequate" ? "" : "Adequate"); }}
-            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Adequate" ? "ring-2 ring-emerald-500/60" : ""}`}
+            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Adequate" ? "ring-2 ring-emerald-500/60" : "hover:scale-[1.02]"}`}
           >
             <StatCard title="Adequate"  value={summary?.adequate ?? 0} icon={CheckCircle2}  accentColor="green" delay={0.2} />
           </div>
           <div
             onClick={() => { handleFilter(setStatus, statusFilter === "Stockout Alert" ? "" : "Stockout Alert"); }}
-            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Stockout Alert" ? "ring-2 ring-neon-red/60" : ""}`}
+            className={`cursor-pointer transition-all rounded-2xl ${statusFilter === "Stockout Alert" ? "ring-2 ring-neon-red/60" : "hover:scale-[1.02]"}`}
           >
             <StatCard title="Stockout Alert" value={summary?.stockout ?? 0} icon={AlertTriangle} accentColor="red" delay={0.3} />
           </div>
@@ -128,22 +138,26 @@ const Parts = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between mt-2">
         <p className="text-sm text-muted-foreground font-medium">
-          Page <span className="text-foreground font-bold">{page}</span> · 50 per page
+          Page <span className="text-foreground font-bold">{page}</span> of <span className="text-foreground font-bold">{totalPages}</span> · <span className="text-foreground font-black">{totalCount.toLocaleString()}</span> items
         </p>
         <div className="flex items-center gap-3">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
             className="rounded-xl bg-card hover:bg-muted/70 disabled:opacity-30 px-4 py-2.5 text-sm font-bold text-muted-foreground transition-all flex items-center gap-2 border border-border/40">
             <ChevronLeft className="h-4 w-4" /> Previous
           </button>
-          <button onClick={() => setPage(p => p + 1)} disabled={data.length < 50}
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
             className="rounded-xl bg-card hover:bg-muted/70 disabled:opacity-30 px-4 py-2.5 text-sm font-bold text-muted-foreground transition-all flex items-center gap-2 border border-border/40">
             Next <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      {loading ? <LoadingSkeleton rows={8} /> : (
+      {/* Table Section */}
+      {loading && parts.length === 0 ? (
+        <PageLoader icon={Package} title="Spare Parts Registry" message="Fetching SAP B1 inventory data..." rows={6} />
+      ) : loading ? (
+        <LoadingSkeleton rows={6} />
+      ) : (
         <div className="bg-card rounded-xl border border-border/10 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -159,10 +173,10 @@ const Parts = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/5">
-                {data.length === 0 ? (
+                {parts.length === 0 ? (
                   <tr><td colSpan={7} className="p-16 text-center text-muted-foreground text-base font-medium">No parts match your filters.</td></tr>
                 ) : (
-                  data.map((part, i) => {
+                  parts.map((part, i) => {
                     const critical = part.quantity_on_hand === 0 || part.quantity_on_hand < part.reorder_point;
                     return (
                       <motion.tr key={`${part.sku}-${i}`}

@@ -10,6 +10,7 @@ import {
   useSalesSummary, useSalesMonthlyTrend, useSalesByModel,
 } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -17,7 +18,7 @@ import {
 } from "recharts";
 
 const MONTH_NAMES = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const STATUS_OPTIONS = ["All", "Available", "Aging"];
+const STATUS_OPTIONS = ["All", "Available", "Aging", "Critical"];
 const MODELS = ["Alto","Baleno","Brezza","Celerio","Dzire","Eeco","Fronx","Ignis","Jimny","Swift","WagonR","XL6"];
 const FUELS  = ["Petrol","Diesel","CNG","Hybrid"];
 const DEALERS = Array.from({ length: 30 }, (_, i) => ({
@@ -60,7 +61,11 @@ const Inventory = () => {
     page,
   }), [statusFilter, modelFilter, fuelFilter, dealerFilter, debouncedSearch, page]);
 
-  const { data, loading } = useInventory(filters);
+  const { data: paginatedData, loading } = useInventory(filters);
+  const inventory = paginatedData.items || [];
+  const totalCount = paginatedData.total || 0;
+  const totalPages = Math.ceil(totalCount / 50);
+
   const hasFilters = search || statusFilter || modelFilter || fuelFilter || dealerFilter;
   const clearAll = () => { setSearch(""); setStatus(""); setModel(""); setFuel(""); setDealer(""); setPage(1); };
   const handleFilter = (setter: (v: string) => void, val: string) => { setter(val); setPage(1); };
@@ -108,23 +113,28 @@ const Inventory = () => {
       {/* ── STOCK INVENTORY TAB ─────────────────────────────────────────── */}
       {activeTab === "Stock Inventory" && (
         <>
-          {/* Stat Cards */}
           {sumLoading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => <div key={i} className="glass rounded-xl h-24 animate-pulse" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Stock"     value={summary?.total     ?? 0} icon={Car}           accentColor="blue"  delay={0}   />
+              <div onClick={clearAll}
+                className={`cursor-pointer rounded-xl transition-all ${!statusFilter ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+                <StatCard title="Total Stock"     value={summary?.total     ?? 0} icon={Car}           accentColor="blue"  delay={0}   />
+              </div>
               <div onClick={() => handleFilter(setStatus, statusFilter === "Available" ? "" : "Available")}
-                className={`cursor-pointer rounded-xl transition-all ${statusFilter === "Available" ? "ring-2 ring-emerald-500/60" : ""}`}>
+                className={`cursor-pointer rounded-xl transition-all ${statusFilter === "Available" ? "ring-2 ring-emerald-500/60" : "hover:scale-[1.02]"}`}>
                 <StatCard title="Available"     value={summary?.available ?? 0} icon={CheckCircle2}  accentColor="green" delay={0.1} />
               </div>
               <div onClick={() => handleFilter(setStatus, statusFilter === "Aging" ? "" : "Aging")}
-                className={`cursor-pointer rounded-xl transition-all ${statusFilter === "Aging" ? "ring-2 ring-neon-amber/60" : ""}`}>
+                className={`cursor-pointer rounded-xl transition-all ${statusFilter === "Aging" ? "ring-2 ring-neon-amber/60" : "hover:scale-[1.02]"}`}>
                 <StatCard title="Aging (>60d)"  value={summary?.aging     ?? 0} icon={AlertTriangle} accentColor="amber" delay={0.2} />
               </div>
-              <StatCard title="Critical (>90d)" value={summary?.critical  ?? 0} icon={Clock}         accentColor="red"   delay={0.3} />
+              <div onClick={() => handleFilter(setStatus, statusFilter === "Critical" ? "" : "Critical")}
+                className={`cursor-pointer rounded-xl transition-all ${statusFilter === "Critical" ? "ring-2 ring-neon-red/60" : "hover:scale-[1.02]"}`}>
+                <StatCard title="Critical (>90d)" value={summary?.critical  ?? 0} icon={Clock}         accentColor="red"   delay={0.3} />
+              </div>
             </div>
           )}
 
@@ -176,13 +186,15 @@ const Inventory = () => {
 
           {/* Pagination */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Page <span className="text-foreground font-medium">{page}</span> · 50 per page</p>
+            <p className="text-xs text-muted-foreground">
+              Page <span className="text-foreground font-medium">{page}</span> of <span className="text-foreground font-medium">{totalPages}</span> · <span className="text-foreground font-black">{totalCount.toLocaleString()}</span> units
+            </p>
             <div className="flex items-center gap-2">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="rounded-lg bg-muted/40 hover:bg-muted/70 disabled:opacity-30 px-3 py-1.5 text-xs text-muted-foreground transition-colors flex items-center gap-1">
                 <ChevronLeft className="h-3.5 w-3.5" /> Prev
               </button>
-              <button onClick={() => setPage(p => p + 1)} disabled={data.length < 50}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
                 className="rounded-lg bg-muted/40 hover:bg-muted/70 disabled:opacity-30 px-3 py-1.5 text-xs text-muted-foreground transition-colors flex items-center gap-1">
                 Next <ChevronRight className="h-3.5 w-3.5" />
               </button>
@@ -190,26 +202,32 @@ const Inventory = () => {
           </div>
 
           {/* Vehicle Cards */}
-          {loading ? <LoadingSkeleton rows={6} /> : (
+          {loading && inventory.length === 0 ? (
+            <PageLoader icon={Car} title="Vehicle Inventory" message="Auditing stock across all dealers..." rows={6} />
+          ) : loading ? (
+            <LoadingSkeleton rows={6} />
+          ) : (
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <AnimatePresence mode="popLayout">
-                {data.length === 0 ? (
+                {inventory.length === 0 ? (
                   <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="col-span-full glass rounded-xl p-10 text-center text-muted-foreground text-sm">
                     No vehicles match your filters.
                   </motion.div>
-                ) : data.map((vehicle, i) => {
+                ) : inventory.map((vehicle, i) => {
                   const aging = vehicle.days_in_inventory > 60;
+                  const critical = vehicle.days_in_inventory > 90;
                   return (
                     <motion.div key={vehicle.vin} layout
                       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ duration: 0.25, delay: Math.min(i * 0.02, 0.25) }}
-                      className="bg-card rounded-xl border border-border/10 shadow-sm p-6">
+                      className={`bg-card rounded-xl border border-border/10 shadow-sm p-6 ${critical ? "ring-1 ring-neon-red/30" : (aging ? "ring-1 ring-neon-amber/30" : "")}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`rounded-lg p-2 ${aging ? "bg-amber-500/10" : "bg-primary/10"}`}>
-                            <Car className={`h-5 w-5 ${aging ? "text-amber-500" : "text-primary"}`} />
+                          <div className={`rounded-lg p-2 ${critical ? "bg-neon-red/10" : (aging ? "bg-neon-amber/10" : "bg-primary/10")}`}>
+                            <Car className={`h-5 w-5 ${critical ? "text-neon-red" : (aging ? "text-neon-amber" : "text-primary")}`} />
                           </div>
                           <div>
                             <h3 className="font-semibold text-foreground">{vehicle.model}</h3>
@@ -217,11 +235,12 @@ const Inventory = () => {
                           </div>
                         </div>
                         <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wide ${
-                          aging
+                          critical ? "bg-neon-red/10 text-neon-red border border-neon-red/30" :
+                          (aging
                             ? "bg-neon-amber/10 text-neon-amber border border-neon-amber/30"
-                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20")
                         }`}>
-                          {aging ? <><AlertTriangle className="h-3 w-3 inline mr-0.5" />Aging</> : "Available"}
+                          {critical ? "Critical" : (aging ? "Aging" : "Available")}
                         </span>
                       </div>
                       <div className="mt-4 space-y-2 text-xs">
@@ -239,7 +258,7 @@ const Inventory = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">Days in Stock</span>
-                          <span className={`flex items-center gap-1 font-semibold ${aging ? "text-neon-amber" : "text-emerald-400"}`}>
+                          <span className={`flex items-center gap-1 font-semibold ${critical ? "text-neon-red" : (aging ? "text-neon-amber" : "text-emerald-400")}`}>
                             <Clock className="h-3 w-3" /> {vehicle.days_in_inventory}
                           </span>
                         </div>
@@ -263,10 +282,18 @@ const Inventory = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Sold"        value={salesSummary?.total_sales       ?? 0} icon={ShoppingCart} accentColor="green" delay={0}   />
-              <StatCard title="Unsold Stock"       value={salesSummary?.total_unsold      ?? 0} icon={Car}          accentColor="amber" delay={0.1} />
-              <StatCard title="Sell-Through %"     value={salesSummary?.sell_through_pct ?? 0} suffix="%" icon={TrendingUp} accentColor="blue" delay={0.2} />
-              <StatCard title="Avg Days to Sell"   value={salesSummary?.avg_days_to_sell  ?? 0} icon={Clock}        accentColor="red"   delay={0.3} />
+              <div className="hover:scale-[1.02] transition-transform cursor-pointer">
+                <StatCard title="Total Sold"        value={salesSummary?.total_sales       ?? 0} icon={ShoppingCart} accentColor="green" delay={0}   />
+              </div>
+              <div className="hover:scale-[1.02] transition-transform cursor-pointer">
+                <StatCard title="Unsold Stock"       value={salesSummary?.total_unsold      ?? 0} icon={Car}          accentColor="amber" delay={0.1} />
+              </div>
+              <div className="hover:scale-[1.02] transition-transform cursor-pointer">
+                <StatCard title="Sell-Through %"     value={salesSummary?.sell_through_pct ?? 0} suffix="%" icon={TrendingUp} accentColor="blue" delay={0.2} />
+              </div>
+              <div className="hover:scale-[1.02] transition-transform cursor-pointer">
+                <StatCard title="Avg Days to Sell"   value={salesSummary?.avg_days_to_sell  ?? 0} icon={Clock}        accentColor="red"   delay={0.3} />
+              </div>
             </div>
           )}
 

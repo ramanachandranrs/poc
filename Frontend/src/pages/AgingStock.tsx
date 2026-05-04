@@ -10,8 +10,9 @@ import {
   type TransferRecommendation,
 } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Flame } from "lucide-react";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -292,7 +293,8 @@ const AgingStock = () => {
     });
   }, [transfers, transferSearch, recFilter, dealerFilter]);
 
-  if (loading) return <LoadingSkeleton rows={8} />;
+  if (loading) return <PageLoader icon={Flame} title="Aging Stock Analysis" message="Identifying slow-moving inventory..." rows={8} />;
+
 
   const transferCount = transfers.filter(r => r.recommendation === "Transfer").length;
   const discountCount = transfers.filter(r => r.recommendation === "Discount").length;
@@ -313,12 +315,22 @@ const AgingStock = () => {
         </button>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <StatCard title="Total Aging (>60d)" value={summary?.total_aging ?? 0} icon={AlertTriangle} accentColor="amber" delay={0} />
-        <StatCard title="Floorplan Burn" value={summary?.total_floorplan_burn ?? 0} icon={IndianRupee} accentColor="red" delay={0.1} />
-        <StatCard title="Transfer Recs" value={transferCount} icon={ArrowRightLeft} accentColor="blue" delay={0.2} />
-        <StatCard title="Avg Days Aging" value={summary?.avg_days_aging ?? 0} icon={TrendingDown} accentColor="purple" delay={0.3} />
+        <div onClick={() => setTab("vehicles")}
+          className={`cursor-pointer transition-all rounded-2xl ${tab === "vehicles" ? "ring-2 ring-neon-amber/60" : "hover:scale-[1.02]"}`}>
+          <StatCard title="Total Aging (>60d)" value={summary?.total_aging ?? 0} icon={AlertTriangle} accentColor="amber" delay={0} />
+        </div>
+        <div className="hover:scale-[1.02] transition-transform cursor-pointer">
+          <StatCard title="Floorplan Burn" value={summary?.total_floorplan_burn ?? 0} icon={IndianRupee} accentColor="red" delay={0.1} />
+        </div>
+        <div onClick={() => setTab("transfers")}
+          className={`cursor-pointer transition-all rounded-2xl ${tab === "transfers" ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+          <StatCard title="Transfer Recs" value={transferCount} icon={ArrowRightLeft} accentColor="blue" delay={0.2} />
+        </div>
+        <div onClick={() => setTab("vehicles")}
+          className={`cursor-pointer transition-all rounded-2xl ${tab === "vehicles" ? "ring-2 ring-primary/60" : "hover:scale-[1.02]"}`}>
+          <StatCard title="Avg Days Aging" value={summary?.avg_days_aging ?? 0} icon={TrendingDown} accentColor="purple" delay={0.3} />
+        </div>
       </div>
 
       {/* Tabs + Min Days + Dealer */}

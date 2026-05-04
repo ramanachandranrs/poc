@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useB2CPrompts, useOperationalAlerts, type B2CPrompt, type OperationalAlert } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -215,7 +216,8 @@ const GenAIPrompts = () => {
   const { data: alerts, loading: alertsLoading } = useOperationalAlerts();
 
   const loading = b2cLoading || alertsLoading;
-  if (loading) return <LoadingSkeleton rows={6} />;
+  if (loading) return <PageLoader icon={MessageSquare} title="AI Copilot Prompts" message="Drafting outreach & alert templates..." rows={6} />;
+
 
   const filteredAlerts = alerts.filter(a => {
     const matchSev  = severityFilter  === "All" || a.severity   === severityFilter;

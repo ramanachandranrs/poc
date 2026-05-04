@@ -10,6 +10,7 @@ import {
   type GuidedRecommendation,
 } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -282,7 +283,8 @@ const GuidedAssistant = () => {
   const [, forceUpdate] = useState(0);
   const refresh = useCallback(() => forceUpdate(n => n + 1), []);
 
-  if (loading) return <LoadingSkeleton rows={6} />;
+  if (loading) return <PageLoader icon={Sparkles} title="Guided Assistant" message="AI Copilot is reviewing recommendations..." rows={6} />;
+
 
   const pending  = recs.filter(r => r.status === "Pending");
   const actioned = recs.filter(r => r.status !== "Pending");

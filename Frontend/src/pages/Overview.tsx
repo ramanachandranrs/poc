@@ -1,13 +1,16 @@
 import { motion } from "framer-motion";
 import { Car, Package, Train, AlertTriangle, Activity, ShieldAlert } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/StatCard";
 import { useInventorySummary, usePartsSummary, useTransitSummary, useTrends } from "@/hooks/useApiData";
-import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
+
 import { useRole } from "@/context/RoleContext";
 
 const Overview = () => {
   const { role } = useRole();
+  const navigate = useNavigate();
   const { data: invSummary,     loading: invLoading }     = useInventorySummary();
   const { data: partsSummary,   loading: partsLoading }   = usePartsSummary();
   const { data: transitSummary, loading: transitLoading } = useTransitSummary();
@@ -21,7 +24,8 @@ const Overview = () => {
   const inTransit   = transitSummary?.in_transit ?? 0;
   const totalVehicles = invSummary?.total ?? 0;
 
-  if (loading) return <LoadingSkeleton rows={6} />;
+  if (loading) return <PageLoader icon={Activity} title="Network Overview" message="Loading dealer network data..." rows={4} />;
+
 
   return (
     <div className="space-y-6">
@@ -40,17 +44,17 @@ const Overview = () => {
               <h3 className="text-lg font-bold text-foreground tracking-tight leading-none">Critical Edge Cases Detected</h3>
               <div className="mt-3 flex flex-wrap gap-3">
                 {agingCount > 0 && (
-                  <span className="flex items-center gap-2 rounded-lg bg-neon-amber/10 border border-neon-amber/20 px-3 py-1 text-[10px] font-bold text-neon-amber uppercase tracking-widest shadow-sm">
+                  <span onClick={() => navigate("/aging")} className="flex items-center gap-2 rounded-lg bg-neon-amber/10 border border-neon-amber/20 px-3 py-1 text-[10px] font-bold text-neon-amber uppercase tracking-widest shadow-sm cursor-pointer hover:bg-neon-amber/20 transition-colors">
                     <AlertTriangle className="h-3 w-3" /> <span>{agingCount}</span> vehicles aging &gt; 60 days
                   </span>
                 )}
                 {stockouts > 0 && (
-                  <span className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm">
+                  <span onClick={() => navigate("/parts")} className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm cursor-pointer hover:bg-neon-red/20 transition-colors">
                     <Package className="h-3 w-3" /> <span>{stockouts}</span> parts below ROP
                   </span>
                 )}
                 {delayed > 0 && (
-                  <span className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm">
+                  <span onClick={() => navigate("/transit")} className="flex items-center gap-2 rounded-lg bg-neon-red/10 border border-neon-red/20 px-3 py-1 text-[10px] font-bold text-neon-red uppercase tracking-widest shadow-sm cursor-pointer hover:bg-neon-red/20 transition-colors">
                     <Train className="h-3 w-3" /> {delayed} shipments delayed
                   </span>
                 )}
@@ -62,10 +66,18 @@ const Overview = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Vehicles" value={totalVehicles} icon={Car} accentColor="blue" delay={0} />
-        <StatCard title="Aging Stock" value={agingCount} suffix="units" icon={AlertTriangle} accentColor="amber" delay={0.1} />
-        <StatCard title="Parts Alerts" value={stockouts} suffix="items" icon={Package} accentColor="red" delay={0.2} />
-        <StatCard title="Active Shipments" value={inTransit} icon={Train} accentColor="green" delay={0.3} />
+        <div onClick={() => navigate("/inventory")} className="cursor-pointer hover:scale-[1.02] transition-transform">
+          <StatCard title="Total Vehicles" value={totalVehicles} icon={Car} accentColor="blue" delay={0} />
+        </div>
+        <div onClick={() => navigate("/aging")} className="cursor-pointer hover:scale-[1.02] transition-transform">
+          <StatCard title="Aging Stock" value={agingCount} suffix="units" icon={AlertTriangle} accentColor="amber" delay={0.1} />
+        </div>
+        <div onClick={() => navigate("/parts")} className="cursor-pointer hover:scale-[1.02] transition-transform">
+          <StatCard title="Parts Alerts" value={stockouts} suffix="items" icon={Package} accentColor="red" delay={0.2} />
+        </div>
+        <div onClick={() => navigate("/transit")} className="cursor-pointer hover:scale-[1.02] transition-transform">
+          <StatCard title="Active Shipments" value={inTransit} icon={Train} accentColor="green" delay={0.3} />
+        </div>
       </div>
 
       {/* Chart */}

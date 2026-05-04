@@ -58,6 +58,27 @@ export interface TrendItem {
   demand: number;
 }
 
+export interface AlertItem {
+  alert_id: string;
+  type: "aging_vehicle" | "parts_stockout" | "transit_delay";
+  severity: "critical" | "medium" | "low";
+  title: string;
+  summary: string;
+  financial_impact_inr: number;
+  dealer_id: string;
+  dealer_name: string;
+  timestamp: string;
+  gemini_message?: string;
+  entity_detail: Record<string, any>;
+  status?: string;
+}
+
+export interface AlertFeedResponse {
+  alerts: AlertItem[];
+  total_financial_impact_inr: number;
+  timestamp: string;
+}
+
 function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]): { data: R[]; loading: boolean; error: string | null } {
   const cacheKey = endpoint;
   const cached = getCache(cacheKey);
@@ -152,6 +173,13 @@ export interface InventoryFilters {
   page?: number;
 }
 
+export interface PaginatedInventory {
+  total: number;
+  page: number;
+  limit: number;
+  items: InventoryItem[];
+}
+
 export const useInventory = (filters: InventoryFilters = {}) => {
   const params = new URLSearchParams();
   if (filters.status)    params.set("status",    filters.status);
@@ -165,7 +193,7 @@ export const useInventory = (filters: InventoryFilters = {}) => {
   const cacheKey = `/wipro/inventory?${params.toString()}`;
   const cached = getCache(cacheKey);
 
-  const [data, setData] = useState<InventoryItem[]>(cached || []);
+  const [data, setData] = useState<PaginatedInventory>({ total: 0, page: 1, limit: 50, items: cached?.items || [] });
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
@@ -178,12 +206,15 @@ export const useInventory = (filters: InventoryFilters = {}) => {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json: any[]) => {
-        const transformed = json.map(v => ({
-          vin: v.vin, dealer_id: v.dealer_id, dealer_name: v.dealer_name,
-          model: v.model, variant: v.variant, fuel_type: v.fuel_type,
-          days_in_inventory: v.days_in_inventory, status: v.status,
-        }));
+      .then((json: any) => {
+        const transformed = {
+          ...json,
+          items: json.items.map((v: any) => ({
+            vin: v.vin, dealer_id: v.dealer_id, dealer_name: v.dealer_name,
+            model: v.model, variant: v.variant, fuel_type: v.fuel_type,
+            days_in_inventory: v.days_in_inventory, status: v.status,
+          }))
+        };
         setData(transformed);
         setCache(cacheKey, transformed);
         setLoading(false);
@@ -229,6 +260,13 @@ export interface PartsFilters {
   page?: number;
 }
 
+export interface PaginatedParts {
+  total: number;
+  page: number;
+  limit: number;
+  items: PartItem[];
+}
+
 export const usePartsList = (filters: PartsFilters = {}) => {
   const params = new URLSearchParams();
   if (filters.status)    params.set("status",    filters.status);
@@ -241,7 +279,7 @@ export const usePartsList = (filters: PartsFilters = {}) => {
   const cacheKey = `/sap/parts?${params.toString()}`;
   const cached = getCache(cacheKey);
 
-  const [data, setData] = useState<PartItem[]>(cached || []);
+  const [data, setData] = useState<PaginatedParts>({ total: 0, page: 1, limit: 50, items: cached?.items || [] });
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
@@ -254,12 +292,15 @@ export const usePartsList = (filters: PartsFilters = {}) => {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json: any[]) => {
-        const transformed = json.map(p => ({
-          sku: p.sku, name: p.part_name, category: p.category,
-          quantity_on_hand: p.quantity_on_hand, reorder_point: p.reorder_point,
-          unit_price: p.unit_cost, stockout_rate: p.stockout_rate,
-        }));
+      .then((json: any) => {
+        const transformed = {
+          ...json,
+          items: json.items.map((p: any) => ({
+            sku: p.sku, name: p.part_name, category: p.category,
+            quantity_on_hand: p.quantity_on_hand, reorder_point: p.reorder_point,
+            unit_price: p.unit_cost, stockout_rate: p.stockout_rate,
+          }))
+        };
         setData(transformed);
         setCache(cacheKey, transformed);
         setLoading(false);
@@ -306,6 +347,13 @@ export interface TransitFilters {
   page?: number;
 }
 
+export interface PaginatedTransit {
+  total: number;
+  page: number;
+  limit: number;
+  items: TransitItem[];
+}
+
 export const useTransit = (filters: TransitFilters = {}) => {
   const params = new URLSearchParams();
   if (filters.status)    params.set("status",    filters.status);
@@ -319,7 +367,7 @@ export const useTransit = (filters: TransitFilters = {}) => {
   const cacheKey = `/rail/transit?${params.toString()}`;
   const cached = getCache(cacheKey);
 
-  const [data, setData] = useState<TransitItem[]>(cached || []);
+  const [data, setData] = useState<PaginatedTransit>({ total: 0, page: 1, limit: 50, items: cached?.items || [] });
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
@@ -332,12 +380,15 @@ export const useTransit = (filters: TransitFilters = {}) => {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((json: any[]) => {
-        const transformed = json.map(t => ({
-          shipment_id: t.shipment_id, origin: t.origin, destination: t.destination,
-          status: t.status, expected_delivery: String(t.expected_delivery ?? ""),
-          carrier: t.carrier, items: t.items, delay_days: t.delay_days,
-        }));
+      .then((json: any) => {
+        const transformed = {
+          ...json,
+          items: json.items.map((t: any) => ({
+            shipment_id: t.shipment_id, origin: t.origin, destination: t.destination,
+            status: t.status, expected_delivery: String(t.expected_delivery ?? ""),
+            carrier: t.carrier, items: t.items, delay_days: t.delay_days,
+          }))
+        };
         setData(transformed);
         setCache(cacheKey, transformed);
         setLoading(false);
@@ -358,23 +409,48 @@ export interface CustomerItem {
   ownership_history: string | null;
 }
 
-export const useCustomers = (params?: { search?: string; state?: string; city?: string; ownership?: string }) => {
+export interface PaginatedCustomers {
+  total: number;
+  page: number;
+  limit: number;
+  items: CustomerItem[];
+}
+
+export const useCustomers = (params?: { search?: string; state?: string; city?: string; ownership?: string; page?: number }) => {
   const query = new URLSearchParams();
   if (params?.search) query.set("search", params.search);
   if (params?.state) query.set("state", params.state);
   if (params?.city) query.set("city", params.city);
   if (params?.ownership) query.set("ownership", params.ownership);
+  query.set("page", String(params?.page ?? 1));
+  query.set("limit", "50");
   const qs = query.toString();
-  return useApiData<any, CustomerItem>(`/customers${qs ? `?${qs}` : ""}`,
-    (data) => data.map((c: any) => ({
-      customer_id: c.customer_id,
-      name: c.name,
-      contact: c.contact,
-      city: c.city,
-      state: c.state,
-      ownership_history: c.ownership_history,
-    }))
-  );
+  
+  const cacheKey = `/customers?${qs}`;
+  const cached = getCache(cacheKey);
+  const [data, setData] = useState<PaginatedCustomers>({ total: 0, page: 1, limit: 50, items: cached?.items || [] });
+  const [loading, setLoading] = useState(!cached);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!cached) setLoading(true);
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => { 
+        setData(json); 
+        setCache(cacheKey, json); 
+        setLoading(false); 
+      })
+      .catch(err => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
+    return () => controller.abort();
+  }, [cacheKey]);
+
+  return { data, loading, error };
 };
 
 export const useTrends = () => useApiData<any, TrendItem>("/overview/trends",
@@ -742,3 +818,51 @@ export const useSalesByModel = () => {
   }, []);
   return { data, loading };
 };
+
+export const useAlertFeed = (filters: { role?: string; zone?: string; dealer_id?: string } = {}) => {
+  const params = new URLSearchParams({ limit: "500" });
+  if (filters.role && filters.role !== "all" && filters.role !== "mother_warehouse") {
+    params.set("role", filters.role);
+  }
+  if (filters.zone)      params.set("zone",      filters.zone);
+  if (filters.dealer_id) params.set("dealer_id", filters.dealer_id);
+
+  const cacheKey = `/alerts/daily-feed?${params.toString()}`;
+  const cached = getCache(cacheKey);
+
+  const [data, setData] = useState<AlertFeedResponse | null>(cached);
+  const [loading, setLoading] = useState(!cached);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = () => setRefreshKey(prev => prev + 1);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!cached || refreshKey > 0) setLoading(true);
+
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(json => {
+        setData(json);
+        setCache(cacheKey, json);
+        setLoading(false);
+      })
+      .catch(err => {
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [cacheKey, refreshKey]);
+
+  return { data, loading, error, refetch };
+};
+
+

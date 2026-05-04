@@ -25,7 +25,45 @@ const METRIC_ICONS: Record<string, any> = {
 const ROIReport = () => {
   const { data: report, loading, error } = useROIReport();
 
-  if (loading) return <LoadingSkeleton rows={6} />;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8 py-12">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative rounded-2xl bg-card border border-border/10 p-8 shadow-2xl flex flex-col items-center"
+        >
+          <div className="relative h-16 w-16 mb-6">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 border-4 border-primary/20 rounded-full"
+            />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <BarChart3 className="h-6 w-6 text-primary animate-pulse" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-black text-foreground tracking-tight">AI Copilot Analysis</h3>
+          <motion.p 
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-2"
+          >
+            Generating ROI report...
+          </motion.p>
+        </motion.div>
+      </div>
+      <div className="w-full max-w-2xl px-4">
+        <LoadingSkeleton rows={4} />
+      </div>
+    </div>
+  );
   if (error || !report) return (
     <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
       Could not load ROI report. Make sure the backend is running.

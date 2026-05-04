@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
@@ -113,7 +114,8 @@ const MLStatus = () => {
     }
   };
 
-  if (loading) return <LoadingSkeleton rows={6} />;
+  if (loading) return <PageLoader icon={Brain} title="ML Training Status" message="Synchronizing model metrics..." rows={6} />;
+
 
   const retrain   = mlData?.retrain;
   const scheduler = mlData?.scheduler;

@@ -135,7 +135,7 @@ def get_parts_summary(db: Session = Depends(get_db), current_user: models.AppUse
     }
 
 
-@app.get("/api/v1/sap/parts", response_model=List[models.PartsResponse])
+@app.get("/api/v1/sap/parts", response_model=models.PaginatedPartsResponse)
 def get_sap_parts(
     dealer_id: Optional[str] = None,
     status: Optional[str] = None,
@@ -160,14 +160,19 @@ def get_sap_parts(
         conditions.append("(p.description LIKE :search OR p.part_number LIKE :search)")
         params["search"] = f"%{search.strip()}%"
     if status == "Stockout Alert":
-        conditions.append("on_hand < rop")
+        conditions.append("dr.on_hand < dr.rop")
     elif status == "Adequate":
-        conditions.append("on_hand >= rop")
+        conditions.append("dr.on_hand >= dr.rop")
 
-    where = " AND ".join(conditions)
+    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    # sub_where is intentionally empty — dealer_id is filtered in the outer WHERE via dr.dealer_id
+    sub_where = ""
+    sub_params: dict = {}
+
     rows = db.execute(text(f"""
         SELECT p.part_number, p.description, p.category_group,
-            on_hand, rop, unit_cost, stockout_rate,
+            dr.on_hand, dr.rop, dr.unit_cost, dr.stockout_rate,
             dr.dealer_id, d.dealer_name
         FROM (
             SELECT part_number, dealer_id,
@@ -176,27 +181,46 @@ def get_sap_parts(
                 AVG(unit_price) as unit_cost,
                 AVG(stockout_flag) as stockout_rate
             FROM demand_records
+            {sub_where}
             GROUP BY part_number, dealer_id
         ) dr
         JOIN parts p ON p.part_number = dr.part_number
         JOIN dealers d ON d.dealer_id = dr.dealer_id
-        WHERE {where}
-        ORDER BY on_hand ASC, p.part_number ASC
+        {where_clause}
+        ORDER BY dr.on_hand ASC, p.part_number ASC
         LIMIT :limit OFFSET :offset
-    """), params).fetchall()
+    """), {**params, **sub_params}).fetchall()
 
-    return [
-        models.PartsResponse(
-            sku=row.part_number,
-            part_name=row.description,
-            category=row.category_group,
-            quantity_on_hand=int(row.on_hand or 0),
-            reorder_point=int(round(row.rop or 0)),
-            unit_cost=round(float(row.unit_cost or 0), 2),
-            stockout_rate=round(float(row.stockout_rate or 0), 3),
-        )
-        for row in rows
-    ]
+    total_row = db.execute(text(f"""
+        SELECT COUNT(*) FROM (
+            SELECT dr.part_number, dr.dealer_id
+            FROM demand_records dr
+            JOIN parts p ON p.part_number = dr.part_number
+            JOIN dealers d ON d.dealer_id = dr.dealer_id
+            {sub_where}
+            GROUP BY dr.part_number, dr.dealer_id
+        ) dr
+        {where_clause}
+    """), {**params, **sub_params}).fetchone()
+    total = total_row[0] if total_row else 0
+
+    return models.PaginatedPartsResponse(
+        total=total,
+        page=page,
+        limit=limit,
+        items=[
+            models.PartsResponse(
+                sku=row.part_number,
+                part_name=row.description,
+                category=row.category_group,
+                quantity_on_hand=int(row.on_hand or 0),
+                reorder_point=int(round(row.rop or 0)),
+                unit_cost=round(float(row.unit_cost or 0), 2),
+                stockout_rate=round(float(row.stockout_rate or 0), 3),
+            )
+            for row in rows
+        ]
+    )
 
 
 @app.get("/api/v1/rail/transit/summary")
@@ -219,7 +243,7 @@ def get_transit_summary(db: Session = Depends(get_db), current_user: models.AppU
     }
 
 
-@app.get("/api/v1/rail/transit", response_model=List[models.TransitResponse])
+@app.get("/api/v1/rail/transit", response_model=models.PaginatedTransitResponse)
 def get_transit(
     zone: Optional[str] = None,
     mode: Optional[str] = None,
@@ -274,19 +298,26 @@ def get_transit(
         LIMIT :limit OFFSET :offset
     """), params).fetchall()
 
-    return [
-        models.TransitResponse(
-            shipment_id=s.shipment_id,
-            origin=s.origin_city or (s.origin_name or "Unknown"),
-            destination=s.destination_city or (s.destination_name or "Unknown"),
-            status=s.status or "Unknown",
-            expected_delivery=s.expected_arrival,
-            carrier=s.carrier_name or "Unknown",
-            items=round(float(s.qty_shipped or 0), 2),
-            delay_days=round(float(s.real_delay_days or 0), 2),
-        )
-        for s in shipments
-    ]
+    total = db.execute(text(f"SELECT COUNT(*) FROM shipments WHERE {where}"), params).fetchone()[0]
+
+    return models.PaginatedTransitResponse(
+        total=total,
+        page=page,
+        limit=limit,
+        items=[
+            models.TransitResponse(
+                shipment_id=s.shipment_id,
+                origin=s.origin_city or (s.origin_name or "Unknown"),
+                destination=s.destination_city or (s.destination_name or "Unknown"),
+                status=s.status or "Unknown",
+                expected_delivery=s.expected_arrival,
+                carrier=s.carrier_name or "Unknown",
+                items=round(float(s.qty_shipped or 0), 2),
+                delay_days=round(float(s.real_delay_days or 0), 2),
+            )
+            for s in shipments
+        ]
+    )
 
 
 @app.get("/api/v1/overview/trends", response_model=List[models.TrendResponse])
@@ -322,63 +353,65 @@ def get_overview_trends(
     ]
 
 
-@app.get("/api/v1/customers", response_model=List[models.CustomerResponse])
+@app.get("/api/v1/customers", response_model=models.PaginatedCustomerResponse)
 def get_customers(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=500),
     search: Optional[str] = None,
     state: Optional[str] = None,
     city: Optional[str] = None,
     ownership: Optional[str] = None,
-    limit: int = Query(30000, ge=1, le=50000),
     db: Session = Depends(get_db),
     current_user: models.AppUser = Depends(get_current_active_user),
 ):
+    offset = (page - 1) * limit
     query = db.query(models.Customer)
 
     if current_user.role != models.UserRole.ADMIN:
         from sqlalchemy import exists
         if current_user.role == models.UserRole.MANAGER:
-            # Check if customer has any relationship with dealers in the manager's zone
             dealer_ids_query = db.query(models.Dealer.dealer_id).filter(models.Dealer.zone == current_user.zone)
-            
-            # Using EXISTS is usually faster than multiple OR'd IN clauses
             has_vehicle = exists().where(models.Vehicle.customer_id == models.Customer.customer_id).where(models.Vehicle.dealer_id.in_(dealer_ids_query))
             has_sale    = exists().where(models.VehicleSale.customer_id == models.Customer.customer_id).where(models.VehicleSale.dealer_id.in_(dealer_ids_query))
             has_job     = exists().where(models.JobCard.customer_id == models.Customer.customer_id).where(models.JobCard.dealer_id.in_(dealer_ids_query))
             has_booking = exists().where(models.Booking.customer_id == models.Customer.customer_id).where(models.Booking.dealer_id.in_(dealer_ids_query))
-            
             query = query.filter(has_vehicle | has_sale | has_job | has_booking)
         else: # Dealer
-            # Check if customer has any relationship with this specific dealer
             has_vehicle = exists().where(models.Vehicle.customer_id == models.Customer.customer_id).where(models.Vehicle.dealer_id == current_user.dealer_id)
             has_sale    = exists().where(models.VehicleSale.customer_id == models.Customer.customer_id).where(models.VehicleSale.dealer_id == current_user.dealer_id)
             has_job     = exists().where(models.JobCard.customer_id == models.Customer.customer_id).where(models.JobCard.dealer_id == current_user.dealer_id)
             has_booking = exists().where(models.Booking.customer_id == models.Customer.customer_id).where(models.Booking.dealer_id == current_user.dealer_id)
-            
             query = query.filter(has_vehicle | has_sale | has_job | has_booking)
 
     if search:
         term = f"%{search.strip()}%"
-        query = query.filter(
-            models.Customer.name.ilike(term) | models.Customer.customer_id.ilike(term)
-        )
+        query = query.filter(models.Customer.name.ilike(term) | models.Customer.customer_id.ilike(term))
     if state:
         query = query.filter(models.Customer.state.ilike(f"%{state.strip()}%"))
     if city:
         query = query.filter(models.Customer.city.ilike(f"%{city.strip()}%"))
     if ownership:
         query = query.filter(models.Customer.ownership_history == ownership.strip())
-    rows = query.order_by(models.Customer.customer_id.asc()).limit(limit).all()
-    return [
-        models.CustomerResponse(
-            customer_id=r.customer_id,
-            name=r.name,
-            contact=r.contact,
-            city=r.city,
-            state=r.state,
-            ownership_history=r.ownership_history,
-        )
-        for r in rows
-    ]
+    
+    total = query.count()
+    rows = query.order_by(models.Customer.customer_id.asc()).offset(offset).limit(limit).all()
+    
+    return models.PaginatedCustomerResponse(
+        total=total,
+        page=page,
+        limit=limit,
+        items=[
+            models.CustomerResponse(
+                customer_id=r.customer_id,
+                name=r.name,
+                contact=r.contact,
+                city=r.city,
+                state=r.state,
+                ownership_history=r.ownership_history,
+            )
+            for r in rows
+        ]
+    )
 
 
 # ── Demand Forecast Endpoints ─────────────────────────────────────────────────
@@ -578,19 +611,26 @@ def _build_ai_prompt(v: dict, target: dict, net_utility: float) -> str:
 def get_aging_summary(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
     scope = get_scope_filters(current_user, dealer_table_alias="d")
     # Only unsold vehicles — true aging showroom stock
+    # Optimization: Use NOT EXISTS instead of NOT IN, and pre-calculate dates
+    from datetime import date, timedelta
+    ref_date = date(2025, 12, 31)
+    d30 = (ref_date - timedelta(days=30))
+    d60 = (ref_date - timedelta(days=60))
+    d90 = (ref_date - timedelta(days=90))
+
     rows = db.execute(
         text(f"""
             SELECT
                 v.chassis_number,
                 v.model_code,
-                CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) AS days
+                v.stock_arrival_date
             FROM vehicles v
             JOIN dealers d ON d.dealer_id = v.dealer_id
             WHERE v.stock_arrival_date IS NOT NULL
               AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
-              AND CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 30
+              AND v.stock_arrival_date < :d30
               AND {scope}
-        """)
+        """), {"d30": d30}
     ).fetchall()
 
     if not rows:
@@ -599,15 +639,31 @@ def get_aging_summary(db: Session = Depends(get_db), current_user: models.AppUse
             total_floorplan_burn=0, top_aging_model="N/A", avg_days_aging=0
         )
 
-    critical = [r for r in rows if r.days >= 90]
-    aging    = [r for r in rows if 60 <= r.days < 90]
-    watch    = [r for r in rows if 30 <= r.days < 60]
-    total_burn = sum(_floorplan_cost(r.days, AVG_INVOICE_VALUE) for r in rows if r.days > 60)
+    # Convert stock_arrival_date to days in Python to avoid repeated SQL calls
+    from datetime import datetime
+    def to_days(arrival_str):
+        # arrival_str might be string or date object depending on SQLAlchemy
+        if isinstance(arrival_str, str):
+            dt = datetime.strptime(arrival_str, "%Y-%m-%d").date()
+        else:
+            dt = arrival_str
+        return (ref_date - dt).days
+
+    processed_rows = []
+    for r in rows:
+        days = to_days(r.stock_arrival_date)
+        processed_rows.append({"model": r.model_code, "days": days})
+
+    critical = [r for r in processed_rows if r["days"] >= 90]
+    aging    = [r for r in processed_rows if 60 <= r["days"] < 90]
+    watch    = [r for r in processed_rows if 30 <= r["days"] < 60]
+    total_burn = sum(_floorplan_cost(r["days"], AVG_INVOICE_VALUE) for r in processed_rows if r["days"] > 60)
 
     from collections import Counter
-    model_counts = Counter(r.model_code for r in rows if r.days > 60)
+    model_counts = Counter(r["model"] for r in processed_rows if r["days"] > 60)
     top_model = model_counts.most_common(1)[0][0] if model_counts else "N/A"
-    avg_days = round(sum(r.days for r in rows if r.days > 60) / max(len([r for r in rows if r.days > 60]), 1), 1)
+    aging_vehicles = [r for r in processed_rows if r["days"] > 60]
+    avg_days = round(sum(r["days"] for r in aging_vehicles) / max(len(aging_vehicles), 1), 1)
 
     return models.AgingSummary(
         total_aging=len([r for r in rows if r.days > 60]),
@@ -699,8 +755,11 @@ def get_transfer_recommendations(
         {"min_days": min_days, "lim": limit},
     ).fetchall()
 
-    # Get all dealers for target matching
-    all_dealers = db.query(models.Dealer).all()
+    # Get all dealers for target matching — filtered by zone if possible to reduce O(N*M)
+    if current_user.role == models.UserRole.MANAGER:
+        all_dealers = db.query(models.Dealer).filter(models.Dealer.zone == current_user.zone).all()
+    else:
+        all_dealers = db.query(models.Dealer).limit(100).all() # Cap for POC performance
 
     # Pre-calculate/Cache demand for aging variants to avoid repeated JSON lookups
     variants = {r.variant_id for r in aging_rows if r.variant_id}
@@ -716,29 +775,25 @@ def get_transfer_recommendations(
     for r in aging_rows:
         total_fp = _floorplan_cost(r.days, AVG_INVOICE_VALUE)
 
-        # Find best target dealer
+        # Find best target dealer — optimized matching
         best_target = None
         best_utility = -999_999
         best_transport = 0
         best_demand = 0
 
-        # Optimization: Filter potential targets by same zone if many dealers exist
-        # For POC, we just use a cached lookup to keep it fast
-        for d in all_dealers:
-            if d.dealer_id == r.dealer_id:
-                continue
-            
+        # Heuristic: only check dealers with high forecast demand for this variant
+        target_dealers = [d for d in all_dealers if d.dealer_id != r.dealer_id]
+        
+        for d in target_dealers:
+            # Cached demand score — prioritized
+            demand = demand_cache.get((r.variant_id, d.dealer_id), 0.0)
+            if demand < 0.1: continue # Skip if no demand
+
             # Cached transport cost
             cities = tuple(sorted([r.city, d.city]))
             if cities not in transport_cache:
                 transport_cache[cities] = get_transport_cost(r.city, d.city, db)
             transport = transport_cache[cities]
-            
-            # Cached demand score
-            demand = demand_cache.get((r.variant_id, d.dealer_id))
-            if demand is None:
-                # fall back to a zero or small proxy if not in forecast to avoid DB hits in loop
-                demand = 0.0
             
             # Net utility = floorplan saved + demand value - transport
             utility = total_fp + (demand * 500) - transport
@@ -748,15 +803,23 @@ def get_transfer_recommendations(
                 best_transport = transport
                 best_demand = demand
 
-        if best_target is None:
-            continue
+        # Fallback if no high-demand dealer found: check top 5 nearest dealers (simplified)
+        if not best_target:
+             # Just picking first available for POC if utility logic fails to find "best"
+             for d in target_dealers[:5]:
+                 cities = tuple(sorted([r.city, d.city]))
+                 if cities not in transport_cache:
+                     transport_cache[cities] = get_transport_cost(r.city, d.city, db)
+                 transport = transport_cache[cities]
+                 utility = total_fp - transport
+                 if utility > best_utility:
+                     best_utility = utility
+                     best_target = d
+                     best_transport = transport
 
-        if best_utility > 0:
-            rec = "Transfer"
-        elif r.days > 90:
-            rec = "Discount"
-        else:
-            rec = "Hold"
+        if not best_target: continue
+
+        rec = "Transfer" if best_utility > 0 else ("Discount" if r.days > 90 else "Hold")
 
         v_dict = {
             "vin": r.chassis_number, "model": r.model_code, "variant": r.variant_id,

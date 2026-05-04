@@ -17,20 +17,26 @@ def get_inventory_summary(
     db: Session = Depends(get_db),
     current_user: models.AppUser = Depends(get_current_active_user)
 ):
+    # Pre-calculate cutoff dates to avoid per-row SQL function calls
+    from datetime import date, timedelta
+    ref_date = date(2025, 12, 31)
+    d60 = (ref_date - timedelta(days=60))
+    d90 = (ref_date - timedelta(days=90))
+
     scope = get_scope_condition(current_user, dealer_field="v.dealer_id", zone_field="d.zone")
     row = db.execute(text(f"""
         SELECT
             COUNT(v.chassis_number) as total,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) <= 60 THEN 1 ELSE 0 END) as available,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 60 THEN 1 ELSE 0 END) as aging,
-            SUM(CASE WHEN CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 90 THEN 1 ELSE 0 END) as critical
+            SUM(CASE WHEN v.stock_arrival_date >= :d60 THEN 1 ELSE 0 END) as available,
+            SUM(CASE WHEN v.stock_arrival_date < :d60 AND v.stock_arrival_date >= :d90 THEN 1 ELSE 0 END) as aging,
+            SUM(CASE WHEN v.stock_arrival_date < :d90 THEN 1 ELSE 0 END) as critical
         FROM vehicles v
         JOIN dealers d ON v.dealer_id = d.dealer_id
         WHERE v.stock_arrival_date IS NOT NULL
           AND v.dealer_id IS NOT NULL
-          AND v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)
+          AND NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)
           AND {scope}
-    """)).fetchone()
+    """), {"d60": d60, "d90": d90}).fetchone()
     return {
         "total": row.total or 0, 
         "available": row.available or 0, 
@@ -38,7 +44,7 @@ def get_inventory_summary(
         "critical": row.critical or 0
     }
 
-@router.get("", response_model=List[models.InventoryResponse])
+@router.get("", response_model=models.PaginatedInventoryResponse)
 def get_inventory(
     dealer_id: Optional[str] = None,
     zone: Optional[str] = None,
@@ -55,7 +61,7 @@ def get_inventory(
     conditions = [
         "v.stock_arrival_date IS NOT NULL",
         "v.dealer_id IS NOT NULL",
-        "v.chassis_number NOT IN (SELECT chassis_number FROM vehicle_sales)",
+        "NOT EXISTS (SELECT 1 FROM vehicle_sales vs WHERE vs.chassis_number = v.chassis_number)",
         scope
     ]
     params: dict = {"limit": limit, "offset": (page - 1) * limit}
@@ -72,15 +78,27 @@ def get_inventory(
     if fuel_type:
         conditions.append("v.fuel_type = :fuel_type")
         params["fuel_type"] = fuel_type.strip()
+    from datetime import date, timedelta
+    ref_date = date(2025, 12, 31)
+    d60 = (ref_date - timedelta(days=60))
+    d90 = (ref_date - timedelta(days=90))
+
     if status == "Available":
-        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) <= 60")
+        conditions.append("v.stock_arrival_date >= :d60")
+        params["d60"] = d60
     elif status == "Aging":
-        conditions.append("CAST(julianday('2025-12-31') - julianday(v.stock_arrival_date) AS INTEGER) > 60")
+        conditions.append("v.stock_arrival_date < :d60")
+        params["d60"] = d60
+    elif status == "Critical":
+        conditions.append("v.stock_arrival_date < :d90")
+        params["d90"] = d90
     if search:
         conditions.append("(v.chassis_number LIKE :search OR v.model_code LIKE :search OR d.dealer_name LIKE :search OR v.variant_id LIKE :search)")
         params["search"] = f"%{search.strip()}%"
 
     where = " AND ".join(conditions)
+    total = db.execute(text(f"SELECT COUNT(*) FROM vehicles v JOIN dealers d ON d.dealer_id = v.dealer_id WHERE {where}"), params).fetchone()[0]
+    
     rows = db.execute(text(f"""
         SELECT v.chassis_number, v.model_code, v.variant_id, v.fuel_type,
             d.dealer_id, d.dealer_name, d.zone,
@@ -92,16 +110,21 @@ def get_inventory(
         LIMIT :limit OFFSET :offset
     """), params).fetchall()
 
-    return [
-        models.InventoryResponse(
-            vin=row.chassis_number,
-            dealer_id=row.dealer_id,
-            dealer_name=row.dealer_name,
-            model=row.model_code or "Unknown",
-            variant=row.variant_id or "Unknown",
-            fuel_type=row.fuel_type,
-            days_in_inventory=int(row.days or 0),
-            status="Aging" if int(row.days or 0) > 60 else "Available",
-        )
-        for row in rows
-    ]
+    return models.PaginatedInventoryResponse(
+        total=total,
+        page=page,
+        limit=limit,
+        items=[
+            models.InventoryResponse(
+                vin=row.chassis_number,
+                dealer_id=row.dealer_id,
+                dealer_name=row.dealer_name,
+                model=row.model_code or "Unknown",
+                variant=row.variant_id or "Unknown",
+                fuel_type=row.fuel_type,
+                days_in_inventory=int(row.days or 0),
+                status="Critical" if int(row.days or 0) > 90 else ("Aging" if int(row.days or 0) > 60 else "Available"),
+            )
+            for row in rows
+        ]
+    )

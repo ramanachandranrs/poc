@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Users, Search, Phone, MapPin, Car, Filter, X } from "lucide-react";
 import { useCustomers } from "@/hooks/useApiData";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
 
 const ownershipOptions = ["1st owner", "2nd owner", "3rd owner"];
@@ -29,27 +30,29 @@ const Customers = () => {
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
-  const { data, loading } = useCustomers({
+  const { data: paginatedData, loading } = useCustomers({
     search: debouncedSearch || undefined,
     state: stateFilter || undefined,
     ownership: ownershipFilter || undefined,
+    page: page,
   });
 
+  const customers = paginatedData.items || [];
+  const totalCount = paginatedData.total || 0;
+
   const states = useMemo(() => {
-    const all = data.map((c) => c.state).filter(Boolean) as string[];
+    // We only have states from the current page here, which is a limitation of server-side pagination
+    // for a simple dropdown. In a real app, we'd have a separate endpoint for states.
+    // For now, we'll keep it as is or hardcode some common ones if needed.
+    const all = customers.map((c) => c.state).filter(Boolean) as string[];
     return [...new Set(all)].sort();
-  }, [data]);
+  }, [customers]);
 
-  const totalFirst = data.filter((c) => c.ownership_history === "1st owner").length;
-  const totalSecond = data.filter((c) => c.ownership_history === "2nd owner").length;
-  const withContact = data.filter((c) => c.contact).length;
+  const totalFirst = customers.filter((c) => c.ownership_history === "1st owner").length;
+  const totalSecond = customers.filter((c) => c.ownership_history === "2nd owner").length;
+  const withContact = customers.filter((c) => c.contact).length;
 
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return data.slice(start, start + pageSize);
-  }, [data, page]);
-
-  const totalPages = Math.ceil(data.length / pageSize);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const clearFilters = () => {
     setSearch("");
@@ -61,7 +64,8 @@ const Customers = () => {
 
   const hasFilters = search || stateFilter || ownershipFilter;
 
-  if (loading) return <LoadingSkeleton rows={8} />;
+  if (loading) return <PageLoader icon={Users} title="Customer Registry" message="Retrieving CRM customer profiles..." rows={8} />;
+
 
   return (
     <div className="space-y-6">
@@ -69,7 +73,7 @@ const Customers = () => {
       <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="text-3xl font-extrabold text-foreground tracking-tight">Customer Registry</h2>
-          <p className="text-base text-muted-foreground mt-1.5 font-medium">Wipro DMS — <span className="text-foreground font-black">{data.length.toLocaleString()}</span> customers found</p>
+          <p className="text-base text-muted-foreground mt-1.5 font-medium">Wipro DMS — <span className="text-foreground font-black">{totalCount.toLocaleString()}</span> customers found</p>
         </div>
         {hasFilters && (
           <button
@@ -83,10 +87,10 @@ const Customers = () => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Customers" value={data.length} icon={Users} accentColor="blue" delay={0} />
-        <StatCard title="1st Owners" value={totalFirst} icon={Car} trend="Primary buyers" trendUp accentColor="green" delay={0.1} />
-        <StatCard title="2nd Owners" value={totalSecond} icon={Car} trend="Pre-owned segment" accentColor="purple" delay={0.2} />
-        <StatCard title="With Contact" value={withContact} icon={Phone} trend="Reachable" trendUp accentColor="amber" delay={0.3} />
+        <StatCard title="Total Customers" value={totalCount} icon={Users} accentColor="blue" delay={0} />
+        <StatCard title="1st Owners" value={totalFirst} icon={Car} trend="On current page" accentColor="green" delay={0.1} />
+        <StatCard title="2nd Owners" value={totalSecond} icon={Car} trend="On current page" accentColor="purple" delay={0.2} />
+        <StatCard title="With Contact" value={withContact} icon={Phone} trend="On current page" accentColor="amber" delay={0.3} />
       </div>
 
       {/* Filters */}
@@ -152,14 +156,14 @@ const Customers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/5">
-              {paginatedData.length === 0 ? (
+              {customers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-16 text-center text-muted-foreground text-lg font-medium">
                     No customers found matching your filters.
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((customer, i) => (
+                customers.map((customer, i) => (
                   <motion.tr
                     key={customer.customer_id}
                     initial={{ opacity: 0, x: -10 }}
@@ -209,8 +213,8 @@ const Customers = () => {
           <div className="p-4 border-t border-border/50 flex items-center justify-between gap-4">
             <div className="text-xs text-muted-foreground">
               Showing <span className="font-medium text-foreground">{((page - 1) * pageSize) + 1}</span> to{" "}
-              <span className="font-medium text-foreground">{Math.min(page * pageSize, data.length)}</span> of{" "}
-              <span className="font-medium text-foreground">{data.length.toLocaleString()}</span>
+              <span className="font-medium text-foreground">{Math.min(page * pageSize, totalCount)}</span> of{" "}
+              <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
