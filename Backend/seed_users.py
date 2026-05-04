@@ -9,11 +9,10 @@ def seed_users():
         # Create tables if they don't exist
         models.Base.metadata.create_all(models.engine)
 
-        # Check if users already exist
-        if db.query(models.AppUser).count() > 0:
-            print("Users already seeded.")
-            return
+        # Clear existing users to avoid duplicates during this expansion
+        db.query(models.AppUser).delete()
 
+        # 1. Add Admin and Regional Managers
         users_to_seed = [
             models.AppUser(
                 username="admin@maruti.com",
@@ -27,22 +26,43 @@ def seed_users():
                 zone="North"
             ),
             models.AppUser(
-                username="dealer_delhi_1@maruti.com",
+                username="west_manager@maruti.com",
                 hashed_password=get_password_hash("secret123"),
-                role=models.UserRole.USER,
-                dealer_id="DLR001" # Make sure this matches an existing dealer or it might cause issues later, DLR001 is common in mock data
+                role=models.UserRole.MANAGER,
+                zone="West"
+            ),
+            models.AppUser(
+                username="south_manager@maruti.com",
+                hashed_password=get_password_hash("secret123"),
+                role=models.UserRole.MANAGER,
+                zone="South"
+            ),
+            models.AppUser(
+                username="east_manager@maruti.com",
+                hashed_password=get_password_hash("secret123"),
+                role=models.UserRole.MANAGER,
+                zone="East"
             )
         ]
 
-        # Let's dynamically find a valid dealer_id for the dealer user just to be safe
-        first_dealer = db.query(models.Dealer).first()
-        if first_dealer:
-            users_to_seed[2].dealer_id = first_dealer.dealer_id
-            print(f"Assigned dealer_id {first_dealer.dealer_id} to dealer user.")
+        # 2. Add a user for EVERY dealer in the database
+        all_dealers = db.query(models.Dealer).all()
+        for dealer in all_dealers:
+            clean_name = "".join(c if c.isalnum() else "_" for c in dealer.dealer_name.lower()).strip("_")
+            username = f"user_{clean_name}@{dealer.dealer_id.lower()}.com"
+            
+            users_to_seed.append(
+                models.AppUser(
+                    username=username,
+                    hashed_password=get_password_hash("secret123"),
+                    role=models.UserRole.USER,
+                    dealer_id=dealer.dealer_id
+                )
+            )
 
         db.add_all(users_to_seed)
         db.commit()
-        print("Successfully seeded users.")
+        print(f"Successfully seeded {len(users_to_seed)} users (1 Admin, 4 Managers, {len(all_dealers)} Dealers).")
 
     except Exception as e:
         db.rollback()

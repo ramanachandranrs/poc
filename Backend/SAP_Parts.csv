@@ -1,101 +1,97 @@
 sku,part_name,category,unit_cost
-PRT_0001,Brake Pads,Mechanical,13585.96
-PRT_0002,Oil Filter,Consumable,3112.63
-PRT_0003,Choose Part,Consumable,13318.23
-PRT_0004,Stay Part,Electrical,9156.47
-PRT_0005,Exactly Part,Consumable,14107.41
-PRT_0006,Occur Part,Body,3258.08
-PRT_0007,Believe Part,Body,1910.75
-PRT_0008,Doctor Part,Mechanical,3073.48
-PRT_0009,About Part,Body,3692.1
-PRT_0010,Left Part,Body,5114.77
-PRT_0011,Oil Part,Mechanical,1152.27
-PRT_0012,Author Part,Consumable,925.04
-PRT_0013,Business Part,Body,3466.83
-PRT_0014,Head Part,Mechanical,12032.0
-PRT_0015,Decide Part,Electrical,10789.33
-PRT_0016,Tv Part,Electrical,6550.49
-PRT_0017,Minute Part,Mechanical,14146.44
-PRT_0018,Poor Part,Body,2648.86
-PRT_0019,Someone Part,Consumable,14559.46
-PRT_0020,Class Part,Electrical,8916.32
-PRT_0021,Choice Part,Body,5024.66
-PRT_0022,Can Part,Mechanical,8172.73
-PRT_0023,National Part,Electrical,11885.55
-PRT_0024,Message Part,Body,9224.58
-PRT_0025,Door Part,Consumable,8464.49
-PRT_0026,Big Part,Body,1489.59
-PRT_0027,Morning Part,Electrical,5728.89
-PRT_0028,Them Part,Consumable,3946.54
-PRT_0029,Product Part,Consumable,1599.7
-PRT_0030,Deal Part,Mechanical,12926.7
-PRT_0031,Card Part,Consumable,9223.02
-PRT_0032,Federal Part,Body,10794.05
-PRT_0033,Agent Part,Consumable,13910.66
-PRT_0034,Nice Part,Consumable,5470.26
-PRT_0035,Expert Part,Electrical,5962.47
-PRT_0036,Budget Part,Consumable,7912.11
-PRT_0037,None Part,Mechanical,7735.05
-PRT_0038,Yeah Part,Body,9705.9
-PRT_0039,Country Part,Body,13541.1
-PRT_0040,National Part,Mechanical,11836.2
-PRT_0041,Near Part,Body,3367.87
-PRT_0042,Natural Part,Consumable,7033.15
-PRT_0043,In Part,Electrical,12328.41
-PRT_0044,Bar Part,Consumable,5927.52
-PRT_0045,Data Part,Body,2329.7
-PRT_0046,Ask Part,Mechanical,11533.28
-PRT_0047,Later Part,Electrical,4716.77
-PRT_0048,Single Part,Electrical,13479.22
-PRT_0049,Raise Part,Electrical,2819.6
-PRT_0050,Able Part,Consumable,13278.68
-PRT_0051,High Part,Electrical,13017.51
-PRT_0052,Young Part,Electrical,13037.62
-PRT_0053,Score Part,Consumable,7352.64
-PRT_0054,Between Part,Consumable,13958.74
-PRT_0055,Nice Part,Mechanical,10839.0
-PRT_0056,True Part,Consumable,8131.35
-PRT_0057,Senior Part,Electrical,5256.32
-PRT_0058,Lot Part,Body,6927.59
-PRT_0059,Home Part,Electrical,7386.23
-PRT_0060,Charge Part,Electrical,9307.1
-PRT_0061,Carry Part,Consumable,816.99
-PRT_0062,Recently Part,Electrical,7609.34
-PRT_0063,Operation Part,Mechanical,707.99
-PRT_0064,Fire Part,Body,5912.87
-PRT_0065,Store Part,Mechanical,14706.58
-PRT_0066,Language Part,Electrical,12295.63
-PRT_0067,Could Part,Electrical,2004.52
-PRT_0068,After Part,Consumable,4654.44
-PRT_0069,My Part,Consumable,14203.62
-PRT_0070,Truth Part,Body,11932.54
-PRT_0071,Head Part,Body,7692.47
-PRT_0072,Order Part,Mechanical,5870.65
-PRT_0073,Nature Part,Consumable,10886.82
-PRT_0074,Building Part,Consumable,7952.33
-PRT_0075,Bag Part,Body,10227.42
-PRT_0076,Throw Part,Body,5391.14
-PRT_0077,Game Part,Electrical,7520.7
-PRT_0078,Again Part,Mechanical,3140.22
-PRT_0079,Voice Part,Electrical,11642.94
-PRT_0080,Finally Part,Mechanical,2687.97
-PRT_0081,End Part,Electrical,7291.02
-PRT_0082,Themselves Part,Consumable,10550.28
-PRT_0083,Trouble Part,Mechanical,10055.32
-PRT_0084,Wife Part,Mechanical,2953.08
-PRT_0085,On Part,Consumable,9497.24
-PRT_0086,Since Part,Mechanical,10915.88
-PRT_0087,Drive Part,Mechanical,13954.99
-PRT_0088,While Part,Mechanical,3390.28
-PRT_0089,Century Part,Consumable,5639.99
-PRT_0090,Suffer Part,Consumable,6282.63
-PRT_0091,Nature Part,Mechanical,2956.11
-PRT_0092,Again Part,Consumable,7204.35
-PRT_0093,More Part,Mechanical,10717.63
-PRT_0094,Mind Part,Mechanical,9882.56
-PRT_0095,Result Part,Mechanical,8266.24
-PRT_0096,Final Part,Mechanical,14709.42
-PRT_0097,How Part,Body,11256.15
-PRT_0098,Through Part,Consumable,7877.24
-PRT_0099,Whether Part,Mechanical,13173.26
-PRT_0100,Play Part,Consumable,11127.28
+PRT_0001,Front Brake Pads (Set),Mechanical,2969.21
+PRT_0002,Rear Brake Pads (Set),Mechanical,2100.88
+PRT_0003,Brake Disc Rotor - Front,Mechanical,3916.54
+PRT_0004,Brake Disc Rotor - Rear,Mechanical,3301.07
+PRT_0005,Clutch Plate Assembly,Mechanical,7282.4
+PRT_0006,Pressure Plate,Mechanical,5686.25
+PRT_0007,Clutch Release Bearing,Mechanical,2067.66
+PRT_0008,Water Pump Assembly,Mechanical,2803.46
+PRT_0009,Thermostat Housing,Mechanical,1416.04
+PRT_0010,Timing Belt Kit,Mechanical,4122.91
+PRT_0011,Drive Belt (Serpentine),Mechanical,1007.15
+PRT_0012,Engine Mount - Front,Mechanical,2604.18
+PRT_0013,Engine Mount - Rear,Mechanical,1887.51
+PRT_0014,Suspension Strut - Front,Mechanical,6822.38
+PRT_0015,Suspension Strut - Rear,Mechanical,6478.79
+PRT_0016,Shock Absorber - Front,Mechanical,3851.23
+PRT_0017,Shock Absorber - Rear,Mechanical,2931.62
+PRT_0018,Stabilizer Bar Link,Mechanical,1694.19
+PRT_0019,Ball Joint - Lower,Mechanical,2076.38
+PRT_0020,Tie Rod End,Mechanical,1150.13
+PRT_0021,CV Joint Boot Kit,Mechanical,1037.16
+PRT_0022,Wheel Bearing Assembly,Mechanical,2966.44
+PRT_0023,Exhaust Manifold Gasket,Mechanical,647.41
+PRT_0024,Cylinder Head Gasket,Mechanical,3048.59
+PRT_0025,Piston Ring Set,Mechanical,5230.95
+PRT_0026,Engine Oil 5W-30 (4L),Consumable,1711.76
+PRT_0027,Engine Oil 5W-40 (4L),Consumable,1931.21
+PRT_0028,Oil Filter,Consumable,395.56
+PRT_0029,Air Filter Element,Consumable,750.89
+PRT_0030,Cabin Air Filter,Consumable,536.18
+PRT_0031,Fuel Filter,Consumable,972.0
+PRT_0032,Spark Plug (Set of 4),Consumable,1710.27
+PRT_0033,Spark Plug - Iridium (Set),Consumable,2830.43
+PRT_0034,Coolant (1L),Consumable,433.94
+PRT_0035,Brake Fluid DOT4 (500ml),Consumable,308.34
+PRT_0036,Power Steering Fluid (1L),Consumable,457.03
+PRT_0037,Transmission Fluid (1L),Consumable,791.15
+PRT_0038,Windshield Washer Fluid,Consumable,186.4
+PRT_0039,Wiper Blade - Front (Pair),Consumable,942.24
+PRT_0040,Wiper Blade - Rear,Consumable,460.44
+PRT_0041,Battery 12V 65Ah,Electrical,6898.92
+PRT_0042,Battery 12V 45Ah,Electrical,4145.99
+PRT_0043,Alternator Assembly,Electrical,11479.62
+PRT_0044,Starter Motor,Electrical,8337.67
+PRT_0045,Ignition Coil Pack,Electrical,2796.6
+PRT_0046,Oxygen Sensor (Lambda),Electrical,4139.27
+PRT_0047,MAP Sensor,Electrical,2464.84
+PRT_0048,Crankshaft Position Sensor,Electrical,1773.44
+PRT_0049,Camshaft Position Sensor,Electrical,2185.48
+PRT_0050,Throttle Position Sensor,Electrical,3262.13
+PRT_0051,ABS Speed Sensor - Front,Electrical,2498.74
+PRT_0052,ABS Speed Sensor - Rear,Electrical,2008.27
+PRT_0053,Fuel Injector,Electrical,3534.35
+PRT_0054,EGR Valve,Electrical,5881.18
+PRT_0055,Mass Air Flow Sensor,Electrical,4282.08
+PRT_0056,Radiator Fan Motor,Electrical,3717.86
+PRT_0057,Horn Assembly,Electrical,612.91
+PRT_0058,Headlamp Bulb H7,Electrical,374.06
+PRT_0059,Headlamp Bulb H4,Electrical,251.73
+PRT_0060,Tail Lamp Bulb,Electrical,115.66
+PRT_0061,Fuse Box Assembly,Electrical,2064.34
+PRT_0062,Side Mirror Assembly - LH,Body,5001.6
+PRT_0063,Side Mirror Assembly - RH,Body,4882.01
+PRT_0064,Door Handle - Outer,Body,1266.46
+PRT_0065,Door Handle - Inner,Body,749.94
+PRT_0066,Bumper - Front,Body,9203.8
+PRT_0067,Bumper - Rear,Body,6614.74
+PRT_0068,Fender - LH,Body,4642.0
+PRT_0069,Fender - RH,Body,5101.03
+PRT_0070,Bonnet Hinge,Body,1488.52
+PRT_0071,Boot Lock Assembly,Body,2009.25
+PRT_0072,Windshield Glass - Front,Body,13594.47
+PRT_0073,Windshield Glass - Rear,Body,9459.74
+PRT_0074,Door Seal Rubber - Front,Body,897.18
+PRT_0075,Door Seal Rubber - Rear,Body,921.04
+PRT_0076,Radiator Grille,Body,3099.81
+PRT_0077,Mud Flap Set,Body,730.84
+PRT_0078,Wheel Cover 16 inch,Body,1777.78
+PRT_0079,Roof Rail (Pair),Body,4182.59
+PRT_0080,Spoiler - Rear,Body,6283.12
+PRT_0081,Body Side Moulding,Body,1425.77
+PRT_0082,Floor Mat Set (Premium),Accessories,2043.41
+PRT_0083,Seat Cover Set (Leather),Accessories,8715.69
+PRT_0084,Steering Wheel Cover,Accessories,727.58
+PRT_0085,Car Perfume,Accessories,339.44
+PRT_0086,Phone Mount,Accessories,439.58
+PRT_0087,Trunk Organizer,Accessories,1379.11
+PRT_0088,Boot Carpet Mat,Accessories,902.57
+PRT_0089,Door Visor Set,Accessories,1228.18
+PRT_0090,Chrome Garnish Kit,Accessories,2765.23
+PRT_0091,Alloy Wheel 16 inch,Accessories,6621.71
+PRT_0092,Alloy Wheel 17 inch,Accessories,9551.75
+PRT_0093,Tyre 205/60 R16,Accessories,6308.22
+PRT_0094,Tyre 215/55 R17,Accessories,7031.87
+PRT_0095,Roof Carrier,Accessories,3910.76
+PRT_0096,Touch-up Paint Pen,Accessories,366.5

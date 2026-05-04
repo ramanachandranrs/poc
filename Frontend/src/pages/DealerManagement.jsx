@@ -7,7 +7,7 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
 export default function DealerManagement() {
-  const { role, token } = useRole();
+  const { role, token, user } = useRole();
 
   // ALL hooks must be declared before any early return
   const [dealers, setDealers] = useState([]);
@@ -17,6 +17,10 @@ export default function DealerManagement() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ dealer_id: "", dealer_name: "", city: "", state: "", dealer_type: "1S", zone: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [allDealers, setAllDealers] = useState([]);
+  const [showOnboard, setShowOnboard] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedDealerId, setSelectedDealerId] = useState("");
 
   const fetchDealers = async () => {
     try {
@@ -24,6 +28,13 @@ export default function DealerManagement() {
       const res = await fetch(`${API_BASE}/dealers`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error("Failed to fetch dealers");
       setDealers(await res.json());
+
+      // Also fetch all dealers for the onboarding dropdown
+      const allRes = await fetch(`${API_BASE}/dealers/all`, { headers: { Authorization: `Bearer ${token}` } });
+      if (allRes.ok) {
+        const data = await allRes.json();
+        setAllDealers(data);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -35,7 +46,32 @@ export default function DealerManagement() {
     if (role === "regional_distributor") {
       fetchDealers();
     }
-  }, [role]);
+  }, [role, token]);
+
+  const handleOnboard = async () => {
+    if (!selectedDealerId) return;
+    setFormLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/dealers/${selectedDealerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ zone: user.zone }) // Assign to manager's zone
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.detail || "Failed to onboard dealership");
+      }
+
+      setShowOnboard(false);
+      setSelectedDealerId("");
+      fetchDealers();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   // Access guard AFTER all hooks
   if (role !== "regional_distributor") {
@@ -60,7 +96,7 @@ export default function DealerManagement() {
         city: formData.city,
         state: formData.state,
         dealer_type: formData.dealer_type,
-        zone: formData.zone || "North", // backend enforces zone matches user's zone
+        zone: user.zone, 
       };
 
       const url = isEditing ? `${API_BASE}/dealers/${formData.dealer_id}` : `${API_BASE}/dealers`;
@@ -116,6 +152,7 @@ export default function DealerManagement() {
     });
     setIsEditing(true);
     setShowForm(true);
+    setShowOnboard(false);
   };
 
   return (
@@ -131,20 +168,86 @@ export default function DealerManagement() {
 
         {/* Dealer Form */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-card text-card-foreground p-6 rounded-xl border border-border/40 shadow-lg h-fit">
-          {!showForm ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          {!showForm && !showOnboard ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
                 <Store className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Add Dealership</h3>
-              <p className="text-xs text-muted-foreground mb-6">Onboard a new dealership into your network zone.</p>
+              <h3 className="text-lg font-semibold">Dealer Operations</h3>
+              <p className="text-xs text-muted-foreground mb-4">Onboard an existing dealer or create a new entry.</p>
+              
+              <button
+                onClick={() => setShowOnboard(true)}
+                className="w-full rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-semibold px-4 py-2.5 text-sm transition-colors flex items-center justify-center gap-2 border border-primary/20"
+              >
+                Onboard Existing Dealer
+              </button>
+
               <button
                 onClick={() => setShowForm(true)}
-                className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 py-2 text-sm transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
+                className="w-full rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2.5 text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
               >
-                <Plus className="h-4 w-4" /> Create Dealership
+                <Plus className="h-4 w-4" /> Create New Dealership
               </button>
             </div>
+          ) : showOnboard ? (
+            <>
+               <h3 className="text-lg font-semibold mb-4">Onboard Existing Dealer</h3>
+               <div className="space-y-4">
+                 <div className="relative">
+                   <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase">Select Dealership</label>
+                   <div 
+                     onClick={() => setIsOpen(!isOpen)}
+                     className="w-full rounded-lg bg-muted/20 border border-border/50 px-3 py-2.5 text-sm text-foreground focus:border-primary/50 cursor-pointer flex justify-between items-center"
+                   >
+                     <span className={selectedDealerId ? "text-foreground" : "text-muted-foreground"}>
+                       {selectedDealerId ? allDealers.find(d => d.dealer_id === selectedDealerId)?.dealer_name : "Choose a dealer..."}
+                     </span>
+                     <Plus className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-45' : ''}`} />
+                   </div>
+
+                   {isOpen && (
+                     <div className="absolute top-full left-0 w-full mt-1 bg-[#1a1a1a] border border-border/50 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto overflow-x-hidden backdrop-blur-md">
+                       {allDealers
+                         .filter(ad => ad.zone === "Unassigned")
+                         .map(ad => (
+                           <div 
+                             key={ad.dealer_id}
+                             onClick={() => {
+                               setSelectedDealerId(ad.dealer_id);
+                               setIsOpen(false);
+                             }}
+                             className="px-3 py-2.5 text-sm hover:bg-primary/20 cursor-pointer transition-colors border-b border-border/10 last:border-0"
+                           >
+                             <div className="font-medium text-foreground">{ad.dealer_name}</div>
+                             <div className="text-[10px] text-muted-foreground uppercase">{ad.dealer_id} • {ad.city}</div>
+                           </div>
+                         ))
+                       }
+                       {allDealers.filter(ad => ad.zone === "Unassigned").length === 0 && (
+                         <div className="px-3 py-4 text-center text-xs text-muted-foreground">No unassigned dealers available</div>
+                       )}
+                     </div>
+                   )}
+                 </div>
+                 <div className="pt-2 flex gap-2">
+                    <button
+                      disabled={formLoading || !selectedDealerId}
+                      onClick={handleOnboard}
+                      className="flex-1 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-sm transition-colors flex items-center justify-center shadow-lg shadow-primary/20 disabled:opacity-50"
+                    >
+                      {formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Onboard to Region"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowOnboard(false)}
+                      className="rounded-lg bg-muted/40 hover:bg-muted/60 text-foreground px-4 py-2 text-sm transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                 </div>
+               </div>
+            </>
           ) : (
             <>
               <h3 className="text-lg font-semibold mb-4">

@@ -42,6 +42,11 @@ def get_zones(db: Session = Depends(get_db), current_user: models.AppUser = Depe
     zones = db.query(models.Dealer.zone).distinct().all()
     return [z[0] for z in zones if z[0]]
 
+@router.get("/all", response_model=List[DealerResponse])
+def get_all_dealers(db: Session = Depends(get_db)):
+    """Admin-level or cross-zone lookup for onboarding existing dealers."""
+    return db.query(models.Dealer).all()
+
 @router.get("", response_model=List[DealerResponse])
 def get_dealers(db: Session = Depends(get_db), current_user: models.AppUser = Depends(get_current_active_user)):
     # Regional distributor can only see their own zone
@@ -77,21 +82,30 @@ def update_dealer(dealer_id: str, dealer: DealerUpdate, db: Session = Depends(ge
     db_dealer = db.query(models.Dealer).filter(models.Dealer.dealer_id == dealer_id).first()
     if not db_dealer:
         raise HTTPException(status_code=404, detail="Dealer not found")
-        
-    if current_user.role == models.UserRole.MANAGER and db_dealer.zone != current_user.zone:
-        raise HTTPException(status_code=403, detail="You can only edit dealerships in your assigned zone.")
-        
+    
+    # Permission Logic:
+    # 1. Admin can do anything.
+    # 2. Manager can update a dealer IF it is already in their zone.
+    # 3. Manager can "claim" a dealer (change its zone to theirs) if they provide their own zone.
+    
+    is_admin = current_user.role == models.UserRole.ADMIN
+    is_manager = current_user.role == models.UserRole.MANAGER
+    
+    if is_manager:
+        # If trying to update an existing dealer NOT in their zone, it must be a "claim" operation
+        if db_dealer.zone != current_user.zone:
+            if dealer.zone != current_user.zone:
+                raise HTTPException(status_code=403, detail="You can only claim dealerships into your own zone.")
+        else:
+            # Already in their zone, but they can't move it OUT
+            if dealer.zone and dealer.zone != current_user.zone:
+                raise HTTPException(status_code=403, detail="Managers cannot reassign dealers to other zones.")
+
     if dealer.dealer_name: db_dealer.dealer_name = dealer.dealer_name
     if dealer.city: db_dealer.city = dealer.city
     if dealer.state: db_dealer.state = dealer.state
     if dealer.dealer_type: db_dealer.dealer_type = dealer.dealer_type
-    
-    # Only Admin (not manager) should ideally change zone, but let's check current user role
-    if dealer.zone:
-        if current_user.role == models.UserRole.MANAGER:
-            if dealer.zone != current_user.zone:
-                raise HTTPException(status_code=403, detail="Managers cannot reassign dealers to other zones.")
-        db_dealer.zone = dealer.zone
+    if dealer.zone: db_dealer.zone = dealer.zone
     
     db.commit()
     db.refresh(db_dealer)

@@ -69,20 +69,17 @@ def _load_data_from_db() -> pd.DataFrame:
         df_sales = pd.read_sql(
             text("""
                 SELECT
-                    vs.dealer_id,
-                    vs.variant_id,
-                    vs.sale_date   AS date,
-                    vs.zone,
+                    dt.dealer_id,
+                    'VXI'          AS variant_id,
+                    dt.date        AS date,
+                    d.zone,
                     d.dealer_type,
-                    1              AS units_sold,
-                    COALESCE(vs.festive_sale, 0)  AS festive_flag,
+                    dt.total_demand_qty AS units_sold,
+                    0              AS festive_flag,
                     0              AS promotion_flag
-                FROM vehicle_sales vs
-                JOIN dealers d ON d.dealer_id = vs.dealer_id
-                WHERE vs.sale_date IS NOT NULL
-                  AND vs.variant_id IS NOT NULL
-                  AND vs.dealer_id  IS NOT NULL
-                ORDER BY vs.dealer_id, vs.variant_id, vs.sale_date
+                FROM daily_trends dt
+                JOIN dealers d ON d.dealer_id = dt.dealer_id
+                ORDER BY dt.dealer_id, dt.date
             """),
             conn,
             parse_dates=["date"],

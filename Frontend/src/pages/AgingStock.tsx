@@ -12,7 +12,7 @@ import {
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import PageLoader from "@/components/PageLoader";
 import StatCard from "@/components/StatCard";
-import { RefreshCw, Flame } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

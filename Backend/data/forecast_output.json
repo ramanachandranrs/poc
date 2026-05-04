@@ -1,4982 +1,3886 @@
 {
-  "generated_at": "2026-04-29T19:58:03.711552",
+  "generated_at": "2026-05-04T23:23:26.061429",
   "forecast_horizon": 30,
   "data_source": "vehicle_sales (database)",
-  "training_rows": 12896,
+  "training_rows": 2700,
   "model_metrics": {
-    "AGS": {
-      "mae": 0.13,
-      "rmse": 0.23,
-      "r2": -0.989,
-      "mape": 11.3,
-      "smape": 10.6,
-      "f1_sale": 0.0
-    },
-    "AT": {
-      "mae": 0.1,
-      "rmse": 0.24,
-      "r2": -0.23,
-      "mape": 7.5,
-      "smape": 8.1,
-      "f1_sale": 0.0
-    },
-    "Alpha": {
-      "mae": 0.17,
-      "rmse": 0.29,
-      "r2": -4.166,
-      "mape": 16.6,
-      "smape": 14.2,
-      "f1_sale": 0.0
-    },
-    "Delta": {
-      "mae": 0.09,
-      "rmse": 0.19,
-      "r2": -0.856,
-      "mape": 8.3,
-      "smape": 8.1,
-      "f1_sale": 0.0
-    },
-    "LXI": {
-      "mae": 0.1,
-      "rmse": 0.16,
-      "r2": 0.0,
-      "mape": 9.9,
-      "smape": 9.0,
-      "f1_sale": 0.0
-    },
-    "MT": {
-      "mae": 0.12,
-      "rmse": 0.18,
-      "r2": -0.642,
-      "mape": 11.0,
-      "smape": 10.4,
-      "f1_sale": 0.0
-    },
-    "Sigma": {
-      "mae": 0.11,
-      "rmse": 0.26,
-      "r2": -0.161,
-      "mape": 7.9,
-      "smape": 8.3,
-      "f1_sale": 0.0
-    },
     "VXI": {
-      "mae": 0.15,
-      "rmse": 0.24,
-      "r2": -1.365,
-      "mape": 13.5,
-      "smape": 12.5,
-      "f1_sale": 0.0
-    },
-    "ZXI": {
-      "mae": 0.11,
-      "rmse": 0.21,
-      "r2": -0.627,
-      "mape": 9.8,
-      "smape": 9.2,
+      "mae": 51.16,
+      "rmse": 60.46,
+      "r2": -0.107,
+      "mape": 68.9,
+      "smape": 48.2,
       "f1_sale": 0.0
     }
   },
   "forecasts": [
     {
-      "dealer_id": "DLR004",
-      "dealer_name": "DLR004",
-      "variant_id": "AGS",
-      "total_30d": 33.1,
-      "model_mape": 11.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.01
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.03
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 0.98
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.42
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.03
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.03
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 0.95
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 0.95
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 0.97
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
-      "variant_id": "AGS",
-      "total_30d": 40.6,
-      "model_mape": 11.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.99
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.42
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.43
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.42
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.24
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.33
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR014",
-      "dealer_name": "DLR014",
-      "variant_id": "AGS",
-      "total_30d": 47.0,
-      "model_mape": 11.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.72
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.83
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.84
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.96
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.68
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.69
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.72
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.57
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.72
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "AGS",
-      "total_30d": 53.3,
-      "model_mape": 11.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.94
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.83
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.92
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 2.08
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 2.09
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.61
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 2.0
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 2.11
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.68
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 2.04
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR024",
-      "dealer_name": "DLR024",
-      "variant_id": "AGS",
-      "total_30d": 53.6,
-      "model_mape": 11.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.87
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.99
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.57
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.74
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.85
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.86
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.92
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.87
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.87
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.89
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 2.12
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.74
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.87
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.86
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 2.02
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR006",
-      "dealer_name": "DLR006",
-      "variant_id": "AT",
-      "total_30d": 58.6,
-      "model_mape": 7.5,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 2.14
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 2.18
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 2.29
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 2.23
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 2.31
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.24
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 2.16
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 2.17
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 2.2
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 2.23
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.42
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 2.15
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.93
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 2.11
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.94
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.75
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.61
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.9
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.59
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
-      "variant_id": "AT",
-      "total_30d": 52.6,
-      "model_mape": 7.5,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.9
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 2.29
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 2.15
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.83
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 2.02
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 2.0
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 2.33
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.57
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.77
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 2.02
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 2.08
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.74
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.3
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 2.13
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.24
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.49
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR001",
-      "dealer_name": "DLR001",
-      "variant_id": "Alpha",
-      "total_30d": 49.3,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.76
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.53
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.22
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.69
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.74
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.46
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.99
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.68
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.26
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.89
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 2.11
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.57
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.35
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR006",
-      "dealer_name": "DLR006",
-      "variant_id": "Alpha",
-      "total_30d": 47.5,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.8
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.79
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.17
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.77
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.19
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.01
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.93
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.36
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR009",
-      "dealer_name": "DLR009",
-      "variant_id": "Alpha",
-      "total_30d": 53.3,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.77
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.88
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.32
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.76
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.84
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.33
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 2.1
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.75
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.8
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.8
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.76
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.53
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
-      "variant_id": "Alpha",
-      "total_30d": 53.3,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.94
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.71
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.9
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.38
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 2.02
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.89
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.72
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.95
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.37
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 2.09
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.77
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.34
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 2.02
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.8
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 2.06
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.81
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.55
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR017",
-      "dealer_name": "DLR017",
-      "variant_id": "Alpha",
-      "total_30d": 50.9,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.69
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.68
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.96
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.33
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.9
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 2.01
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.77
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.69
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.21
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.71
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 2.07
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.75
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.48
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "Alpha",
-      "total_30d": 51.6,
-      "model_mape": 16.6,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.88
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 2.24
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.71
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.94
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.1
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 2.0
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.75
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.82
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.3
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 2.1
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.95
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.57
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.92
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 2.13
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.76
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.47
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR001",
-      "dealer_name": "DLR001",
-      "variant_id": "Delta",
-      "total_30d": 37.4,
-      "model_mape": 8.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 0.98
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.01
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.53
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.31
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
-      "variant_id": "Delta",
-      "total_30d": 38.0,
-      "model_mape": 8.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.26
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.03
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.75
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.13
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR016",
-      "dealer_name": "DLR016",
-      "variant_id": "Delta",
-      "total_30d": 38.0,
-      "model_mape": 8.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 0.95
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.24
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.26
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 0.94
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.9
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.36
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "Delta",
-      "total_30d": 42.1,
-      "model_mape": 8.3,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.26
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 2.11
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.23
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.94
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 2.04
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.84
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 0.98
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.97
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.49
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.19
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR004",
-      "dealer_name": "DLR004",
-      "variant_id": "LXI",
-      "total_30d": 39.0,
-      "model_mape": 9.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.04
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.37
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR016",
-      "dealer_name": "DLR016",
-      "variant_id": "LXI",
-      "total_30d": 40.6,
-      "model_mape": 9.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.62
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.78
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.43
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.61
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.26
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "LXI",
-      "total_30d": 40.4,
-      "model_mape": 9.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.21
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.67
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.24
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR004",
-      "dealer_name": "DLR004",
-      "variant_id": "MT",
-      "total_30d": 33.2,
-      "model_mape": 11.0,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.03
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.26
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.0
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.12
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR006",
-      "dealer_name": "DLR006",
-      "variant_id": "MT",
-      "total_30d": 33.8,
-      "model_mape": 11.0,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.2
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.16
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.12
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.09
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.2
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR014",
-      "dealer_name": "DLR014",
-      "variant_id": "MT",
-      "total_30d": 40.0,
-      "model_mape": 11.0,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.61
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.25
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.37
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.24
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.43
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.17
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.18
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.66
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.3
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.25
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "MT",
-      "total_30d": 39.7,
-      "model_mape": 11.0,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.41
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.68
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.11
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.13
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.01
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.01
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.02
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.43
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.52
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 0.93
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 0.97
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.46
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
-      "variant_id": "Sigma",
-      "total_30d": 43.4,
-      "model_mape": 7.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.23
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.79
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.28
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.01
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.69
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.43
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 0.95
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.06
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.7
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 0.89
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 0.98
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.76
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.3
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR017",
-      "dealer_name": "DLR017",
-      "variant_id": "Sigma",
-      "total_30d": 43.9,
-      "model_mape": 7.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.72
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.73
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.29
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.22
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 1.98
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.89
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.65
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.31
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.27
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 2.02
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.44
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.45
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 0.99
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.19
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.8
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.83
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.38
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 0.93
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.05
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.6
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.47
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.35
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.37
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR021",
-      "dealer_name": "DLR021",
-      "variant_id": "Sigma",
-      "total_30d": 44.5,
-      "model_mape": 7.9,
-      "daily": [
-        {
-          "date": "2026-01-01",
-          "forecast": 1.55
-        },
-        {
-          "date": "2026-01-02",
-          "forecast": 1.59
-        },
-        {
-          "date": "2026-01-03",
-          "forecast": 1.39
-        },
-        {
-          "date": "2026-01-04",
-          "forecast": 1.32
-        },
-        {
-          "date": "2026-01-05",
-          "forecast": 2.05
-        },
-        {
-          "date": "2026-01-06",
-          "forecast": 1.63
-        },
-        {
-          "date": "2026-01-07",
-          "forecast": 1.79
-        },
-        {
-          "date": "2026-01-08",
-          "forecast": 1.36
-        },
-        {
-          "date": "2026-01-09",
-          "forecast": 1.46
-        },
-        {
-          "date": "2026-01-10",
-          "forecast": 1.07
-        },
-        {
-          "date": "2026-01-11",
-          "forecast": 1.14
-        },
-        {
-          "date": "2026-01-12",
-          "forecast": 1.91
-        },
-        {
-          "date": "2026-01-13",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-14",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-15",
-          "forecast": 1.58
-        },
-        {
-          "date": "2026-01-16",
-          "forecast": 1.79
-        },
-        {
-          "date": "2026-01-17",
-          "forecast": 1.1
-        },
-        {
-          "date": "2026-01-18",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-19",
-          "forecast": 1.5
-        },
-        {
-          "date": "2026-01-20",
-          "forecast": 1.51
-        },
-        {
-          "date": "2026-01-21",
-          "forecast": 1.4
-        },
-        {
-          "date": "2026-01-22",
-          "forecast": 1.33
-        },
-        {
-          "date": "2026-01-23",
-          "forecast": 1.48
-        },
-        {
-          "date": "2026-01-24",
-          "forecast": 1.08
-        },
-        {
-          "date": "2026-01-25",
-          "forecast": 1.15
-        },
-        {
-          "date": "2026-01-26",
-          "forecast": 1.61
-        },
-        {
-          "date": "2026-01-27",
-          "forecast": 1.64
-        },
-        {
-          "date": "2026-01-28",
-          "forecast": 1.54
-        },
-        {
-          "date": "2026-01-29",
-          "forecast": 1.56
-        },
-        {
-          "date": "2026-01-30",
-          "forecast": 1.5
-        }
-      ]
-    },
-    {
-      "dealer_id": "DLR001",
-      "dealer_name": "DLR001",
+      "dealer_id": "DLR_001",
+      "dealer_name": "DLR_001",
       "variant_id": "VXI",
-      "total_30d": 36.2,
-      "model_mape": 13.5,
+      "total_30d": 3572.5,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.22
+          "date": "2025-04-01",
+          "forecast": 134.38
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.3
+          "date": "2025-04-02",
+          "forecast": 103.87
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.17
+          "date": "2025-04-03",
+          "forecast": 77.35
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.16
+          "date": "2025-04-04",
+          "forecast": 83.51
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.37
+          "date": "2025-04-05",
+          "forecast": 99.86
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.27
+          "date": "2025-04-06",
+          "forecast": 112.52
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.41
+          "date": "2025-04-07",
+          "forecast": 100.81
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.31
+          "date": "2025-04-08",
+          "forecast": 152.04
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.01
+          "date": "2025-04-09",
+          "forecast": 116.74
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.05
+          "date": "2025-04-10",
+          "forecast": 89.07
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.03
+          "date": "2025-04-11",
+          "forecast": 110.29
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.26
+          "date": "2025-04-12",
+          "forecast": 145.42
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.12
+          "date": "2025-04-13",
+          "forecast": 117.03
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.33
+          "date": "2025-04-14",
+          "forecast": 122.22
         },
         {
-          "date": "2026-01-15",
-          "forecast": 0.96
+          "date": "2025-04-15",
+          "forecast": 111.81
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.04
+          "date": "2025-04-16",
+          "forecast": 135.63
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.19
+          "date": "2025-04-17",
+          "forecast": 126.29
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.08
+          "date": "2025-04-18",
+          "forecast": 129.4
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.59
+          "date": "2025-04-19",
+          "forecast": 93.44
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.42
+          "date": "2025-04-20",
+          "forecast": 131.08
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.54
+          "date": "2025-04-21",
+          "forecast": 149.31
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.13
+          "date": "2025-04-22",
+          "forecast": 115.73
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.12
+          "date": "2025-04-23",
+          "forecast": 121.97
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.2
+          "date": "2025-04-24",
+          "forecast": 132.66
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.11
+          "date": "2025-04-25",
+          "forecast": 127.05
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.17
+          "date": "2025-04-26",
+          "forecast": 129.04
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.18
+          "date": "2025-04-27",
+          "forecast": 129.28
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.34
+          "date": "2025-04-28",
+          "forecast": 122.37
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.1
+          "date": "2025-04-29",
+          "forecast": 139.24
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.01
+          "date": "2025-04-30",
+          "forecast": 113.09
         }
       ]
     },
     {
-      "dealer_id": "DLR006",
-      "dealer_name": "DLR006",
+      "dealer_id": "DLR_002",
+      "dealer_name": "DLR_002",
       "variant_id": "VXI",
-      "total_30d": 34.9,
-      "model_mape": 13.5,
+      "total_30d": 3669.5,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.19
+          "date": "2025-04-01",
+          "forecast": 108.16
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.23
+          "date": "2025-04-02",
+          "forecast": 95.37
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.1
+          "date": "2025-04-03",
+          "forecast": 114.04
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.08
+          "date": "2025-04-04",
+          "forecast": 105.57
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.27
+          "date": "2025-04-05",
+          "forecast": 98.81
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.23
+          "date": "2025-04-06",
+          "forecast": 136.96
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.37
+          "date": "2025-04-07",
+          "forecast": 134.76
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.06
+          "date": "2025-04-08",
+          "forecast": 167.0
         },
         {
-          "date": "2026-01-09",
-          "forecast": 0.99
+          "date": "2025-04-09",
+          "forecast": 144.36
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.0
+          "date": "2025-04-10",
+          "forecast": 106.09
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.03
+          "date": "2025-04-11",
+          "forecast": 105.83
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.22
+          "date": "2025-04-12",
+          "forecast": 91.01
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.11
+          "date": "2025-04-13",
+          "forecast": 116.03
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.3
+          "date": "2025-04-14",
+          "forecast": 166.65
         },
         {
-          "date": "2026-01-15",
-          "forecast": 0.99
+          "date": "2025-04-15",
+          "forecast": 96.09
         },
         {
-          "date": "2026-01-16",
-          "forecast": 0.99
+          "date": "2025-04-16",
+          "forecast": 111.63
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.03
+          "date": "2025-04-17",
+          "forecast": 148.87
         },
         {
-          "date": "2026-01-18",
-          "forecast": 0.97
+          "date": "2025-04-18",
+          "forecast": 140.08
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.46
+          "date": "2025-04-19",
+          "forecast": 126.08
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.41
+          "date": "2025-04-20",
+          "forecast": 132.94
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.62
+          "date": "2025-04-21",
+          "forecast": 99.89
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.16
+          "date": "2025-04-22",
+          "forecast": 154.13
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.06
+          "date": "2025-04-23",
+          "forecast": 101.26
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.09
+          "date": "2025-04-24",
+          "forecast": 126.02
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.04
+          "date": "2025-04-25",
+          "forecast": 133.08
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.32
+          "date": "2025-04-26",
+          "forecast": 125.33
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.19
+          "date": "2025-04-27",
+          "forecast": 119.27
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.34
+          "date": "2025-04-28",
+          "forecast": 128.9
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.06
+          "date": "2025-04-29",
+          "forecast": 91.08
         },
         {
-          "date": "2026-01-30",
-          "forecast": 0.96
+          "date": "2025-04-30",
+          "forecast": 144.23
         }
       ]
     },
     {
-      "dealer_id": "DLR008",
-      "dealer_name": "DLR008",
+      "dealer_id": "DLR_003",
+      "dealer_name": "DLR_003",
       "variant_id": "VXI",
-      "total_30d": 38.7,
-      "model_mape": 13.5,
+      "total_30d": 3493.3,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.39
+          "date": "2025-04-01",
+          "forecast": 74.95
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.25
+          "date": "2025-04-02",
+          "forecast": 76.54
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.51
+          "date": "2025-04-03",
+          "forecast": 67.06
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.13
+          "date": "2025-04-04",
+          "forecast": 74.01
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.37
+          "date": "2025-04-05",
+          "forecast": 102.03
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.24
+          "date": "2025-04-06",
+          "forecast": 102.67
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.32
+          "date": "2025-04-07",
+          "forecast": 104.26
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.69
+          "date": "2025-04-08",
+          "forecast": 125.63
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.22
+          "date": "2025-04-09",
+          "forecast": 144.58
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.23
+          "date": "2025-04-10",
+          "forecast": 147.33
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.48
+          "date": "2025-04-11",
+          "forecast": 131.11
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.35
+          "date": "2025-04-12",
+          "forecast": 167.62
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.13
+          "date": "2025-04-13",
+          "forecast": 59.47
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.23
+          "date": "2025-04-14",
+          "forecast": 109.91
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.26
+          "date": "2025-04-15",
+          "forecast": 111.47
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.23
+          "date": "2025-04-16",
+          "forecast": 140.61
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.61
+          "date": "2025-04-17",
+          "forecast": 101.71
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.23
+          "date": "2025-04-18",
+          "forecast": 122.28
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.41
+          "date": "2025-04-19",
+          "forecast": 119.62
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.19
+          "date": "2025-04-20",
+          "forecast": 143.47
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.29
+          "date": "2025-04-21",
+          "forecast": 102.57
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.25
+          "date": "2025-04-22",
+          "forecast": 147.47
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.15
+          "date": "2025-04-23",
+          "forecast": 102.58
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.23
+          "date": "2025-04-24",
+          "forecast": 136.26
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.11
+          "date": "2025-04-25",
+          "forecast": 128.94
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.15
+          "date": "2025-04-26",
+          "forecast": 142.79
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.1
+          "date": "2025-04-27",
+          "forecast": 93.85
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.21
+          "date": "2025-04-28",
+          "forecast": 117.93
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.38
+          "date": "2025-04-29",
+          "forecast": 116.65
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.34
+          "date": "2025-04-30",
+          "forecast": 177.97
         }
       ]
     },
     {
-      "dealer_id": "DLR009",
-      "dealer_name": "DLR009",
+      "dealer_id": "DLR_004",
+      "dealer_name": "DLR_004",
       "variant_id": "VXI",
-      "total_30d": 36.3,
-      "model_mape": 13.5,
+      "total_30d": 3471.9,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.76
+          "date": "2025-04-01",
+          "forecast": 104.38
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.36
+          "date": "2025-04-02",
+          "forecast": 79.44
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.08
+          "date": "2025-04-03",
+          "forecast": 90.91
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.06
+          "date": "2025-04-04",
+          "forecast": 92.13
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.3
+          "date": "2025-04-05",
+          "forecast": 105.43
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.19
+          "date": "2025-04-06",
+          "forecast": 106.95
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.21
+          "date": "2025-04-07",
+          "forecast": 106.46
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.12
+          "date": "2025-04-08",
+          "forecast": 146.61
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.09
+          "date": "2025-04-09",
+          "forecast": 140.79
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.04
+          "date": "2025-04-10",
+          "forecast": 99.31
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.01
+          "date": "2025-04-11",
+          "forecast": 120.85
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.4
+          "date": "2025-04-12",
+          "forecast": 143.17
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.12
+          "date": "2025-04-13",
+          "forecast": 74.29
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.69
+          "date": "2025-04-14",
+          "forecast": 87.75
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.1
+          "date": "2025-04-15",
+          "forecast": 83.04
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.06
+          "date": "2025-04-16",
+          "forecast": 125.45
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.03
+          "date": "2025-04-17",
+          "forecast": 150.65
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.25
+          "date": "2025-04-18",
+          "forecast": 132.76
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.43
+          "date": "2025-04-19",
+          "forecast": 118.21
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.21
+          "date": "2025-04-20",
+          "forecast": 127.86
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.26
+          "date": "2025-04-21",
+          "forecast": 139.97
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.1
+          "date": "2025-04-22",
+          "forecast": 115.05
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.06
+          "date": "2025-04-23",
+          "forecast": 113.52
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.4
+          "date": "2025-04-24",
+          "forecast": 104.64
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.04
+          "date": "2025-04-25",
+          "forecast": 125.65
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.28
+          "date": "2025-04-26",
+          "forecast": 149.88
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.17
+          "date": "2025-04-27",
+          "forecast": 111.34
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.2
+          "date": "2025-04-28",
+          "forecast": 117.89
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.19
+          "date": "2025-04-29",
+          "forecast": 140.75
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.13
+          "date": "2025-04-30",
+          "forecast": 116.74
         }
       ]
     },
     {
-      "dealer_id": "DLR010",
-      "dealer_name": "DLR010",
+      "dealer_id": "DLR_005",
+      "dealer_name": "DLR_005",
       "variant_id": "VXI",
-      "total_30d": 36.8,
-      "model_mape": 13.5,
+      "total_30d": 3499.2,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.43
+          "date": "2025-04-01",
+          "forecast": 134.32
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.23
+          "date": "2025-04-02",
+          "forecast": 66.66
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.44
+          "date": "2025-04-03",
+          "forecast": 93.84
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.24
+          "date": "2025-04-04",
+          "forecast": 96.9
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.58
+          "date": "2025-04-05",
+          "forecast": 106.27
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.28
+          "date": "2025-04-06",
+          "forecast": 112.62
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.17
+          "date": "2025-04-07",
+          "forecast": 123.89
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.14
+          "date": "2025-04-08",
+          "forecast": 165.73
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.06
+          "date": "2025-04-09",
+          "forecast": 130.73
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.08
+          "date": "2025-04-10",
+          "forecast": 118.94
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.06
+          "date": "2025-04-11",
+          "forecast": 144.88
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.58
+          "date": "2025-04-12",
+          "forecast": 97.84
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.18
+          "date": "2025-04-13",
+          "forecast": 97.31
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.18
+          "date": "2025-04-14",
+          "forecast": 91.07
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.14
+          "date": "2025-04-15",
+          "forecast": 112.76
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.09
+          "date": "2025-04-16",
+          "forecast": 170.49
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.06
+          "date": "2025-04-17",
+          "forecast": 104.34
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.04
+          "date": "2025-04-18",
+          "forecast": 94.17
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.79
+          "date": "2025-04-19",
+          "forecast": 102.19
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.3
+          "date": "2025-04-20",
+          "forecast": 132.4
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.24
+          "date": "2025-04-21",
+          "forecast": 124.97
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.13
+          "date": "2025-04-22",
+          "forecast": 128.13
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.07
+          "date": "2025-04-23",
+          "forecast": 137.3
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.08
+          "date": "2025-04-24",
+          "forecast": 115.91
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.05
+          "date": "2025-04-25",
+          "forecast": 120.33
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.44
+          "date": "2025-04-26",
+          "forecast": 150.89
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.2
+          "date": "2025-04-27",
+          "forecast": 91.64
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.18
+          "date": "2025-04-28",
+          "forecast": 104.71
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.21
+          "date": "2025-04-29",
+          "forecast": 118.82
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.13
+          "date": "2025-04-30",
+          "forecast": 109.1
         }
       ]
     },
     {
-      "dealer_id": "DLR014",
-      "dealer_name": "DLR014",
+      "dealer_id": "DLR_006",
+      "dealer_name": "DLR_006",
       "variant_id": "VXI",
-      "total_30d": 36.9,
-      "model_mape": 13.5,
+      "total_30d": 3772.8,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.33
+          "date": "2025-04-01",
+          "forecast": 103.0
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.38
+          "date": "2025-04-02",
+          "forecast": 98.07
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.41
+          "date": "2025-04-03",
+          "forecast": 108.87
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.12
+          "date": "2025-04-04",
+          "forecast": 128.63
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.81
+          "date": "2025-04-05",
+          "forecast": 133.53
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.03
+          "date": "2025-04-06",
+          "forecast": 133.57
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.01
+          "date": "2025-04-07",
+          "forecast": 154.91
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.09
+          "date": "2025-04-08",
+          "forecast": 148.72
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.16
+          "date": "2025-04-09",
+          "forecast": 115.32
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.06
+          "date": "2025-04-10",
+          "forecast": 120.2
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.02
+          "date": "2025-04-11",
+          "forecast": 132.95
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.53
+          "date": "2025-04-12",
+          "forecast": 124.73
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.54
+          "date": "2025-04-13",
+          "forecast": 140.15
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.07
+          "date": "2025-04-14",
+          "forecast": 76.47
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.15
+          "date": "2025-04-15",
+          "forecast": 128.31
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.15
+          "date": "2025-04-16",
+          "forecast": 135.26
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.37
+          "date": "2025-04-17",
+          "forecast": 145.38
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.01
+          "date": "2025-04-18",
+          "forecast": 100.49
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.61
+          "date": "2025-04-19",
+          "forecast": 129.05
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.1
+          "date": "2025-04-20",
+          "forecast": 138.57
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.2
+          "date": "2025-04-21",
+          "forecast": 142.33
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.13
+          "date": "2025-04-22",
+          "forecast": 109.32
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.1
+          "date": "2025-04-23",
+          "forecast": 133.84
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.05
+          "date": "2025-04-24",
+          "forecast": 114.5
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.0
+          "date": "2025-04-25",
+          "forecast": 160.59
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.39
+          "date": "2025-04-26",
+          "forecast": 97.31
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.41
+          "date": "2025-04-27",
+          "forecast": 115.46
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.18
+          "date": "2025-04-28",
+          "forecast": 143.95
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.27
+          "date": "2025-04-29",
+          "forecast": 130.76
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.21
+          "date": "2025-04-30",
+          "forecast": 128.6
         }
       ]
     },
     {
-      "dealer_id": "DLR017",
-      "dealer_name": "DLR017",
+      "dealer_id": "DLR_007",
+      "dealer_name": "DLR_007",
       "variant_id": "VXI",
-      "total_30d": 34.0,
-      "model_mape": 13.5,
+      "total_30d": 3689.1,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.05
+          "date": "2025-04-01",
+          "forecast": 99.65
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.37
+          "date": "2025-04-02",
+          "forecast": 97.2
         },
         {
-          "date": "2026-01-03",
-          "forecast": 0.87
+          "date": "2025-04-03",
+          "forecast": 91.25
         },
         {
-          "date": "2026-01-04",
-          "forecast": 0.88
+          "date": "2025-04-04",
+          "forecast": 99.88
         },
         {
-          "date": "2026-01-05",
-          "forecast": 2.04
+          "date": "2025-04-05",
+          "forecast": 108.39
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.17
+          "date": "2025-04-06",
+          "forecast": 146.12
         },
         {
-          "date": "2026-01-07",
-          "forecast": 0.95
+          "date": "2025-04-07",
+          "forecast": 128.03
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.28
+          "date": "2025-04-08",
+          "forecast": 155.79
         },
         {
-          "date": "2026-01-09",
-          "forecast": 0.85
+          "date": "2025-04-09",
+          "forecast": 144.64
         },
         {
-          "date": "2026-01-10",
-          "forecast": 0.82
+          "date": "2025-04-10",
+          "forecast": 105.05
         },
         {
-          "date": "2026-01-11",
-          "forecast": 0.78
+          "date": "2025-04-11",
+          "forecast": 113.35
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.94
+          "date": "2025-04-12",
+          "forecast": 116.48
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.1
+          "date": "2025-04-13",
+          "forecast": 117.09
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.0
+          "date": "2025-04-14",
+          "forecast": 123.21
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.05
+          "date": "2025-04-15",
+          "forecast": 142.54
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.03
+          "date": "2025-04-16",
+          "forecast": 135.83
         },
         {
-          "date": "2026-01-17",
-          "forecast": 0.91
+          "date": "2025-04-17",
+          "forecast": 150.36
         },
         {
-          "date": "2026-01-18",
-          "forecast": 0.87
+          "date": "2025-04-18",
+          "forecast": 81.77
         },
         {
-          "date": "2026-01-19",
-          "forecast": 2.11
+          "date": "2025-04-19",
+          "forecast": 123.3
         },
         {
-          "date": "2026-01-20",
-          "forecast": 0.95
+          "date": "2025-04-20",
+          "forecast": 145.92
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.05
+          "date": "2025-04-21",
+          "forecast": 112.28
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.32
+          "date": "2025-04-22",
+          "forecast": 125.75
         },
         {
-          "date": "2026-01-23",
-          "forecast": 0.86
+          "date": "2025-04-23",
+          "forecast": 131.95
         },
         {
-          "date": "2026-01-24",
-          "forecast": 0.91
+          "date": "2025-04-24",
+          "forecast": 143.06
         },
         {
-          "date": "2026-01-25",
-          "forecast": 0.89
+          "date": "2025-04-25",
+          "forecast": 118.43
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.58
+          "date": "2025-04-26",
+          "forecast": 116.46
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.37
+          "date": "2025-04-27",
+          "forecast": 119.15
         },
         {
-          "date": "2026-01-28",
-          "forecast": 0.96
+          "date": "2025-04-28",
+          "forecast": 149.92
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.09
+          "date": "2025-04-29",
+          "forecast": 118.25
         },
         {
-          "date": "2026-01-30",
-          "forecast": 0.91
+          "date": "2025-04-30",
+          "forecast": 128.0
         }
       ]
     },
     {
-      "dealer_id": "DLR001",
-      "dealer_name": "DLR001",
-      "variant_id": "ZXI",
-      "total_30d": 33.8,
-      "model_mape": 9.8,
+      "dealer_id": "DLR_008",
+      "dealer_name": "DLR_008",
+      "variant_id": "VXI",
+      "total_30d": 3614.7,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.28
+          "date": "2025-04-01",
+          "forecast": 89.26
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.13
+          "date": "2025-04-02",
+          "forecast": 104.67
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.15
+          "date": "2025-04-03",
+          "forecast": 79.7
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.03
+          "date": "2025-04-04",
+          "forecast": 101.06
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.17
+          "date": "2025-04-05",
+          "forecast": 109.66
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.07
+          "date": "2025-04-06",
+          "forecast": 104.49
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.21
+          "date": "2025-04-07",
+          "forecast": 107.87
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.07
+          "date": "2025-04-08",
+          "forecast": 146.2
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.02
+          "date": "2025-04-09",
+          "forecast": 138.47
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.01
+          "date": "2025-04-10",
+          "forecast": 119.86
         },
         {
-          "date": "2026-01-11",
-          "forecast": 0.93
+          "date": "2025-04-11",
+          "forecast": 131.07
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.0
+          "date": "2025-04-12",
+          "forecast": 127.23
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.03
+          "date": "2025-04-13",
+          "forecast": 90.37
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.12
+          "date": "2025-04-14",
+          "forecast": 131.39
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.05
+          "date": "2025-04-15",
+          "forecast": 128.16
         },
         {
-          "date": "2026-01-16",
-          "forecast": 0.98
+          "date": "2025-04-16",
+          "forecast": 118.17
         },
         {
-          "date": "2026-01-17",
-          "forecast": 0.94
+          "date": "2025-04-17",
+          "forecast": 137.29
         },
         {
-          "date": "2026-01-18",
-          "forecast": 0.93
+          "date": "2025-04-18",
+          "forecast": 111.3
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.07
+          "date": "2025-04-19",
+          "forecast": 149.67
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.1
+          "date": "2025-04-20",
+          "forecast": 129.63
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.09
+          "date": "2025-04-21",
+          "forecast": 116.52
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.17
+          "date": "2025-04-22",
+          "forecast": 139.4
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.09
+          "date": "2025-04-23",
+          "forecast": 115.08
         },
         {
-          "date": "2026-01-24",
-          "forecast": 0.97
+          "date": "2025-04-24",
+          "forecast": 126.04
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.37
+          "date": "2025-04-25",
+          "forecast": 149.51
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.39
+          "date": "2025-04-26",
+          "forecast": 74.3
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.23
+          "date": "2025-04-27",
+          "forecast": 145.01
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.17
+          "date": "2025-04-28",
+          "forecast": 120.36
         },
         {
-          "date": "2026-01-29",
-          "forecast": 1.6
+          "date": "2025-04-29",
+          "forecast": 134.8
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.43
+          "date": "2025-04-30",
+          "forecast": 138.13
         }
       ]
     },
     {
-      "dealer_id": "DLR009",
-      "dealer_name": "DLR009",
-      "variant_id": "ZXI",
-      "total_30d": 40.2,
-      "model_mape": 9.8,
+      "dealer_id": "DLR_009",
+      "dealer_name": "DLR_009",
+      "variant_id": "VXI",
+      "total_30d": 3562.6,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.51
+          "date": "2025-04-01",
+          "forecast": 104.6
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.59
+          "date": "2025-04-02",
+          "forecast": 61.61
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.77
+          "date": "2025-04-03",
+          "forecast": 113.38
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.6
+          "date": "2025-04-04",
+          "forecast": 110.57
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.54
+          "date": "2025-04-05",
+          "forecast": 99.49
         },
         {
-          "date": "2026-01-06",
-          "forecast": 0.99
+          "date": "2025-04-06",
+          "forecast": 89.21
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.17
+          "date": "2025-04-07",
+          "forecast": 115.24
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.21
+          "date": "2025-04-08",
+          "forecast": 123.01
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.18
+          "date": "2025-04-09",
+          "forecast": 112.56
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.26
+          "date": "2025-04-10",
+          "forecast": 123.67
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.18
+          "date": "2025-04-11",
+          "forecast": 158.85
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.11
+          "date": "2025-04-12",
+          "forecast": 157.51
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.07
+          "date": "2025-04-13",
+          "forecast": 113.09
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.2
+          "date": "2025-04-14",
+          "forecast": 103.12
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.51
+          "date": "2025-04-15",
+          "forecast": 123.64
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.43
+          "date": "2025-04-16",
+          "forecast": 138.85
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.87
+          "date": "2025-04-17",
+          "forecast": 107.37
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.04
+          "date": "2025-04-18",
+          "forecast": 98.85
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.06
+          "date": "2025-04-19",
+          "forecast": 112.9
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.09
+          "date": "2025-04-20",
+          "forecast": 162.03
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.23
+          "date": "2025-04-21",
+          "forecast": 112.33
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.53
+          "date": "2025-04-22",
+          "forecast": 136.1
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.14
+          "date": "2025-04-23",
+          "forecast": 130.33
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.43
+          "date": "2025-04-24",
+          "forecast": 132.61
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.13
+          "date": "2025-04-25",
+          "forecast": 125.98
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.13
+          "date": "2025-04-26",
+          "forecast": 108.99
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.21
+          "date": "2025-04-27",
+          "forecast": 117.11
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.37
+          "date": "2025-04-28",
+          "forecast": 141.18
         },
         {
-          "date": "2026-01-29",
-          "forecast": 2.14
+          "date": "2025-04-29",
+          "forecast": 90.38
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.5
+          "date": "2025-04-30",
+          "forecast": 138.01
         }
       ]
     },
     {
-      "dealer_id": "DLR012",
-      "dealer_name": "DLR012",
-      "variant_id": "ZXI",
-      "total_30d": 38.2,
-      "model_mape": 9.8,
+      "dealer_id": "DLR_010",
+      "dealer_name": "DLR_010",
+      "variant_id": "VXI",
+      "total_30d": 3806.8,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.41
+          "date": "2025-04-01",
+          "forecast": 103.82
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.24
+          "date": "2025-04-02",
+          "forecast": 109.87
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.49
+          "date": "2025-04-03",
+          "forecast": 109.99
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.34
+          "date": "2025-04-04",
+          "forecast": 115.77
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.47
+          "date": "2025-04-05",
+          "forecast": 145.07
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.09
+          "date": "2025-04-06",
+          "forecast": 135.69
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.09
+          "date": "2025-04-07",
+          "forecast": 115.15
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.15
+          "date": "2025-04-08",
+          "forecast": 154.03
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.17
+          "date": "2025-04-09",
+          "forecast": 137.96
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.37
+          "date": "2025-04-10",
+          "forecast": 109.0
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.06
+          "date": "2025-04-11",
+          "forecast": 103.41
         },
         {
-          "date": "2026-01-12",
-          "forecast": 0.99
+          "date": "2025-04-12",
+          "forecast": 104.9
         },
         {
-          "date": "2026-01-13",
-          "forecast": 0.93
+          "date": "2025-04-13",
+          "forecast": 142.41
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.05
+          "date": "2025-04-14",
+          "forecast": 137.01
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.26
+          "date": "2025-04-15",
+          "forecast": 121.1
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.27
+          "date": "2025-04-16",
+          "forecast": 154.66
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.46
+          "date": "2025-04-17",
+          "forecast": 118.23
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.13
+          "date": "2025-04-18",
+          "forecast": 129.25
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.09
+          "date": "2025-04-19",
+          "forecast": 132.72
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.21
+          "date": "2025-04-20",
+          "forecast": 137.06
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.32
+          "date": "2025-04-21",
+          "forecast": 131.1
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.63
+          "date": "2025-04-22",
+          "forecast": 131.27
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.29
+          "date": "2025-04-23",
+          "forecast": 130.35
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.35
+          "date": "2025-04-24",
+          "forecast": 150.11
         },
         {
-          "date": "2026-01-25",
-          "forecast": 1.09
+          "date": "2025-04-25",
+          "forecast": 101.2
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.23
+          "date": "2025-04-26",
+          "forecast": 131.05
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.06
+          "date": "2025-04-27",
+          "forecast": 132.22
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.59
+          "date": "2025-04-28",
+          "forecast": 138.42
         },
         {
-          "date": "2026-01-29",
-          "forecast": 2.01
+          "date": "2025-04-29",
+          "forecast": 119.97
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.33
+          "date": "2025-04-30",
+          "forecast": 123.99
         }
       ]
     },
     {
-      "dealer_id": "DLR016",
-      "dealer_name": "DLR016",
-      "variant_id": "ZXI",
-      "total_30d": 39.1,
-      "model_mape": 9.8,
+      "dealer_id": "DLR_011",
+      "dealer_name": "DLR_011",
+      "variant_id": "VXI",
+      "total_30d": 3628.7,
+      "model_mape": 68.9,
       "daily": [
         {
-          "date": "2026-01-01",
-          "forecast": 1.4
+          "date": "2025-04-01",
+          "forecast": 66.18
         },
         {
-          "date": "2026-01-02",
-          "forecast": 1.32
+          "date": "2025-04-02",
+          "forecast": 82.29
         },
         {
-          "date": "2026-01-03",
-          "forecast": 1.38
+          "date": "2025-04-03",
+          "forecast": 67.85
         },
         {
-          "date": "2026-01-04",
-          "forecast": 1.3
+          "date": "2025-04-04",
+          "forecast": 104.74
         },
         {
-          "date": "2026-01-05",
-          "forecast": 1.29
+          "date": "2025-04-05",
+          "forecast": 114.13
         },
         {
-          "date": "2026-01-06",
-          "forecast": 1.16
+          "date": "2025-04-06",
+          "forecast": 143.97
         },
         {
-          "date": "2026-01-07",
-          "forecast": 1.45
+          "date": "2025-04-07",
+          "forecast": 125.29
         },
         {
-          "date": "2026-01-08",
-          "forecast": 1.22
+          "date": "2025-04-08",
+          "forecast": 136.3
         },
         {
-          "date": "2026-01-09",
-          "forecast": 1.24
+          "date": "2025-04-09",
+          "forecast": 137.36
         },
         {
-          "date": "2026-01-10",
-          "forecast": 1.31
+          "date": "2025-04-10",
+          "forecast": 137.38
         },
         {
-          "date": "2026-01-11",
-          "forecast": 1.21
+          "date": "2025-04-11",
+          "forecast": 120.79
         },
         {
-          "date": "2026-01-12",
-          "forecast": 1.06
+          "date": "2025-04-12",
+          "forecast": 119.61
         },
         {
-          "date": "2026-01-13",
-          "forecast": 1.07
+          "date": "2025-04-13",
+          "forecast": 138.35
         },
         {
-          "date": "2026-01-14",
-          "forecast": 1.16
+          "date": "2025-04-14",
+          "forecast": 104.47
         },
         {
-          "date": "2026-01-15",
-          "forecast": 1.33
+          "date": "2025-04-15",
+          "forecast": 111.15
         },
         {
-          "date": "2026-01-16",
-          "forecast": 1.31
+          "date": "2025-04-16",
+          "forecast": 159.7
         },
         {
-          "date": "2026-01-17",
-          "forecast": 1.47
+          "date": "2025-04-17",
+          "forecast": 103.2
         },
         {
-          "date": "2026-01-18",
-          "forecast": 1.25
+          "date": "2025-04-18",
+          "forecast": 152.95
         },
         {
-          "date": "2026-01-19",
-          "forecast": 1.17
+          "date": "2025-04-19",
+          "forecast": 120.69
         },
         {
-          "date": "2026-01-20",
-          "forecast": 1.28
+          "date": "2025-04-20",
+          "forecast": 121.8
         },
         {
-          "date": "2026-01-21",
-          "forecast": 1.41
+          "date": "2025-04-21",
+          "forecast": 144.56
         },
         {
-          "date": "2026-01-22",
-          "forecast": 1.48
+          "date": "2025-04-22",
+          "forecast": 111.62
         },
         {
-          "date": "2026-01-23",
-          "forecast": 1.37
+          "date": "2025-04-23",
+          "forecast": 111.97
         },
         {
-          "date": "2026-01-24",
-          "forecast": 1.43
+          "date": "2025-04-24",
+          "forecast": 159.31
         },
         {
-          "date": "2026-01-25",
-          "forecast": 0.95
+          "date": "2025-04-25",
+          "forecast": 89.58
         },
         {
-          "date": "2026-01-26",
-          "forecast": 1.03
+          "date": "2025-04-26",
+          "forecast": 133.21
         },
         {
-          "date": "2026-01-27",
-          "forecast": 1.34
+          "date": "2025-04-27",
+          "forecast": 132.54
         },
         {
-          "date": "2026-01-28",
-          "forecast": 1.22
+          "date": "2025-04-28",
+          "forecast": 117.32
         },
         {
-          "date": "2026-01-29",
-          "forecast": 2.13
+          "date": "2025-04-29",
+          "forecast": 156.71
         },
         {
-          "date": "2026-01-30",
-          "forecast": 1.34
+          "date": "2025-04-30",
+          "forecast": 103.63
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_012",
+      "dealer_name": "DLR_012",
+      "variant_id": "VXI",
+      "total_30d": 3731.6,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 136.06
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 107.78
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 77.66
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 105.65
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 121.72
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 121.17
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 148.48
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 151.74
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 129.22
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 126.59
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 157.62
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 120.49
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 124.21
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 113.06
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 121.8
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 123.01
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 147.63
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 87.78
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 159.17
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 94.18
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 132.99
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 137.95
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 125.82
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 117.26
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 151.57
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 86.48
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 145.81
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 105.29
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 116.15
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 137.23
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_013",
+      "dealer_name": "DLR_013",
+      "variant_id": "VXI",
+      "total_30d": 3665.8,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 147.76
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 69.38
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 98.23
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 118.5
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 107.84
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 98.8
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 116.04
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 141.96
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 128.72
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 161.08
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 105.53
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 139.06
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 118.94
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 142.1
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 104.54
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 140.94
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 83.67
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 144.79
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 117.34
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 171.23
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 86.03
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 133.15
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 130.64
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 108.91
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 97.19
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 147.95
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 92.06
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 151.38
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 150.2
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 111.85
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_014",
+      "dealer_name": "DLR_014",
+      "variant_id": "VXI",
+      "total_30d": 3685.7,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 111.79
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 99.51
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 103.18
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 95.23
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 111.31
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 159.59
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 115.76
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 118.06
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 164.07
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 108.43
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 115.78
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 102.52
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 94.21
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 144.29
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 127.09
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 128.69
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 128.35
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 126.09
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 151.24
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 107.91
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 98.03
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 151.96
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 119.23
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 129.35
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 127.94
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 117.74
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 167.18
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 95.09
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 102.55
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 163.49
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_015",
+      "dealer_name": "DLR_015",
+      "variant_id": "VXI",
+      "total_30d": 3709.3,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 92.43
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 85.98
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 87.06
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 115.99
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 117.3
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 135.82
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 165.42
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 126.54
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 133.65
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 120.22
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 134.41
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 132.53
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 81.38
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 100.12
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 119.14
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 142.64
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 162.49
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 113.9
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 157.31
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 110.37
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 141.44
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 115.87
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 113.69
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 97.27
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 138.7
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 133.55
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 171.71
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 80.99
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 125.54
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 155.8
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_016",
+      "dealer_name": "DLR_016",
+      "variant_id": "VXI",
+      "total_30d": 3593.8,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 114.0
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 93.65
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 87.74
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 92.99
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 87.63
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 94.49
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 124.42
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 139.0
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 126.94
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 102.39
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 132.86
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 122.14
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 120.69
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 144.6
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 105.15
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 127.88
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 134.83
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 99.55
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 126.29
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 149.26
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 107.07
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 135.13
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 128.68
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 110.82
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 141.45
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 95.23
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 143.47
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 136.19
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 123.49
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 145.78
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_017",
+      "dealer_name": "DLR_017",
+      "variant_id": "VXI",
+      "total_30d": 3566.9,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 93.66
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 81.7
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 93.86
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 94.08
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 96.52
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 125.87
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 151.63
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 110.97
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 131.89
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 136.56
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 144.68
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 92.72
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 107.81
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 96.88
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 120.15
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 147.81
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 95.57
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 131.85
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 133.73
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 141.87
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 113.01
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 147.58
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 93.88
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 134.22
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 106.58
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 117.08
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 153.28
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 129.44
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 100.08
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 141.91
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_018",
+      "dealer_name": "DLR_018",
+      "variant_id": "VXI",
+      "total_30d": 3532.4,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 85.75
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 72.2
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 78.33
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 98.89
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 120.66
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 149.0
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 139.12
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 92.57
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 96.12
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 121.21
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 128.82
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 131.38
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 138.6
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 116.4
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 123.48
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 149.73
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 110.2
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 104.46
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 100.76
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 131.65
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 118.94
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 152.71
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 126.3
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 135.91
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 128.77
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 100.6
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 111.81
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 122.8
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 119.36
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 125.84
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_019",
+      "dealer_name": "DLR_019",
+      "variant_id": "VXI",
+      "total_30d": 3420.8,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 133.17
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 104.13
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 83.16
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 78.61
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 75.55
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 67.9
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 64.38
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 111.77
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 135.51
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 131.35
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 125.99
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 115.58
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 81.12
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 105.71
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 108.65
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 138.34
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 124.96
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 149.87
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 135.79
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 134.26
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 131.51
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 105.44
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 93.66
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 115.44
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 115.19
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 133.66
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 150.73
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 118.07
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 128.74
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 122.6
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_020",
+      "dealer_name": "DLR_020",
+      "variant_id": "VXI",
+      "total_30d": 3476.7,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 119.12
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 106.01
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 68.87
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 101.29
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 78.75
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 110.57
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 106.27
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 119.56
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 130.3
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 137.23
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 131.87
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 99.9
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 120.34
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 117.96
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 134.32
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 122.9
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 121.53
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 88.43
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 135.63
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 133.81
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 137.68
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 98.46
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 125.31
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 126.3
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 139.12
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 102.19
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 107.19
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 102.68
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 145.72
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 107.4
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_021",
+      "dealer_name": "DLR_021",
+      "variant_id": "VXI",
+      "total_30d": 3503.4,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 110.0
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 77.45
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 76.85
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 104.81
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 70.84
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 113.49
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 130.49
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 120.7
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 141.07
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 102.75
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 137.23
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 116.65
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 133.87
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 109.1
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 108.61
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 128.02
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 140.44
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 116.58
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 136.79
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 121.68
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 124.43
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 142.11
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 99.84
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 91.17
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 128.95
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 115.16
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 142.09
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 98.26
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 114.92
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 149.08
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_022",
+      "dealer_name": "DLR_022",
+      "variant_id": "VXI",
+      "total_30d": 3245.7,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 105.15
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 47.71
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 70.79
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 76.35
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 73.46
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 70.58
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 119.9
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 104.53
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 103.65
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 109.34
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 80.24
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 106.87
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 119.63
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 95.09
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 110.55
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 128.51
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 132.28
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 139.14
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 131.86
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 137.29
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 99.69
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 99.71
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 111.8
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 111.12
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 117.51
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 119.88
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 130.55
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 137.6
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 125.06
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 129.82
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_023",
+      "dealer_name": "DLR_023",
+      "variant_id": "VXI",
+      "total_30d": 3417.9,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 120.09
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 96.72
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 84.76
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 90.29
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 56.29
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 117.77
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 118.48
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 115.68
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 130.17
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 98.56
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 104.82
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 118.85
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 137.21
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 98.62
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 120.04
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 113.07
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 101.97
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 114.72
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 141.97
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 117.95
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 129.77
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 140.9
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 115.17
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 110.27
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 124.73
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 110.15
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 126.71
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 132.06
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 108.97
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 121.11
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_024",
+      "dealer_name": "DLR_024",
+      "variant_id": "VXI",
+      "total_30d": 3363.5,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 102.42
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 80.53
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 93.8
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 93.64
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 95.75
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 121.97
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 104.73
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 102.42
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 99.72
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 94.18
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 91.27
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 96.92
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 121.63
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 115.28
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 118.52
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 121.56
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 114.4
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 101.58
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 110.37
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 126.75
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 130.55
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 129.67
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 115.6
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 121.71
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 113.8
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 132.95
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 114.25
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 128.59
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 133.63
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 135.29
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_025",
+      "dealer_name": "DLR_025",
+      "variant_id": "VXI",
+      "total_30d": 3104.1,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 94.13
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 84.11
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 47.65
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 99.39
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 108.67
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 88.16
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 97.54
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 94.1
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 100.38
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 107.52
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 87.53
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 102.83
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 104.98
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 90.15
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 103.72
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 112.35
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 102.38
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 94.41
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 104.52
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 120.86
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 120.09
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 124.62
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 116.8
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 123.82
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 116.3
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 101.85
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 124.91
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 129.26
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 92.57
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 108.5
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_026",
+      "dealer_name": "DLR_026",
+      "variant_id": "VXI",
+      "total_30d": 3080.0,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 124.26
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 112.53
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 92.01
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 80.0
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 73.35
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 105.26
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 67.9
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 84.9
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 88.82
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 84.96
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 90.74
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 106.76
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 98.92
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 108.47
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 97.84
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 94.46
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 105.91
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 99.54
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 112.99
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 104.81
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 104.37
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 119.88
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 127.15
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 137.44
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 114.36
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 108.31
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 98.59
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 118.53
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 119.87
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 97.09
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_027",
+      "dealer_name": "DLR_027",
+      "variant_id": "VXI",
+      "total_30d": 3131.9,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 112.79
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 83.5
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 79.99
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 83.43
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 109.83
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 97.97
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 114.03
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 103.84
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 112.47
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 127.52
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 99.02
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 84.13
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 95.49
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 93.34
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 73.55
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 121.71
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 131.89
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 123.95
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 101.23
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 102.41
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 111.33
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 112.97
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 106.51
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 107.02
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 105.59
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 116.49
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 108.51
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 101.16
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 106.66
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 103.59
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_028",
+      "dealer_name": "DLR_028",
+      "variant_id": "VXI",
+      "total_30d": 3180.8,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 121.0
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 81.44
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 67.94
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 95.9
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 99.19
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 101.46
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 113.9
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 100.65
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 94.43
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 102.52
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 106.88
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 71.71
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 113.98
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 90.97
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 97.99
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 119.6
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 113.05
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 105.59
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 111.34
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 118.63
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 114.2
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 138.32
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 105.34
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 101.99
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 106.48
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 126.39
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 131.06
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 102.62
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 113.44
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 112.79
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_029",
+      "dealer_name": "DLR_029",
+      "variant_id": "VXI",
+      "total_30d": 3206.0,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 87.66
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 78.98
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 73.5
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 95.81
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 90.89
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 95.85
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 81.25
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 86.44
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 99.64
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 116.8
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 120.67
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 137.53
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 122.43
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 113.3
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 106.32
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 115.15
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 122.45
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 101.52
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 110.42
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 117.34
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 135.15
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 143.63
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 85.99
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 94.64
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 115.93
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 130.05
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 115.35
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 94.09
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 102.03
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 115.19
+        }
+      ]
+    },
+    {
+      "dealer_id": "DLR_030",
+      "dealer_name": "DLR_030",
+      "variant_id": "VXI",
+      "total_30d": 3236.8,
+      "model_mape": 68.9,
+      "daily": [
+        {
+          "date": "2025-04-01",
+          "forecast": 128.83
+        },
+        {
+          "date": "2025-04-02",
+          "forecast": 108.3
+        },
+        {
+          "date": "2025-04-03",
+          "forecast": 64.11
+        },
+        {
+          "date": "2025-04-04",
+          "forecast": 95.64
+        },
+        {
+          "date": "2025-04-05",
+          "forecast": 92.11
+        },
+        {
+          "date": "2025-04-06",
+          "forecast": 86.68
+        },
+        {
+          "date": "2025-04-07",
+          "forecast": 83.63
+        },
+        {
+          "date": "2025-04-08",
+          "forecast": 104.59
+        },
+        {
+          "date": "2025-04-09",
+          "forecast": 96.87
+        },
+        {
+          "date": "2025-04-10",
+          "forecast": 101.46
+        },
+        {
+          "date": "2025-04-11",
+          "forecast": 103.61
+        },
+        {
+          "date": "2025-04-12",
+          "forecast": 110.95
+        },
+        {
+          "date": "2025-04-13",
+          "forecast": 103.1
+        },
+        {
+          "date": "2025-04-14",
+          "forecast": 95.37
+        },
+        {
+          "date": "2025-04-15",
+          "forecast": 120.61
+        },
+        {
+          "date": "2025-04-16",
+          "forecast": 143.15
+        },
+        {
+          "date": "2025-04-17",
+          "forecast": 106.19
+        },
+        {
+          "date": "2025-04-18",
+          "forecast": 97.73
+        },
+        {
+          "date": "2025-04-19",
+          "forecast": 101.79
+        },
+        {
+          "date": "2025-04-20",
+          "forecast": 125.33
+        },
+        {
+          "date": "2025-04-21",
+          "forecast": 137.45
+        },
+        {
+          "date": "2025-04-22",
+          "forecast": 141.98
+        },
+        {
+          "date": "2025-04-23",
+          "forecast": 90.8
+        },
+        {
+          "date": "2025-04-24",
+          "forecast": 105.35
+        },
+        {
+          "date": "2025-04-25",
+          "forecast": 103.08
+        },
+        {
+          "date": "2025-04-26",
+          "forecast": 124.69
+        },
+        {
+          "date": "2025-04-27",
+          "forecast": 113.79
+        },
+        {
+          "date": "2025-04-28",
+          "forecast": 109.54
+        },
+        {
+          "date": "2025-04-29",
+          "forecast": 123.31
+        },
+        {
+          "date": "2025-04-30",
+          "forecast": 116.73
         }
       ]
     }

@@ -347,7 +347,7 @@ export default function AlertFeed() {
   const totalImpact = data?.total_financial_impact_inr || 0;
   const dealerCount = useMemo(() => {
     if (!data?.alerts) return 0;
-    return new Set(data.alerts.map(a => a.dealer_id).filter(Boolean)).size;
+    return new Set(data.alerts.map(a => a.dealer_id).filter(id => id && id !== "N/A")).size;
   }, [data]);
 
   useEffect(() => {

@@ -28,12 +28,12 @@ class UserUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     username: str
-    role: str
+    role: models.UserRole
     zone: Optional[str] = None
     dealer_id: Optional[str] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @router.get("", response_model=List[UserResponse])
 def get_users(db: Session = Depends(get_db)):
