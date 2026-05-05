@@ -27,9 +27,10 @@ warnings.filterwarnings("ignore")
 
 logger = logging.getLogger("ml_retraining")
 
-OUTPUT_PATH   = Path("data/forecast_output.json")
+BASE_DIR = Path(__file__).parent
+OUTPUT_PATH   = BASE_DIR / "data" / "forecast_output.json"
 FORECAST_DAYS = 30
-STATUS_PATH   = Path("data/retrain_status.json")
+STATUS_PATH   = BASE_DIR / "data" / "retrain_status.json"
 
 FEATURE_COLS = [
     "dealer_enc", "zone_enc", "type_enc",
@@ -63,30 +64,50 @@ def get_retrain_status() -> dict:
 
 
 def _load_data_from_db() -> pd.DataFrame:
-    """Pull vehicle_sales + dealer metadata directly from SQLite."""
-    engine = models.engine
-    with engine.connect() as conn:
-        df_sales = pd.read_sql(
-            text("""
-                SELECT
-                    dt.dealer_id,
-                    'VXI'          AS variant_id,
-                    dt.date        AS date,
-                    d.zone,
-                    d.dealer_type,
-                    dt.total_demand_qty AS units_sold,
-                    0              AS festive_flag,
-                    0              AS promotion_flag
-                FROM daily_trends dt
-                JOIN dealers d ON d.dealer_id = dt.dealer_id
-                ORDER BY dt.dealer_id, dt.date
-            """),
-            conn,
-            parse_dates=["date"],
-        )
+    """
+    Load training data from vehicle_sales_transactions.csv which contains
+    contiguous daily time-series across all 9 variants × 30 dealers (98k+ rows).
+    Falls back to demand_records DB table if CSV is unavailable.
+    """
+    csv_path = BASE_DIR / "data" / "vehicle_sales_transactions.csv"
+
+    if csv_path.exists():
+        logger.info("Loading training data from %s", csv_path)
+        df_sales = pd.read_csv(csv_path, parse_dates=["date"])
+        df_sales = df_sales.rename(columns={
+            "dealer_id": "dealer_id",
+            "variant_id": "variant_id",
+            "zone": "zone",
+            "dealer_type": "dealer_type",
+            "units_sold": "units_sold",
+            "festive_flag": "festive_flag",
+            "promotion_flag": "promotion_flag",
+        })
+    else:
+        logger.info("CSV not found, falling back to database query")
+        engine = models.engine
+        with engine.connect() as conn:
+            df_sales = pd.read_sql(
+                text("""
+                    SELECT
+                        dr.dealer_id,
+                        dr.variant_id,
+                        dr.date        AS date,
+                        d.zone,
+                        d.dealer_type,
+                        dr.demand_qty  AS units_sold,
+                        0              AS festive_flag,
+                        dr.promotion_flag
+                    FROM demand_records dr
+                    JOIN dealers d ON d.dealer_id = dr.dealer_id
+                    ORDER BY dr.dealer_id, dr.variant_id, dr.date
+                """),
+                conn,
+                parse_dates=["date"],
+            )
 
     if df_sales.empty:
-        raise ValueError("No vehicle_sales data found in the database.")
+        raise ValueError("No training data found (CSV or database).")
 
     # Aggregate to dealer + variant + date (daily unit count)
     df_daily = (
@@ -194,15 +215,15 @@ def run_retraining() -> dict:
             f1 = f1_score(y_te_bin, sale_pred, zero_division=0)
             classifiers[variant] = clf
 
-        sale_mask_tr = y_tr > 0
         reg = XGBRegressor(
-            n_estimators=400, learning_rate=0.05, max_depth=6,
-            subsample=0.8, colsample_bytree=0.8,
-            min_child_weight=2, random_state=42, verbosity=0,
+            n_estimators=600, learning_rate=0.03, max_depth=8,
+            subsample=0.85, colsample_bytree=0.85,
+            min_child_weight=3, reg_alpha=0.1, reg_lambda=1.0,
+            random_state=42, verbosity=0,
         )
         reg.fit(
-            X_tr[sale_mask_tr], y_tr[sale_mask_tr],
-            eval_set=[(X_te[y_te > 0], y_te[y_te > 0])],
+            X_tr, y_tr,
+            eval_set=[(X_te, y_te)],
             verbose=False,
         )
 

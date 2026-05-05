@@ -348,7 +348,7 @@ def load_data():
             )
 
         # Bookings
-        bookings_df = pd.read_csv("Customer_Bookings.csv") # Root dir
+        bookings_df = read_csv("Customer_Bookings.csv")
         booking_ids = set()
         customer_list = sorted(list(customer_ids))
         for row in bookings_df.to_dict(orient="records"):

@@ -1,101 +1,101 @@
 Part_Number,Description,Category_Group,MRP_Base,Inventory_Level,Unit_Of_Measurement
-PRT_0001,MGP Spark Plug Type 5,Electrical,250,In Stock,Each
-PRT_0002,MGP Headlight Bulb Type 1,Electrical,850,In Stock,Each
-PRT_0003,MGP Wiper Blades Type 2,Consumable,600,In Stock,Each
-PRT_0004,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
-PRT_0005,MGP Alternator Type 2,Electrical,5600,In Stock,Each
-PRT_0006,MGP Battery Type 5,Electrical,4500,In Stock,Each
-PRT_0007,MGP Clutch Plate Type 1,Mechanical,3200,In Stock,Each
-PRT_0008,MGP Radiator Type 2,Mechanical,6500,In Stock,Each
-PRT_0009,MGP Fuel Pump Type 4,Mechanical,4200,In Stock,Each
-PRT_0010,MGP Timing Belt Type 3,Mechanical,1500,In Stock,Each
-PRT_0011,MGP Air Filter Type 2,Consumable,450,In Stock,Each
-PRT_0012,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
-PRT_0013,MGP Oil Filter Type 1,Consumable,320,In Stock,Each
-PRT_0014,MGP Alternator Type 1,Electrical,5600,In Stock,Each
+PRT_0001,MGP Thermostat Type 4,Mechanical,1200,In Stock,Each
+PRT_0002,MGP Spark Plug Type 4,Electrical,250,In Stock,Each
+PRT_0003,MGP Clutch Plate Type 1,Mechanical,3200,In Stock,Each
+PRT_0004,MGP Alternator Type 5,Electrical,5600,In Stock,Each
+PRT_0005,MGP Thermostat Type 3,Mechanical,1200,In Stock,Each
+PRT_0006,MGP Headlight Bulb Type 4,Electrical,850,In Stock,Each
+PRT_0007,MGP Clutch Plate Type 4,Mechanical,3200,In Stock,Each
+PRT_0008,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each
+PRT_0009,MGP Radiator Type 1,Mechanical,6500,In Stock,Each
+PRT_0010,MGP Timing Belt Type 4,Mechanical,1500,In Stock,Each
+PRT_0011,MGP Cabin Air Filter Type 2,Consumable,550,In Stock,Each
+PRT_0012,MGP Clutch Plate Type 5,Mechanical,3200,In Stock,Each
+PRT_0013,MGP Headlight Bulb Type 3,Electrical,850,In Stock,Each
+PRT_0014,MGP Alternator Type 4,Electrical,5600,In Stock,Each
 PRT_0015,MGP Timing Belt Type 3,Mechanical,1500,In Stock,Each
-PRT_0016,MGP Headlight Bulb Type 3,Electrical,850,In Stock,Each
-PRT_0017,MGP Radiator Type 1,Mechanical,6500,In Stock,Each
-PRT_0018,MGP Fuel Pump Type 4,Mechanical,4200,In Stock,Each
-PRT_0019,MGP Wiper Blades Type 1,Consumable,600,In Stock,Each
-PRT_0020,MGP Cabin Air Filter Type 4,Consumable,550,In Stock,Each
-PRT_0021,MGP Oil Filter Type 5,Consumable,320,In Stock,Each
-PRT_0022,MGP Clutch Plate Type 5,Mechanical,3200,In Stock,Each
-PRT_0023,MGP Cabin Air Filter Type 3,Consumable,550,In Stock,Each
-PRT_0024,MGP Headlight Bulb Type 2,Electrical,850,In Stock,Each
-PRT_0025,MGP Fuel Pump Type 1,Mechanical,4200,In Stock,Each
-PRT_0026,MGP Brake Pads Type 2,Mechanical,1850,In Stock,Each
-PRT_0027,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
-PRT_0028,MGP Oil Filter Type 2,Consumable,320,In Stock,Each
-PRT_0029,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
-PRT_0030,MGP Alternator Type 3,Electrical,5600,In Stock,Each
-PRT_0031,MGP Battery Type 3,Electrical,4500,In Stock,Each
-PRT_0032,MGP Air Filter Type 3,Consumable,450,In Stock,Each
-PRT_0033,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each
-PRT_0034,MGP Shock Absorber Type 3,Mechanical,2800,In Stock,Each
-PRT_0035,MGP Fuel Pump Type 1,Mechanical,4200,In Stock,Each
-PRT_0036,MGP Headlight Bulb Type 2,Electrical,850,In Stock,Each
-PRT_0037,MGP Wiper Blades Type 2,Consumable,600,In Stock,Each
-PRT_0038,MGP Air Filter Type 4,Consumable,450,In Stock,Each
-PRT_0039,MGP Alternator Type 3,Electrical,5600,In Stock,Each
-PRT_0040,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
-PRT_0041,MGP Spark Plug Type 3,Electrical,250,In Stock,Each
-PRT_0042,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
-PRT_0043,MGP Spark Plug Type 1,Electrical,250,In Stock,Each
-PRT_0044,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
-PRT_0045,MGP Alternator Type 3,Electrical,5600,In Stock,Each
-PRT_0046,MGP Oil Filter Type 2,Consumable,320,In Stock,Each
-PRT_0047,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
-PRT_0048,MGP Cabin Air Filter Type 3,Consumable,550,In Stock,Each
-PRT_0049,MGP Spark Plug Type 4,Electrical,250,In Stock,Each
-PRT_0050,MGP Alternator Type 4,Electrical,5600,In Stock,Each
-PRT_0051,MGP Air Filter Type 3,Consumable,450,In Stock,Each
-PRT_0052,MGP Air Filter Type 2,Consumable,450,In Stock,Each
-PRT_0053,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
-PRT_0054,MGP Wiper Blades Type 3,Consumable,600,In Stock,Each
-PRT_0055,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
-PRT_0056,MGP Alternator Type 5,Electrical,5600,In Stock,Each
-PRT_0057,MGP Alternator Type 3,Electrical,5600,In Stock,Each
-PRT_0058,MGP Spark Plug Type 2,Electrical,250,In Stock,Each
-PRT_0059,MGP Wiper Blades Type 4,Consumable,600,In Stock,Each
-PRT_0060,MGP Oil Filter Type 1,Consumable,320,In Stock,Each
-PRT_0061,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
-PRT_0062,MGP Air Filter Type 2,Consumable,450,In Stock,Each
-PRT_0063,MGP Radiator Type 4,Mechanical,6500,In Stock,Each
-PRT_0064,MGP Headlight Bulb Type 1,Electrical,850,In Stock,Each
-PRT_0065,MGP Alternator Type 4,Electrical,5600,In Stock,Each
-PRT_0066,MGP Headlight Bulb Type 4,Electrical,850,In Stock,Each
-PRT_0067,MGP Wiper Blades Type 3,Consumable,600,In Stock,Each
-PRT_0068,MGP Wiper Blades Type 1,Consumable,600,In Stock,Each
-PRT_0069,MGP Shock Absorber Type 1,Mechanical,2800,In Stock,Each
-PRT_0070,MGP Shock Absorber Type 5,Mechanical,2800,In Stock,Each
-PRT_0071,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
-PRT_0072,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
-PRT_0073,MGP Oil Filter Type 3,Consumable,320,In Stock,Each
-PRT_0074,MGP Alternator Type 2,Electrical,5600,In Stock,Each
-PRT_0075,MGP Battery Type 1,Electrical,4500,In Stock,Each
-PRT_0076,MGP Fuel Pump Type 3,Mechanical,4200,In Stock,Each
-PRT_0077,MGP Wiper Blades Type 2,Consumable,600,In Stock,Each
-PRT_0078,MGP Wiper Blades Type 1,Consumable,600,In Stock,Each
-PRT_0079,MGP Thermostat Type 3,Mechanical,1200,In Stock,Each
-PRT_0080,MGP Thermostat Type 5,Mechanical,1200,In Stock,Each
-PRT_0081,MGP Headlight Bulb Type 2,Electrical,850,In Stock,Each
-PRT_0082,MGP Air Filter Type 3,Consumable,450,In Stock,Each
-PRT_0083,MGP Radiator Type 2,Mechanical,6500,In Stock,Each
-PRT_0084,MGP Wiper Blades Type 5,Consumable,600,In Stock,Each
-PRT_0085,MGP Cabin Air Filter Type 1,Consumable,550,In Stock,Each
-PRT_0086,MGP Headlight Bulb Type 3,Electrical,850,In Stock,Each
-PRT_0087,MGP Battery Type 1,Electrical,4500,In Stock,Each
-PRT_0088,MGP Oil Filter Type 3,Consumable,320,In Stock,Each
-PRT_0089,MGP Cabin Air Filter Type 3,Consumable,550,In Stock,Each
-PRT_0090,MGP Spark Plug Type 1,Electrical,250,In Stock,Each
-PRT_0091,MGP Spark Plug Type 5,Electrical,250,In Stock,Each
-PRT_0092,MGP Oil Filter Type 1,Consumable,320,In Stock,Each
-PRT_0093,MGP Fuel Pump Type 4,Mechanical,4200,In Stock,Each
-PRT_0094,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
-PRT_0095,MGP Radiator Type 5,Mechanical,6500,In Stock,Each
-PRT_0096,MGP Radiator Type 2,Mechanical,6500,In Stock,Each
-PRT_0097,MGP Air Filter Type 4,Consumable,450,In Stock,Each
-PRT_0098,MGP Wiper Blades Type 2,Consumable,600,In Stock,Each
-PRT_0099,MGP Clutch Plate Type 5,Mechanical,3200,In Stock,Each
-PRT_0100,MGP Thermostat Type 5,Mechanical,1200,In Stock,Each
+PRT_0016,MGP Alternator Type 3,Electrical,5600,In Stock,Each
+PRT_0017,MGP Spark Plug Type 5,Electrical,250,In Stock,Each
+PRT_0018,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
+PRT_0019,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
+PRT_0020,MGP Headlight Bulb Type 4,Electrical,850,In Stock,Each
+PRT_0021,MGP Shock Absorber Type 5,Mechanical,2800,In Stock,Each
+PRT_0022,MGP Spark Plug Type 1,Electrical,250,In Stock,Each
+PRT_0023,MGP Fuel Pump Type 4,Mechanical,4200,In Stock,Each
+PRT_0024,MGP Cabin Air Filter Type 1,Consumable,550,In Stock,Each
+PRT_0025,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
+PRT_0026,MGP Clutch Plate Type 4,Mechanical,3200,In Stock,Each
+PRT_0027,MGP Alternator Type 4,Electrical,5600,In Stock,Each
+PRT_0028,MGP Brake Pads Type 3,Mechanical,1850,In Stock,Each
+PRT_0029,MGP Shock Absorber Type 2,Mechanical,2800,In Stock,Each
+PRT_0030,MGP Air Filter Type 4,Consumable,450,In Stock,Each
+PRT_0031,MGP Fuel Pump Type 1,Mechanical,4200,In Stock,Each
+PRT_0032,MGP Thermostat Type 2,Mechanical,1200,In Stock,Each
+PRT_0033,MGP Radiator Type 3,Mechanical,6500,In Stock,Each
+PRT_0034,MGP Battery Type 1,Electrical,4500,In Stock,Each
+PRT_0035,MGP Spark Plug Type 1,Electrical,250,In Stock,Each
+PRT_0036,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each
+PRT_0037,MGP Brake Pads Type 4,Mechanical,1850,In Stock,Each
+PRT_0038,MGP Clutch Plate Type 1,Mechanical,3200,In Stock,Each
+PRT_0039,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
+PRT_0040,MGP Oil Filter Type 5,Consumable,320,In Stock,Each
+PRT_0041,MGP Shock Absorber Type 1,Mechanical,2800,In Stock,Each
+PRT_0042,MGP Fuel Pump Type 4,Mechanical,4200,In Stock,Each
+PRT_0043,MGP Fuel Pump Type 1,Mechanical,4200,In Stock,Each
+PRT_0044,MGP Alternator Type 4,Electrical,5600,In Stock,Each
+PRT_0045,MGP Headlight Bulb Type 2,Electrical,850,In Stock,Each
+PRT_0046,MGP Timing Belt Type 3,Mechanical,1500,In Stock,Each
+PRT_0047,MGP Wiper Blades Type 5,Consumable,600,In Stock,Each
+PRT_0048,MGP Oil Filter Type 1,Consumable,320,In Stock,Each
+PRT_0049,MGP Thermostat Type 2,Mechanical,1200,In Stock,Each
+PRT_0050,MGP Radiator Type 1,Mechanical,6500,In Stock,Each
+PRT_0051,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
+PRT_0052,MGP Clutch Plate Type 1,Mechanical,3200,In Stock,Each
+PRT_0053,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
+PRT_0054,MGP Oil Filter Type 3,Consumable,320,In Stock,Each
+PRT_0055,MGP Timing Belt Type 5,Mechanical,1500,In Stock,Each
+PRT_0056,MGP Oil Filter Type 4,Consumable,320,In Stock,Each
+PRT_0057,MGP Battery Type 2,Electrical,4500,In Stock,Each
+PRT_0058,MGP Wiper Blades Type 2,Consumable,600,In Stock,Each
+PRT_0059,MGP Spark Plug Type 5,Electrical,250,In Stock,Each
+PRT_0060,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
+PRT_0061,MGP Cabin Air Filter Type 4,Consumable,550,In Stock,Each
+PRT_0062,MGP Brake Pads Type 3,Mechanical,1850,In Stock,Each
+PRT_0063,MGP Headlight Bulb Type 5,Electrical,850,In Stock,Each
+PRT_0064,MGP Spark Plug Type 3,Electrical,250,In Stock,Each
+PRT_0065,MGP Alternator Type 2,Electrical,5600,In Stock,Each
+PRT_0066,MGP Air Filter Type 4,Consumable,450,In Stock,Each
+PRT_0067,MGP Battery Type 1,Electrical,4500,In Stock,Each
+PRT_0068,MGP Spark Plug Type 4,Electrical,250,In Stock,Each
+PRT_0069,MGP Oil Filter Type 5,Consumable,320,In Stock,Each
+PRT_0070,MGP Spark Plug Type 2,Electrical,250,In Stock,Each
+PRT_0071,MGP Wiper Blades Type 5,Consumable,600,In Stock,Each
+PRT_0072,MGP Radiator Type 4,Mechanical,6500,In Stock,Each
+PRT_0073,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each
+PRT_0074,MGP Timing Belt Type 4,Mechanical,1500,In Stock,Each
+PRT_0075,MGP Alternator Type 5,Electrical,5600,In Stock,Each
+PRT_0076,MGP Thermostat Type 4,Mechanical,1200,In Stock,Each
+PRT_0077,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each
+PRT_0078,MGP Alternator Type 3,Electrical,5600,In Stock,Each
+PRT_0079,MGP Spark Plug Type 4,Electrical,250,In Stock,Each
+PRT_0080,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
+PRT_0081,MGP Shock Absorber Type 4,Mechanical,2800,In Stock,Each
+PRT_0082,MGP Cabin Air Filter Type 5,Consumable,550,In Stock,Each
+PRT_0083,MGP Battery Type 3,Electrical,4500,In Stock,Each
+PRT_0084,MGP Air Filter Type 3,Consumable,450,In Stock,Each
+PRT_0085,MGP Clutch Plate Type 2,Mechanical,3200,In Stock,Each
+PRT_0086,MGP Oil Filter Type 4,Consumable,320,In Stock,Each
+PRT_0087,MGP Oil Filter Type 5,Consumable,320,In Stock,Each
+PRT_0088,MGP Thermostat Type 1,Mechanical,1200,In Stock,Each
+PRT_0089,MGP Alternator Type 5,Electrical,5600,In Stock,Each
+PRT_0090,MGP Clutch Plate Type 5,Mechanical,3200,In Stock,Each
+PRT_0091,MGP Thermostat Type 3,Mechanical,1200,In Stock,Each
+PRT_0092,MGP Headlight Bulb Type 5,Electrical,850,In Stock,Each
+PRT_0093,MGP Cabin Air Filter Type 2,Consumable,550,In Stock,Each
+PRT_0094,MGP Thermostat Type 4,Mechanical,1200,In Stock,Each
+PRT_0095,MGP Spark Plug Type 3,Electrical,250,In Stock,Each
+PRT_0096,MGP Fuel Pump Type 5,Mechanical,4200,In Stock,Each
+PRT_0097,MGP Clutch Plate Type 3,Mechanical,3200,In Stock,Each
+PRT_0098,MGP Thermostat Type 5,Mechanical,1200,In Stock,Each
+PRT_0099,MGP Cabin Air Filter Type 1,Consumable,550,In Stock,Each
+PRT_0100,MGP Timing Belt Type 2,Mechanical,1500,In Stock,Each

@@ -96,6 +96,10 @@ function useApiData<T, R = T>(endpoint: string, transform?: (data: T[]) => R[]):
 
     fetch(`${API_BASE}${endpoint}`, { signal: controller.signal, headers })
       .then((res) => {
+        if (res.status === 401) {
+          window.dispatchEvent(new Event("unauthorized"));
+          throw new Error("Unauthorized");
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
@@ -720,7 +724,10 @@ export const useForecastVariants = (dealerId?: string, variantId?: string) => {
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
     fetch(`${API_BASE}${cacheKey}`, { signal: controller.signal, headers })
-      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((r) => { 
+        if (r.status === 401) window.dispatchEvent(new Event("unauthorized"));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); 
+      })
       .then((json) => { setData(json); setCache(cacheKey, json); setLoading(false); })
       .catch((err) => { if (err.name !== "AbortError") { setError(err.message); setLoading(false); } });
     return () => controller.abort();

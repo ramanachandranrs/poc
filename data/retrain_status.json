@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "message": "Retrained 9 models. Avg MAPE=142.3% | 270 forecasts saved.",
+  "timestamp": "2026-05-05T17:06:11.060182",
+  "metrics": {
+    "variants_trained": 9,
+    "dealer_variant_combos": 270,
+    "avg_mape": 142.3,
+    "avg_mae": 6.42,
+    "training_rows": 21884,
+    "generated_at": "2026-05-05T17:06:10.948703"
+  }
+}

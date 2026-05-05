@@ -21,6 +21,13 @@ export function RoleProvider({ children }) {
   const role = user?.role || "mother_warehouse";
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      console.warn("Session expired. Logging out.");
+      logout();
+    };
+
+    window.addEventListener("unauthorized", handleUnauthorized);
+    
     if (token) {
       try {
         const decoded = jwtDecode(token);
@@ -40,6 +47,8 @@ export function RoleProvider({ children }) {
       setUser(null);
       localStorage.removeItem("access_token");
     }
+
+    return () => window.removeEventListener("unauthorized", handleUnauthorized);
   }, [token]);
 
   const login = async (username, password) => {

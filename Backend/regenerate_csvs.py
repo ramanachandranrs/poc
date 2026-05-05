@@ -45,9 +45,19 @@ with open(DATA_DIR / "dealer_master.csv", "w", newline="", encoding="utf-8") as 
 CUSTOMERS = [f"CUST{i:05d}" for i in range(1, 25001)]
 with open(DATA_DIR / "customer_master.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    w.writerow(["Customer_ID", "Customer_Name", "Email", "Phone", "City", "Zone"])
-    for cid in CUSTOMERS:
-        w.writerow([cid, f"Customer {cid}", f"{cid.lower()}@maruti.com", "9876543210", "Delhi", "North"])
+    w.writerow(["Customer_ID", "Name", "Email", "Contact", "City", "State", "Zone", "Ownership_History"])
+    
+    states = ["Delhi", "Maharashtra", "Karnataka", "Tamil Nadu", "Gujarat", "Haryana"]
+    cities = {"Delhi": ["New Delhi"], "Maharashtra": ["Mumbai", "Pune"], "Karnataka": ["Bangalore", "Mysore"], "Tamil Nadu": ["Chennai", "Coimbatore"], "Gujarat": ["Ahmedabad", "Surat"], "Haryana": ["Gurgaon", "Faridabad"]}
+    ownerships = ["1st owner", "1st owner", "1st owner", "2nd owner", "3rd owner"] # 60% 1st, 20% 2nd, 20% 3rd
+    
+    for i in range(1, 25001):
+        cid = f"CUST{i:05d}"
+        state = random.choice(states)
+        city = random.choice(cities[state])
+        contact = f"{random.randint(9000000000, 9999999999)}"
+        ownership = random.choice(ownerships)
+        w.writerow([cid, f"Customer {cid}", f"{cid.lower()}@maruti.com", contact, city, state, "North", ownership])
 
 # ── 3. PARTS ─────────────────────────────────────────────────────────────────
 PART_TYPES = [
@@ -98,12 +108,16 @@ MODEL_WEIGHTS = {
 MODEL_LIST = list(MODEL_WEIGHTS.keys())
 MODEL_PROBS = list(MODEL_WEIGHTS.values())
 
+# Variants
+VARIANTS = ["AGS", "AT", "Alpha", "Delta", "LXI", "MT", "Sigma", "VXI", "ZXI"]
+
 with open(DATA_DIR / "vehicle_sales.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     w.writerow(["sale_id", "chassis_number", "dealer_id", "customer_id", "sale_date", "month", "quarter", "year", "final_sale_price_inr", "days_to_sell", "discount_given_inr", "finance_taken", "exchange_vehicle", "model_code", "variant_id"])
     for i in range(2500):
         # Pick model based on weights for realistic distribution
         model = random.choices(MODEL_LIST, weights=MODEL_PROBS)[0]
+        variant = random.choice(VARIANTS)
         vin = VINS[i]
         
         sdate = datetime(2025, random.randint(1, 12), random.randint(1, 28))
@@ -119,7 +133,7 @@ with open(DATA_DIR / "vehicle_sales.csv", "w", newline="", encoding="utf-8") as 
         discount = random.randint(5000, 45000)
         finance = 1 if random.random() < 0.65 else 0
         exchange = 1 if random.random() < 0.30 else 0
-        w.writerow([f"SAL{i:06d}", vin, random.choice(ALL_DEALERS)[0], random.choice(CUSTOMERS), sdate.strftime("%Y-%m-%d"), sdate.month, 1, 2025, random.randint(500000, 1500000), days_to_sell, discount, finance, exchange, model, "VXI"])
+        w.writerow([f"SAL{i:06d}", vin, random.choice(ALL_DEALERS)[0], random.choice(CUSTOMERS), sdate.strftime("%Y-%m-%d"), sdate.month, 1, 2025, random.randint(500000, 1500000), days_to_sell, discount, finance, exchange, model, variant])
 
 # ── 5. DEMAND & TRENDS ───────────────────────────────────────────────────────
 with open(DATA_DIR / "demand_clean.csv", "w", newline="", encoding="utf-8") as f:
@@ -129,13 +143,14 @@ with open(DATA_DIR / "demand_clean.csv", "w", newline="", encoding="utf-8") as f
         d = random.choice(ALL_DEALERS)
         p = random.choice(PARTS)
         sdate = datetime(2025, random.randint(1, 12), random.randint(1, 28))
+        variant = random.choice(VARIANTS)
         
         # 10% chance of stockout
         is_stockout = random.random() < 0.10
         rop = random.randint(10, 50)
         on_hand = random.randint(0, rop - 1) if is_stockout else random.randint(rop, rop + 50)
         
-        w.writerow([f"DMD{i:05d}", sdate.strftime("%Y-%m-%d"), 2025, sdate.month, sdate.day, sdate.weekday(), 1, d[0], d[1], d[5], "WH001", p[0], p[1], "Standard", p[2], "Each", "Swift", "VXI", "Petrol", 0, 0, 0, random.randint(1, 20), on_hand, rop, 5, 10, 10, "Fulfilled", p[3], p[3] * random.randint(1, 5), 1 if is_stockout else 0])
+        w.writerow([f"DMD{i:05d}", sdate.strftime("%Y-%m-%d"), 2025, sdate.month, sdate.day, sdate.weekday(), 1, d[0], d[1], d[5], "WH001", p[0], p[1], "Standard", p[2], "Each", random.choice(MODELS), variant, "Petrol", 0, 0, 0, random.randint(1, 20), on_hand, rop, 5, 10, 10, "Fulfilled", p[3], p[3] * random.randint(1, 5), 1 if is_stockout else 0])
 
 import math
 with open(DATA_DIR / "daily_trend_agg.csv", "w", newline="", encoding="utf-8") as f:
@@ -151,4 +166,11 @@ with open(DATA_DIR / "daily_trend_agg.csv", "w", newline="", encoding="utf-8") a
             demand = int(random.randint(20, 250) * seasonal_multiplier)
             w.writerow([sdate.strftime("%Y-%m-%d"), d[0], "Standard", demand, 1200, demand * 1200, random.randint(0, 3)])
 
-print("DONE: 30 Dealers generated. Realistic datasets constructed (100 Parts, 5000 Vehicles, 25k Customers, 25k Demand Records).")
+with open(DATA_DIR / "Customer_Bookings.csv", "w", newline="", encoding="utf-8") as f:
+    w = csv.writer(f)
+    w.writerow(["booking_id", "dealer_id", "requested_model", "requested_variant", "date_booked", "status"])
+    for i in range(500):
+        sdate = datetime(2025, random.randint(1, 12), random.randint(1, 28))
+        w.writerow([f"BOK{i:05d}", random.choice(ALL_DEALERS)[0], random.choice(MODELS), random.choice(VARIANTS), sdate.strftime("%Y-%m-%d"), random.choice(["Confirmed", "Pending", "Delivered"])])
+
+print("DONE: 30 Dealers generated. Realistic datasets constructed (100 Parts, 5000 Vehicles, 25k Customers, 25k Demand Records, 500 Bookings).")
