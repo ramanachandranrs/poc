@@ -3,10 +3,13 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 import os
+from pathlib import Path
 from sqlalchemy import Date, Float, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///dealer_network.db")
+# Resolve database URL relative to this file's directory to avoid CWD issues
+BASE_DIR = Path(__file__).parent.absolute()
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/dealer_network.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
 

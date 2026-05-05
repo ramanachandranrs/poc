@@ -14,16 +14,16 @@ DATA_DIR.mkdir(exist_ok=True)
 # ── 1. DEALERS (30 total) ──────────────────────────────────────────────────
 # 10 Flagship Assigned Dealers
 ASSIGNED_DEALERS = [
-    ("DLR_001", "Competent Automobiles",    "Delhi",        "Delhi",        "Flagship",  "North"),
-    ("DLR_002", "Vitesse Motors",           "Mumbai",       "Maharashtra",  "Flagship",  "West"),
-    ("DLR_003", "Popular Maruti",           "Kochi",        "Kerala",       "Premium",   "South"),
-    ("DLR_004", "Varun Motors",             "Hyderabad",    "Telangana",    "Premium",   "South"),
-    ("DLR_005", "Sai Service",              "Pune",         "Maharashtra",  "Standard",  "West"),
-    ("DLR_006", "Bimal Auto",               "Bengaluru",    "Karnataka",    "Premium",   "South"),
-    ("DLR_007", "Kalyani Motors",           "Bengaluru",    "Karnataka",    "Standard",  "South"),
-    ("DLR_008", "Mandovi Motors",           "Bengaluru",    "Karnataka",    "Standard",  "South"),
-    ("DLR_009", "Chowgule Industries",      "Pune",         "Maharashtra",  "Standard",  "West"),
-    ("DLR_010", "Machino Techno",           "Kolkata",      "West Bengal",  "Premium",   "East"),
+    ("DLR001", "Competent Automobiles",    "Delhi",        "Delhi",        "Flagship",  "North"),
+    ("DLR002", "Vitesse Motors",           "Mumbai",       "Maharashtra",  "Flagship",  "West"),
+    ("DLR003", "Popular Maruti",           "Kochi",        "Kerala",       "Premium",   "South"),
+    ("DLR004", "Varun Motors",             "Hyderabad",    "Telangana",    "Premium",   "South"),
+    ("DLR005", "Sai Service",              "Pune",         "Maharashtra",  "Standard",  "West"),
+    ("DLR006", "Bimal Auto",               "Bengaluru",    "Karnataka",    "Premium",   "South"),
+    ("DLR007", "Kalyani Motors",           "Bengaluru",    "Karnataka",    "Standard",  "South"),
+    ("DLR008", "Mandovi Motors",           "Bengaluru",    "Karnataka",    "Standard",  "South"),
+    ("DLR009", "Chowgule Industries",      "Pune",         "Maharashtra",  "Standard",  "West"),
+    ("DLR010", "Machino Techno",           "Kolkata",      "West Bengal",  "Premium",   "East"),
 ]
 
 # 20 Unassigned Dealers
@@ -31,7 +31,7 @@ UNASSIGNED_DEALERS = []
 locations = [("Gurugram", "Haryana"), ("Noida", "UP"), ("Surat", "Gujarat"), ("Lucknow", "UP"), ("Jaipur", "Rajasthan"), ("Nagpur", "Maharashtra")]
 for i in range(11, 31):
     loc = random.choice(locations)
-    UNASSIGNED_DEALERS.append((f"DLR_{i:03d}", f"Maruti Point {i}", loc[0], loc[1], "Standard", "Unassigned"))
+    UNASSIGNED_DEALERS.append((f"DLR{i:03d}", f"Maruti Point {i}", loc[0], loc[1], "Standard", "Unassigned"))
 
 ALL_DEALERS = ASSIGNED_DEALERS + UNASSIGNED_DEALERS
 
@@ -91,7 +91,7 @@ with open(DATA_DIR / "dealer_part_master.csv", "w", newline="", encoding="utf-8"
 
 # ── 4. VEHICLES & SALES ──────────────────────────────────────────────────────
 MODELS = ["Swift", "Baleno", "Alto", "Brezza", "Ertiga", "Dzire", "Celerio", "Ignis", "Grand Vitara"]
-VINS = [f"VIN{i:05d}" for i in range(1, 5001)]
+VINS = [f"VIN{i:07d}" for i in range(1, 25001)] # Increased to 25k to match job card range
 
 with open(DATA_DIR / "vehicle_master.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)

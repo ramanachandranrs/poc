@@ -174,7 +174,7 @@ export default function NLQChat() {
           className="glow-blue"
           style={{
             position: "fixed",
-            bottom: "24px",
+            bottom: "80px",
             right: "24px",
             zIndex: 99999,
             display: "flex",
@@ -213,7 +213,7 @@ export default function NLQChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, width: 380, height: 560 }}
+            style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 99999, width: 380, height: 560 }}
             className="flex flex-col rounded-2xl shadow-2xl overflow-hidden glass-strong glow-blue"
           >
             {/* Header */}

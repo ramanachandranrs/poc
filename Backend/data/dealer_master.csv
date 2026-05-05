@@ -1,31 +1,31 @@
 Dealer_ID,Dealer_Name,City,State,Dealer_Type,Zone
-DLR_001,Competent Automobiles,Delhi,Delhi,Flagship,North
-DLR_002,Vitesse Motors,Mumbai,Maharashtra,Flagship,West
-DLR_003,Popular Maruti,Kochi,Kerala,Premium,South
-DLR_004,Varun Motors,Hyderabad,Telangana,Premium,South
-DLR_005,Sai Service,Pune,Maharashtra,Standard,West
-DLR_006,Bimal Auto,Bengaluru,Karnataka,Premium,South
-DLR_007,Kalyani Motors,Bengaluru,Karnataka,Standard,South
-DLR_008,Mandovi Motors,Bengaluru,Karnataka,Standard,South
-DLR_009,Chowgule Industries,Pune,Maharashtra,Standard,West
-DLR_010,Machino Techno,Kolkata,West Bengal,Premium,East
-DLR_011,Maruti Point 11,Nagpur,Maharashtra,Standard,Unassigned
-DLR_012,Maruti Point 12,Gurugram,Haryana,Standard,Unassigned
-DLR_013,Maruti Point 13,Gurugram,Haryana,Standard,Unassigned
-DLR_014,Maruti Point 14,Nagpur,Maharashtra,Standard,Unassigned
-DLR_015,Maruti Point 15,Surat,Gujarat,Standard,Unassigned
-DLR_016,Maruti Point 16,Noida,UP,Standard,Unassigned
-DLR_017,Maruti Point 17,Noida,UP,Standard,Unassigned
-DLR_018,Maruti Point 18,Noida,UP,Standard,Unassigned
-DLR_019,Maruti Point 19,Nagpur,Maharashtra,Standard,Unassigned
-DLR_020,Maruti Point 20,Gurugram,Haryana,Standard,Unassigned
-DLR_021,Maruti Point 21,Nagpur,Maharashtra,Standard,Unassigned
-DLR_022,Maruti Point 22,Nagpur,Maharashtra,Standard,Unassigned
-DLR_023,Maruti Point 23,Jaipur,Rajasthan,Standard,Unassigned
-DLR_024,Maruti Point 24,Gurugram,Haryana,Standard,Unassigned
-DLR_025,Maruti Point 25,Jaipur,Rajasthan,Standard,Unassigned
-DLR_026,Maruti Point 26,Lucknow,UP,Standard,Unassigned
-DLR_027,Maruti Point 27,Gurugram,Haryana,Standard,Unassigned
-DLR_028,Maruti Point 28,Gurugram,Haryana,Standard,Unassigned
-DLR_029,Maruti Point 29,Gurugram,Haryana,Standard,Unassigned
-DLR_030,Maruti Point 30,Noida,UP,Standard,Unassigned
+DLR001,Competent Automobiles,Delhi,Delhi,Flagship,North
+DLR002,Vitesse Motors,Mumbai,Maharashtra,Flagship,West
+DLR003,Popular Maruti,Kochi,Kerala,Premium,South
+DLR004,Varun Motors,Hyderabad,Telangana,Premium,South
+DLR005,Sai Service,Pune,Maharashtra,Standard,West
+DLR006,Bimal Auto,Bengaluru,Karnataka,Premium,South
+DLR007,Kalyani Motors,Bengaluru,Karnataka,Standard,South
+DLR008,Mandovi Motors,Bengaluru,Karnataka,Standard,South
+DLR009,Chowgule Industries,Pune,Maharashtra,Standard,West
+DLR010,Machino Techno,Kolkata,West Bengal,Premium,East
+DLR011,Maruti Point 11,Nagpur,Maharashtra,Standard,Unassigned
+DLR012,Maruti Point 12,Gurugram,Haryana,Standard,Unassigned
+DLR013,Maruti Point 13,Gurugram,Haryana,Standard,Unassigned
+DLR014,Maruti Point 14,Nagpur,Maharashtra,Standard,Unassigned
+DLR015,Maruti Point 15,Surat,Gujarat,Standard,Unassigned
+DLR016,Maruti Point 16,Noida,UP,Standard,Unassigned
+DLR017,Maruti Point 17,Noida,UP,Standard,Unassigned
+DLR018,Maruti Point 18,Noida,UP,Standard,Unassigned
+DLR019,Maruti Point 19,Nagpur,Maharashtra,Standard,Unassigned
+DLR020,Maruti Point 20,Gurugram,Haryana,Standard,Unassigned
+DLR021,Maruti Point 21,Nagpur,Maharashtra,Standard,Unassigned
+DLR022,Maruti Point 22,Nagpur,Maharashtra,Standard,Unassigned
+DLR023,Maruti Point 23,Jaipur,Rajasthan,Standard,Unassigned
+DLR024,Maruti Point 24,Gurugram,Haryana,Standard,Unassigned
+DLR025,Maruti Point 25,Jaipur,Rajasthan,Standard,Unassigned
+DLR026,Maruti Point 26,Lucknow,UP,Standard,Unassigned
+DLR027,Maruti Point 27,Gurugram,Haryana,Standard,Unassigned
+DLR028,Maruti Point 28,Gurugram,Haryana,Standard,Unassigned
+DLR029,Maruti Point 29,Gurugram,Haryana,Standard,Unassigned
+DLR030,Maruti Point 30,Noida,UP,Standard,Unassigned
