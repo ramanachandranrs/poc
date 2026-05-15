@@ -81,7 +81,8 @@ const MLStatus = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: MLStatusResponse = await res.json();
       setMlData(json);
-    } catch {
+    } catch (err) {
+      console.error("Failed to fetch ML status:", err);
       // silently ignore — backend might not be ready
     } finally {
       setLoading(false);
@@ -108,6 +109,7 @@ const MLStatus = () => {
       setTriggerMsg(json.message ?? "Retraining started.");
       fetchStatus();
     } catch (e) {
+      console.error("Retrain Trigger Error:", e);
       setTriggerMsg("Failed to trigger retraining. Check backend.");
     } finally {
       setTriggering(false);

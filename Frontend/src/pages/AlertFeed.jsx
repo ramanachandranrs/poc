@@ -69,7 +69,8 @@ function AlertCard({ alert, onAction }) {
       });
       const json = await res.json();
       setMessage(json.message);
-    } catch {
+    } catch (err) {
+      console.error("Generate Message Error:", err);
       setMessage("Failed to generate message. Check backend connection.");
     } finally {
       setGenerating(false);

@@ -316,9 +316,9 @@ const Inventory = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Finance Taken</p>
                   <p className="text-xl font-bold text-foreground">
-                    {salesSummary.finance_count.toLocaleString()}
+                    {(salesSummary.finance_count ?? 0).toLocaleString()}
                     <span className="text-xs text-muted-foreground ml-1">
-                      ({Math.round(salesSummary.finance_count / salesSummary.total_sales * 100)}%)
+                      ({salesSummary.total_sales > 0 ? Math.round((salesSummary.finance_count ?? 0) / salesSummary.total_sales * 100) : 0}%)
                     </span>
                   </p>
                 </div>
@@ -393,7 +393,7 @@ const Inventory = () => {
                 {byModel.map((row, i) => (
                   <tr key={row.model} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}>
                     <td className="px-4 py-3 font-medium text-foreground">{row.model}</td>
-                    <td className="px-4 py-3 text-right text-emerald-400 font-semibold">{row.units_sold.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right text-emerald-400 font-semibold">{(row.units_sold ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3 text-right text-foreground">{fmt(row.total_revenue)}</td>
                     <td className={`px-4 py-3 text-right font-semibold ${row.avg_days_to_sell > 60 ? "text-neon-amber" : "text-foreground"}`}>
                       {row.avg_days_to_sell}d

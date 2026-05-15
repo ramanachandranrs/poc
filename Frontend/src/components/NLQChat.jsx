@@ -137,6 +137,14 @@ export default function NLQChat() {
         headers,
         body: JSON.stringify({ question: q, session_id: sessionId }),
       });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const error = new Error(`HTTP ${res.status}`);
+        error.requestId = errJson.request_id || res.headers.get("X-Request-ID");
+        throw error;
+      }
+
       const json = await res.json();
       setMessages((prev) => [
         ...prev,
@@ -149,10 +157,18 @@ export default function NLQChat() {
         },
       ]);
       if (!open) setUnread((n) => n + 1);
-    } catch {
+    } catch (err) {
+      console.error("NLQ Query Error:", err);
+      let errorMsg = "Connection error. Is the backend running on port 8000?";
+      
+      // Try to extract request ID for production debugging
+      if (err instanceof Error && err.requestId) {
+        errorMsg += ` (Ref: ${err.requestId})`;
+      }
+
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Connection error. Is the backend running on port 8000?", follow_ups: [] },
+        { role: "assistant", content: errorMsg, follow_ups: [] },
       ]);
     } finally {
       setLoading(false);

@@ -20,6 +20,7 @@ export default function Login() {
       await login(username, password);
       navigate("/");
     } catch (err) {
+      console.error("Login failed:", err);
       setError("Invalid username or password");
     } finally {
       setLoading(false);

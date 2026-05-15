@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 import bcrypt
 
 # Ensure we're running from Backend dir
-os.chdir(r"c:\Users\RamanachandranRS\Professional\New folder\poc\Backend")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
 
 import models
 
@@ -71,8 +72,9 @@ def run():
     db.commit()
     db.close()
     
-    # 5. Write CSV
-    csv_path = r"c:\Users\RamanachandranRS\Professional\New folder\poc\credentials.csv"
+    # 5. Write CSV - Save in project root
+    root_dir = os.path.dirname(script_dir)
+    csv_path = os.path.join(root_dir, "credentials.csv")
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(headers)

@@ -54,6 +54,7 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
       const res = await callGemini(endpoint, payload);
       setMessage(res.generated_text);
     } catch (e) {
+      console.error("Gemini Generation Error:", e);
       setMessage("Failed to generate. Check Vertex AI credentials.");
     } finally {
       setLoading(false);
@@ -81,7 +82,8 @@ function RecCard({ rec, onRefresh }: { rec: GuidedRecommendation; onRefresh: () 
         setEmailStatus("error");
         setEmailInfo(String((email as Record<string, unknown>)?.error ?? "Email send failed"));
       }
-    } catch {
+    } catch (err) {
+      console.error("Approve Recommendation Error:", err);
       setEmailStatus("error");
       setEmailInfo("Approval failed. Check backend.");
     }

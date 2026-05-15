@@ -9,9 +9,40 @@ from pydantic import BaseModel
 from datetime import timedelta
 import json
 import logging
+import time
+import uuid
+import json
+import traceback
 from pathlib import Path
+from fastapi import Request, Response
 
-logging.basicConfig(level=logging.INFO)
+# --- Production Logging Setup ---
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+        }
+        # Add 'extra' attributes
+        static_fields = ("name", "msg", "args", "levelname", "levelno", "pathname", "filename", "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName", "created", "msecs", "relativeCreated", "thread", "threadName", "processName", "process", "message")
+        for key, value in record.__dict__.items():
+            if key not in static_fields:
+                log_record[key] = value
+        
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_record)
+
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+# Use JSON in production, but keep it readable if desired. 
+# Here we'll enable JSON formatting for true production readiness.
+formatter = JSONFormatter(datefmt="%Y-%m-%d %H:%M:%S")
+handler.setFormatter(formatter)
+logger.handlers = [handler]
+logger.setLevel(logging.INFO)
 
 import models
 from distance_service import get_transport_cost, get_distance_km
@@ -71,6 +102,46 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    request.state.request_id = request_id
+    
+    start_time = time.time()
+    try:
+        response = await call_next(request)
+        duration = (time.time() - start_time) * 1000
+        
+        logging.info(
+            f"Request Complete",
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": response.status_code,
+                "duration_ms": round(duration, 2)
+            }
+        )
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as e:
+        duration = (time.time() - start_time) * 1000
+        logging.error(
+            f"Request Failed: {str(e)}",
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "duration_ms": round(duration, 2)
+            },
+            exc_info=True
+        )
+        return Response(
+            content=json.dumps({"detail": "Internal Server Error", "request_id": request_id}),
+            status_code=500,
+            media_type="application/json"
+        )
 
 def get_db():
     db = Session(models.engine)
